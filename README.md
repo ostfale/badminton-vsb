@@ -1,34 +1,22 @@
-# My Application README
+# Badminton Statistics Web Application
 
-- [ ] TODO Replace or update this README with instructions relevant to your application
+dd
+
+# Internal
+
+## Configuration
+
+### Links
+    + https://vaadin.com/docs/latest/flow/integrations/spring/configuration#special-configuration-parameters
+
+### Run Application
 
 To start the application in development mode, import it into your IDE and run the `Application` class. 
 You can also start the application from the command line by running: 
 
 ```bash
-./mvnw
+./mvnw                                                               # runs `mvn spring-boot:run` for you
+./mvnw package                                                       # builds a jar file
+docker build -t my-application:latest .                              # builds a docker image
+docker build --secret id=proKey,src=$HOME/.vaadin/proKey .           # builds a docker image with a commercial component
 ```
-
-To build the application in production mode, run:
-
-```bash
-./mvnw package
-```
-
-To build a Docker image, run:
-
-```bash
-docker build -t my-application:latest .
-```
-
-If you use commercial components, pass the license key as a build secret:
-
-```bash
-docker build --secret id=proKey,src=$HOME/.vaadin/proKey .
-```
-
-## Getting Started
-
-The [Quick Start](https://vaadin.com/docs/v25/getting-started/quick-start) tutorial helps you get started with Vaadin in 
-around 10 minutes. This tutorial walks you through building a simple application, introducing the core concepts along 
-the way.

@@ -1,0 +1,11 @@
+server:
+  port: ${PORT:8181}
+
+logging:
+  level:
+    org:
+      atmosphere: warn
+
+vaadin:
+  launch-browser: true                                             # Launch browser when starting the application.
+  allowed-packages: com.vaadin,org.vaadin,com.flowingcode,de.ostfale.va
