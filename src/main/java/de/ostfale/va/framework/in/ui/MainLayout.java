@@ -1,0 +1,67 @@
+package de.ostfale.va.framework.in.ui;
+
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.applayout.AppLayout;
+import com.vaadin.flow.component.applayout.DrawerToggle;
+import com.vaadin.flow.component.html.Image;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.Scroller;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.sidenav.SideNav;
+import com.vaadin.flow.component.sidenav.SideNavItem;
+import com.vaadin.flow.dom.Style;
+import com.vaadin.flow.router.Layout;
+import com.vaadin.flow.server.menu.MenuConfiguration;
+import com.vaadin.flow.server.menu.MenuEntry;
+import com.vaadin.flow.theme.lumo.LumoUtility;
+import de.ostfale.va.common.UseLogging;
+
+@Layout
+public final class MainLayout extends AppLayout implements UseLogging {
+
+    public MainLayout() {
+        log().info("MainLayout :: Created");
+        setPrimarySection(Section.DRAWER);
+
+        // Add a toggle to the header so users can open/close the drawer
+        addToNavbar(new DrawerToggle());
+        addToDrawer(createHeader(), new Scroller(createSideNav()));
+    }
+
+    private Component createHeader() {
+        Image appLogo = new Image("images/shuttle_logo.png", "Application Logo");
+        appLogo.setWidth("80px");
+        appLogo.setHeight(null);
+
+        // Ensure no background or border is forced by CSS
+        appLogo.getStyle().set("background-color", "transparent");
+        appLogo.getStyle().set("object-fit", "contain");
+
+        var appName = new Span("Badminton Statistik");
+        appName.getStyle().setFontWeight(Style.FontWeight.BOLD);
+        appName.getStyle().set("font-size", "1.2rem"); // Scale text to match larger logo
+
+        var header = new VerticalLayout(appLogo, appName);
+        header.setAlignItems(FlexComponent.Alignment.CENTER);
+        header.setPadding(true); // Add some space around the larger logo
+        header.setSpacing(false);
+        return header;
+    }
+
+    private SideNav createSideNav() {
+        var nav = new SideNav();
+        nav.addClassNames(LumoUtility.Margin.Horizontal.MEDIUM);
+        MenuConfiguration.getMenuEntries().forEach(entry -> nav.addItem(createSideNavItem(entry)));
+        return nav;
+    }
+
+    private SideNavItem createSideNavItem(MenuEntry menuEntry) {
+        if (menuEntry.icon() != null) {
+            return new SideNavItem(menuEntry.title(), menuEntry.path(), new Icon(menuEntry.icon()));
+        } else {
+            return new SideNavItem(menuEntry.title(), menuEntry.path());
+        }
+    }
+}
