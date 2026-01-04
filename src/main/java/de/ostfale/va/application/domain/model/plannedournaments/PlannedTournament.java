@@ -1,5 +1,8 @@
 package de.ostfale.va.application.domain.model.plannedournaments;
 
+import de.ostfale.va.application.domain.model.plannedournaments.vo.PlannedTournamentCategoriesVO;
+import de.ostfale.va.application.domain.model.plannedournaments.vo.PlannedTournamentTypesVO;
+import de.ostfale.va.application.domain.model.plannedournaments.vo.TournamentAgeClassesVO;
 import de.ostfale.va.common.UseTimeHandling;
 
 import java.time.LocalDate;

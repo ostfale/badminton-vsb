@@ -6,5 +6,5 @@ import java.io.InputStream;
 import java.util.List;
 
 public interface ForImportingPlannedTournamentsUC {
-    List<PlannedTournament> importFromSource(InputStream inputStream);
+    List<PlannedTournament> importFromSource(InputStream... streams);
 }

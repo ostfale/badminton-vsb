@@ -1,4 +1,6 @@
-package de.ostfale.va.application.domain.model.plannedournaments;
+package de.ostfale.va.application.domain.model.plannedournaments.vo;
+
+import de.ostfale.va.application.domain.model.plannedournaments.exceptions.PlannedTournamentCategoryNotFoundException;
 
 import java.util.Arrays;
 

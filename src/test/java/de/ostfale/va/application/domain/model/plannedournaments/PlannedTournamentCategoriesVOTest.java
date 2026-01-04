@@ -1,5 +1,7 @@
 package de.ostfale.va.application.domain.model.plannedournaments;
 
+import de.ostfale.va.application.domain.model.plannedournaments.exceptions.PlannedTournamentCategoryNotFoundException;
+import de.ostfale.va.application.domain.model.plannedournaments.vo.PlannedTournamentCategoriesVO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
