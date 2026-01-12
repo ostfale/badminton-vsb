@@ -1,0 +1,4 @@
+/* Main styles file - imports all component styles */
+
+/* Component styles */
+@import './planned-tournaments-info-card.css';

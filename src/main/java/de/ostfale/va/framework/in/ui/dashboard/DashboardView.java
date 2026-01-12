@@ -1,4 +1,4 @@
-package de.ostfale.va.framework.in.ui;
+package de.ostfale.va.framework.in.ui.dashboard;
 
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
@@ -14,5 +14,7 @@ public class DashboardView extends VerticalLayout implements UseLogging{
         setSizeFull();
         setPadding(true);
         setSpacing(true);
+
+        add(new PlannedTournamentsInfoCard());
     }
 }

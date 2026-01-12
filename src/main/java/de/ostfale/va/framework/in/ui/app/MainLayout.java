@@ -13,7 +13,7 @@ import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.dom.Style;
 import com.vaadin.flow.router.Layout;
 import de.ostfale.va.common.UseLogging;
-import de.ostfale.va.framework.in.ui.DashboardView;
+import de.ostfale.va.framework.in.ui.dashboard.DashboardView;
 import de.ostfale.va.framework.in.ui.PlayerStats;
 import de.ostfale.va.framework.in.ui.plannedtournaments.PlannedTournamentsView;
 import de.ostfale.va.framework.in.ui.playerranking.PlayerRankingView;
