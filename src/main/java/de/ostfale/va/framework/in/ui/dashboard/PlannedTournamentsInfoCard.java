@@ -26,11 +26,53 @@ public class PlannedTournamentsInfoCard extends Div implements UseLogging, UseTi
         Card tournamentImageCard = createCard();
         Image image = createImage();
         VerticalLayout contentLayout = new VerticalLayout();
-        // contentLayout.add(createYearHeader(), prepareDownloadRow(), prepareCurrentYearRow(), prepareNextYearRow());
+        contentLayout.add(createYearHeader());
+
+        // Add the new statistics rows here
+        contentLayout.add(createStatisticsRows());
 
         VerticalLayout cardContent = createCardContent(image, contentLayout, createButtonLayout());
         tournamentImageCard.add(cardContent);
         add(tournamentImageCard);
+    }
+
+    private VerticalLayout createStatisticsRows() {
+        VerticalLayout statsContainer = new VerticalLayout();
+        statsContainer.setPadding(false);
+        statsContainer.setSpacing(false);
+        statsContainer.getStyle().set("padding", "0 1rem"); // Align with the H2 header
+
+        int currentYear = getCurrentCalendarYear();
+        int nextYear = currentYear + 1;
+
+        // Row 1: Letzter Download (Left aligned with Statistik)
+        statsContainer.add(createStatRow("Letzter Download", "01.01.2024", false));
+
+        // Row 2: Turniere [Current Year] (Indented)
+        statsContainer.add(createStatRow("Turniere " + currentYear, "42", true));
+
+        // Row 3: Turniere [Next Year] (Indented)
+        statsContainer.add(createStatRow("Turniere " + nextYear, "15", true));
+
+        return statsContainer;
+    }
+
+    private HorizontalLayout createStatRow(String labelText, String valueText, boolean indented) {
+        com.vaadin.flow.component.html.Span label = new com.vaadin.flow.component.html.Span(labelText);
+        com.vaadin.flow.component.html.Span value = new com.vaadin.flow.component.html.Span(valueText);
+        value.getStyle().set("font-weight", "bold");
+
+        HorizontalLayout row = new HorizontalLayout(label, value);
+        row.setWidthFull();
+        row.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
+
+        row.getStyle().set("margin-bottom", "0.75rem");
+
+        if (indented) {
+            // Apply a "tab" (indentation) to the left
+            row.getStyle().set("padding-left", "2rem");
+        }
+        return row;
     }
 
     private HorizontalLayout createYearHeader() {
@@ -74,7 +116,10 @@ public class PlannedTournamentsInfoCard extends Div implements UseLogging, UseTi
         HorizontalLayout buttonLayout = new HorizontalLayout(downloadButton, updateButton);
         buttonLayout.setWidthFull();
         buttonLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.START);
-        buttonLayout.getStyle().set("padding", "0 1rem 1rem 0");
+
+        // Adjust padding to align with the text (1rem on the left)
+        buttonLayout.getStyle().set("padding", "0 1rem 1rem 1rem");
+
         return buttonLayout;
     }
 
