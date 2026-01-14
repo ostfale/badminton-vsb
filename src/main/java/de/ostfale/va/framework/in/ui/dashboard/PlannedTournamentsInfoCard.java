@@ -10,13 +10,17 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import de.ostfale.va.application.port.in.ForCalculatingTournamentsStatisticsUC;
 import de.ostfale.va.common.UseLogging;
 import de.ostfale.va.common.UseTimeHandling;
 
 public class PlannedTournamentsInfoCard extends Div implements UseLogging, UseTimeHandling {
 
-    public PlannedTournamentsInfoCard() {
+    private final ForCalculatingTournamentsStatisticsUC calcService;
+
+    public PlannedTournamentsInfoCard(ForCalculatingTournamentsStatisticsUC service) {
         log().debug("PlannedTournamentsInfoCard :: Created");
+        this.calcService = service;
         setWidth("600px");
         setHeight("600px");
         initLayout();

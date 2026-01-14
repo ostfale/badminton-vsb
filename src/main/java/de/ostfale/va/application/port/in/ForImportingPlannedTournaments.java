@@ -5,6 +5,6 @@ import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournamen
 import java.io.InputStream;
 import java.util.List;
 
-public interface ForImportingPlannedTournamentsUC {
-    List<PlannedTournament> importFromSource(InputStream... streams);
+public interface ForImportingPlannedTournaments {
+    List<PlannedTournament> importFromSource();
 }

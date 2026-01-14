@@ -1,6 +1,6 @@
 package de.ostfale.va.framework.in.web;
 
-import de.ostfale.va.application.port.in.ForImportingPlannedTournamentsUC;
+import de.ostfale.va.application.port.in.ForImportingPlannedTournaments;
 import de.ostfale.va.common.UseLogging;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -14,13 +14,13 @@ import java.util.Arrays;
 @RestController
 public class PlannedTournamentController implements UseLogging {
 
-    private final ForImportingPlannedTournamentsUC importUC;
+    private final ForImportingPlannedTournaments importUC;
 
-    public PlannedTournamentController(ForImportingPlannedTournamentsUC importUC) {
+    public PlannedTournamentController(ForImportingPlannedTournaments importUC) {
         this.importUC = importUC;
     }
 
-    @PostMapping("/import")
+   /* @PostMapping("/import")
     public void importTournaments(@RequestParam("files") MultipartFile[] files) {
         InputStream[] streams = Arrays.stream(files)
                 .map(this::convertToInputStream)
@@ -35,5 +35,5 @@ public class PlannedTournamentController implements UseLogging {
             log().error("Failed to get input stream from file: {}", file.getOriginalFilename(), e);
             throw new RuntimeException("Error processing uploaded file", e);
         }
-    }
+    }*/
 }
