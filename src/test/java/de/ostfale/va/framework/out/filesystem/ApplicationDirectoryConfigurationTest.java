@@ -1,6 +1,6 @@
 package de.ostfale.va.framework.out.filesystem;
 
-import de.ostfale.va.application.port.out.ForDirectoryConfiguration;
+import de.ostfale.va.application.port.out.ForDirectoryConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -40,7 +40,7 @@ class ApplicationDirectoryConfigurationTest {
         var expectedNumberOfDirectories = 11;
 
         // when
-        List<ForDirectoryConfiguration.DirectoryEntry> structure = config.structure();
+        List<ForDirectoryConfig.DirectoryEntry> structure = config.structure();
 
         // then
         assertEquals(expectedNumberOfDirectories, structure.size());
@@ -55,10 +55,10 @@ class ApplicationDirectoryConfigurationTest {
         var expectedConfigEntryPath = "config";
 
         // when
-        List<ForDirectoryConfiguration.DirectoryEntry> structure = config.structure();
+        List<ForDirectoryConfig.DirectoryEntry> structure = config.structure();
 
         // then
-        ForDirectoryConfiguration.DirectoryEntry configEntry = findEntryByName(structure, searchName);
+        ForDirectoryConfig.DirectoryEntry configEntry = findEntryByName(structure, searchName);
         assertNotNull(configEntry);
         assertEquals(expectedConfigEntryName, configEntry.name());
         assertEquals(expectedConfigEntryPath, configEntry.path());
@@ -75,10 +75,10 @@ class ApplicationDirectoryConfigurationTest {
         var searchName = "tournament";
 
         // when
-        List<ForDirectoryConfiguration.DirectoryEntry> structure = config.structure();
+        List<ForDirectoryConfig.DirectoryEntry> structure = config.structure();
 
         // then
-        ForDirectoryConfiguration.DirectoryEntry tournamentEntry = findEntryByName(structure, searchName);
+        ForDirectoryConfig.DirectoryEntry tournamentEntry = findEntryByName(structure, searchName);
         assertNotNull(tournamentEntry);
         assertEquals(expectedTournamentEntryName, tournamentEntry.name());
         assertEquals(expectedTournamentEntryPath, tournamentEntry.path());
@@ -96,14 +96,14 @@ class ApplicationDirectoryConfigurationTest {
         var expectedDashboardPath = "data/dashboard";
 
         // when
-        List<ForDirectoryConfiguration.DirectoryEntry> structure = config.structure();
+        List<ForDirectoryConfig.DirectoryEntry> structure = config.structure();
 
         // then
-        ForDirectoryConfiguration.DirectoryEntry dashboardEntry = findEntryByName(structure, searchNameDashboard);
+        ForDirectoryConfig.DirectoryEntry dashboardEntry = findEntryByName(structure, searchNameDashboard);
         assertNotNull(dashboardEntry);
         assertEquals(expectedDashboardPath, dashboardEntry.path());
 
-        ForDirectoryConfiguration.DirectoryEntry favPlayerMatchesEntry = findEntryByName(structure, searchNamePlayer);
+        ForDirectoryConfig.DirectoryEntry favPlayerMatchesEntry = findEntryByName(structure, searchNamePlayer);
         assertNotNull(favPlayerMatchesEntry);
         assertEquals(expectedEntryPath, favPlayerMatchesEntry.path());
     }
@@ -112,28 +112,28 @@ class ApplicationDirectoryConfigurationTest {
     @DisplayName("structure should contain all entries with createIfMissing=true")
     void structure_allEntriesShouldHaveCreateIfMissingTrue() {
         // when
-        List<ForDirectoryConfiguration.DirectoryEntry> structure = config.structure();
+        List<ForDirectoryConfig.DirectoryEntry> structure = config.structure();
 
         // then
-        assertTrue(structure.stream().allMatch(ForDirectoryConfiguration.DirectoryEntry::createIfMissing));
+        assertTrue(structure.stream().allMatch(ForDirectoryConfig.DirectoryEntry::createIfMissing));
     }
 
     @Test
     @DisplayName("structure should contain all entries with required=true")
     void structure_allEntriesShouldBeRequired() {
         // when
-        List<ForDirectoryConfiguration.DirectoryEntry> structure = config.structure();
+        List<ForDirectoryConfig.DirectoryEntry> structure = config.structure();
 
         // then
-        assertTrue(structure.stream().allMatch(ForDirectoryConfiguration.DirectoryEntry::required));
+        assertTrue(structure.stream().allMatch(ForDirectoryConfig.DirectoryEntry::required));
     }
 
     @Test
     @DisplayName("structure should contain expected directory names")
     void structure_shouldContainExpectedDirectoryNames() {
         // when
-        List<ForDirectoryConfiguration.DirectoryEntry> structure = config.structure();
-        List<String> names = structure.stream().map(ForDirectoryConfiguration.DirectoryEntry::name).toList();
+        List<ForDirectoryConfig.DirectoryEntry> structure = config.structure();
+        List<String> names = structure.stream().map(ForDirectoryConfig.DirectoryEntry::name).toList();
 
         // then
         assertAll(
@@ -151,8 +151,8 @@ class ApplicationDirectoryConfigurationTest {
         );
     }
 
-    private ForDirectoryConfiguration.DirectoryEntry findEntryByName(
-            List<ForDirectoryConfiguration.DirectoryEntry> entries, String name) {
+    private ForDirectoryConfig.DirectoryEntry findEntryByName(
+            List<ForDirectoryConfig.DirectoryEntry> entries, String name) {
         return entries.stream()
                 .filter(entry -> name.equals(entry.name()))
                 .findFirst()

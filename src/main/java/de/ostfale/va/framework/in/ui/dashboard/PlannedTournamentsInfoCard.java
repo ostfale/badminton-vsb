@@ -6,24 +6,42 @@ import com.vaadin.flow.component.card.Card;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Image;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournamentsStatistics;
 import de.ostfale.va.application.port.in.ForCalculatingTournamentsStatisticsUC;
+import de.ostfale.va.application.port.in.ForImportingPlannedTournaments;
 import de.ostfale.va.common.UseLogging;
 import de.ostfale.va.common.UseTimeHandling;
+
+import java.time.LocalDateTime;
 
 public class PlannedTournamentsInfoCard extends Div implements UseLogging, UseTimeHandling {
 
     private final ForCalculatingTournamentsStatisticsUC calcService;
+    private final ForImportingPlannedTournaments importService;
+    private final VerticalLayout statsContainer = new VerticalLayout();
 
-    public PlannedTournamentsInfoCard(ForCalculatingTournamentsStatisticsUC service) {
+    public PlannedTournamentsInfoCard(
+            ForCalculatingTournamentsStatisticsUC statCalcService,
+            ForImportingPlannedTournaments importService) {
         log().debug("PlannedTournamentsInfoCard :: Created");
-        this.calcService = service;
+        this.importService = importService;
+        this.calcService = statCalcService;
         setWidth("600px");
         setHeight("600px");
+        initStatsContainer();
         initLayout();
+        refreshStatistics();
+    }
+
+    private void initStatsContainer() {
+        statsContainer.setPadding(false);
+        statsContainer.setSpacing(false);
+        statsContainer.getStyle().set("padding", "0 1rem");
     }
 
     private void initLayout() {
@@ -31,40 +49,26 @@ public class PlannedTournamentsInfoCard extends Div implements UseLogging, UseTi
         Image image = createImage();
         VerticalLayout contentLayout = new VerticalLayout();
         contentLayout.add(createYearHeader());
-
-        // Add the new statistics rows here
-        contentLayout.add(createStatisticsRows());
+        contentLayout.add(statsContainer);
 
         VerticalLayout cardContent = createCardContent(image, contentLayout, createButtonLayout());
         tournamentImageCard.add(cardContent);
         add(tournamentImageCard);
     }
 
-    private VerticalLayout createStatisticsRows() {
-        VerticalLayout statsContainer = new VerticalLayout();
-        statsContainer.setPadding(false);
-        statsContainer.setSpacing(false);
-        statsContainer.getStyle().set("padding", "0 1rem"); // Align with the H2 header
-
+    private void updateStatisticsRows(PlannedTournamentsStatistics stats) {
+        statsContainer.removeAll();
         int currentYear = getCurrentCalendarYear();
-        int nextYear = currentYear + 1;
 
-        // Row 1: Letzter Download (Left aligned with Statistik)
-        statsContainer.add(createStatRow("Letzter Download", "01.01.2024", false));
-
-        // Row 2: Turniere [Current Year] (Indented)
-        statsContainer.add(createStatRow("Turniere " + currentYear, "42", true));
-
-        // Row 3: Turniere [Next Year] (Indented)
-        statsContainer.add(createStatRow("Turniere " + nextYear, "15", true));
-
-        return statsContainer;
+        statsContainer.add(createStatRow("Letzter Download", stats.lastDownloadTimestamp(), false));
+        statsContainer.add(createStatRow("Turniere " + currentYear, stats.getThisYearsStatistic(), true));
+        statsContainer.add(createStatRow("Turniere " + (currentYear + 1), stats.getNextYearsStatistic(), true));
     }
 
     private HorizontalLayout createStatRow(String labelText, String valueText, boolean indented) {
-        com.vaadin.flow.component.html.Span label = new com.vaadin.flow.component.html.Span(labelText);
-        com.vaadin.flow.component.html.Span value = new com.vaadin.flow.component.html.Span(valueText);
-        value.getStyle().set("font-weight", "bold");
+        com.vaadin.flow.component.html.Span label = new Span(labelText);
+        com.vaadin.flow.component.html.Span value = new Span(valueText);
+        value.getStyle().set("font-weight", "normal");
 
         HorizontalLayout row = new HorizontalLayout(label, value);
         row.setWidthFull();
@@ -123,7 +127,6 @@ public class PlannedTournamentsInfoCard extends Div implements UseLogging, UseTi
 
         // Adjust padding to align with the text (1rem on the left)
         buttonLayout.getStyle().set("padding", "0 1rem 1rem 1rem");
-
         return buttonLayout;
     }
 
@@ -135,6 +138,12 @@ public class PlannedTournamentsInfoCard extends Div implements UseLogging, UseTi
         return button;
     }
 
+    private void refreshStatistics() {
+        var tournamentsList = importService.importFromSource();
+        var statResult = calcService.loadTournamentsStatistik(tournamentsList, LocalDateTime.now().toString());
+        updateStatisticsRows(statResult);
+    }
+
     private void handleDownload() {
         log().info("Download button clicked");
         // Implement download logic
@@ -142,6 +151,6 @@ public class PlannedTournamentsInfoCard extends Div implements UseLogging, UseTi
 
     private void handleUpdate() {
         log().info("Update button clicked");
-        // Implement update logic
+        refreshStatistics();
     }
 }

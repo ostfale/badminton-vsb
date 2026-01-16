@@ -1,6 +1,6 @@
 package de.ostfale.va.framework.out.filesystem;
 
-import de.ostfale.va.application.port.out.ForDirectoryConfiguration;
+import de.ostfale.va.application.port.out.ForDirectoryConfig;
 import de.ostfale.va.common.UseFileSystemHandling;
 import de.ostfale.va.common.UseLogging;
 import org.springframework.stereotype.Service;
@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class ApplicationDirectoryConfiguration implements ForDirectoryConfiguration, UseFileSystemHandling, UseLogging {
+public class ApplicationDirectoryConfiguration implements ForDirectoryConfig, UseFileSystemHandling, UseLogging {
 
     public static final String APP_NAME = ".badminton-vsb";
     public static final String TOURNAMENT_DIR_NAME = "tournament";

@@ -2,7 +2,7 @@ package de.ostfale.va.application.port.out;
 
 import java.util.List;
 
-public interface ForDirectoryConfiguration {
+public interface ForDirectoryConfig {
 
     String basePath();
 
