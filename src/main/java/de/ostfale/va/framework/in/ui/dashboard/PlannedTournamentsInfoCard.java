@@ -13,24 +13,26 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournamentsStatistics;
 import de.ostfale.va.application.port.in.ForCalculatingTournamentsStatisticsUC;
+import de.ostfale.va.application.port.in.ForDownloadingPlannedTournaments;
 import de.ostfale.va.application.port.in.ForImportingPlannedTournaments;
 import de.ostfale.va.common.UseLogging;
 import de.ostfale.va.common.UseTimeHandling;
-
-import java.time.LocalDateTime;
 
 public class PlannedTournamentsInfoCard extends Div implements UseLogging, UseTimeHandling {
 
     private final ForCalculatingTournamentsStatisticsUC calcService;
     private final ForImportingPlannedTournaments importService;
+    private final ForDownloadingPlannedTournaments downloadService;
     private final VerticalLayout statsContainer = new VerticalLayout();
 
     public PlannedTournamentsInfoCard(
             ForCalculatingTournamentsStatisticsUC statCalcService,
-            ForImportingPlannedTournaments importService) {
+            ForImportingPlannedTournaments importService,
+            ForDownloadingPlannedTournaments downloadService) {
         log().debug("PlannedTournamentsInfoCard :: Created");
         this.importService = importService;
         this.calcService = statCalcService;
+        this.downloadService = downloadService;
         setWidth("600px");
         setHeight("600px");
         initStatsContainer();
@@ -140,13 +142,15 @@ public class PlannedTournamentsInfoCard extends Div implements UseLogging, UseTi
 
     private void refreshStatistics() {
         var tournamentsList = importService.importFromSource();
-        var statResult = calcService.loadTournamentsStatistik(tournamentsList, LocalDateTime.now().toString());
+        var lastDownloadDateFromFile = importService.getLastDownloadDate();
+        var statResult = calcService.loadTournamentsStatistik(tournamentsList, lastDownloadDateFromFile);
         updateStatisticsRows(statResult);
     }
 
     private void handleDownload() {
         log().info("Download button clicked");
-        // Implement download logic
+        downloadService.performDownload();
+        refreshStatistics();
     }
 
     private void handleUpdate() {

@@ -2,7 +2,7 @@ package de.ostfale.va.application.port.out;
 
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournamentDownloadTask;
 
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ForPlannedTournamentsDownloadConfig {
@@ -21,11 +21,12 @@ public interface ForPlannedTournamentsDownloadConfig {
 
     List<PlannedTournamentDownloadTask> getDownloadTasks();
 
-    LocalTime getScheduledTime();
-
-    String prepareDownloadFileName(String year);
-
     String prepareDownloadTargetPath(String appDirName);
 
     String prepareDownloadUrl(String year);
+
+    String prepareDownloadFileName(String year, LocalDateTime downloadDateTime);
+
+    String readDateTimeFromFileName(String fileName);
 }
+

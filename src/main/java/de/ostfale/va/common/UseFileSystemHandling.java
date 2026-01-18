@@ -35,7 +35,16 @@ public interface UseFileSystemHandling extends UseLogging {
         return Paths.get(getApplicationHomeDir(), subDirName).toString();
     }
 
-    default List<InputStream> readAllFiles(String dirPath) {
+    default List<File> readAllFiles(String dirPath) {
+        var result = Stream.ofNullable(new File(dirPath).listFiles())
+                .flatMap(Stream::of)
+                .filter(File::isFile)
+                .toList();
+        log().debug("UseFileSystemHandling :: Read {} files from {}", result.size(), dirPath);
+        return result;
+    }
+
+    default List<InputStream> readAllFilesAsStreams(String dirPath) {
         log().debug("UseFileSystemHandling :: Reading all files in {}", dirPath);
         Path rootPath = Paths.get(dirPath);
 

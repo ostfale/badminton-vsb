@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface ForImportingPlannedTournaments {
     List<PlannedTournament> importFromSource();
+
+    String getLastDownloadDate();
 }

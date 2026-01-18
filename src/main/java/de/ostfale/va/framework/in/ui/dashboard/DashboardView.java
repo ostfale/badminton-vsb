@@ -2,9 +2,11 @@ package de.ostfale.va.framework.in.ui.dashboard;
 
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
-import de.ostfale.va.application.domain.service.ImportPlannedTournamentsService;
+import de.ostfale.va.application.domain.service.DownloadPlannedTournamentsService;
 import de.ostfale.va.application.port.in.ForCalculatingTournamentsStatisticsUC;
+import de.ostfale.va.application.port.in.ForDownloadingPlannedTournaments;
 import de.ostfale.va.application.port.in.ForImportingPlannedTournaments;
+import de.ostfale.va.application.port.out.ForDirectoryConfig;
 import de.ostfale.va.common.UseLogging;
 import de.ostfale.va.framework.in.ui.app.MainLayout;
 
@@ -12,12 +14,15 @@ import de.ostfale.va.framework.in.ui.app.MainLayout;
 public class DashboardView extends VerticalLayout implements UseLogging {
     public static final String PATH = "";
 
-    public DashboardView(ForCalculatingTournamentsStatisticsUC calcService, ForImportingPlannedTournaments importService) {
+    public DashboardView(
+            ForCalculatingTournamentsStatisticsUC calcService,
+            ForImportingPlannedTournaments importService,
+            ForDownloadingPlannedTournaments downloadService) {
         log().info("OverviewView :: constructor");
         setSizeFull();
         setPadding(true);
         setSpacing(true);
 
-        add(new PlannedTournamentsInfoCard(calcService, importService));
+        add(new PlannedTournamentsInfoCard(calcService, importService, downloadService));
     }
 }

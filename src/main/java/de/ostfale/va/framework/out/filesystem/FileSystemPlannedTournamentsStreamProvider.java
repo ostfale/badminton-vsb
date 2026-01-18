@@ -15,8 +15,18 @@ public class FileSystemPlannedTournamentsStreamProvider implements ForProvidingP
     public List<InputStream> getPlannedTournamentStreams() {
         var subDirName = ApplicationDirectoryConfiguration.TOURNAMENT_DIR_NAME;
         var result = getApplicationSubDir(subDirName);
-        var streamList = readAllFiles(result);
-        log().info("FileSystemPlannedTournamentsStreamProvider :: Found {} files in {}", streamList.size(), result);
+        var streamList = readAllFilesAsStreams(result);
+        log().debug("FileSystemPlannedTournamentsStreamProvider :: Found {} files in {}", streamList.size(), result);
         return streamList;
+    }
+
+    @Override
+    public String getDownloadDateInFileName() {
+        var subDirName = ApplicationDirectoryConfiguration.TOURNAMENT_DIR_NAME;
+        var result = getApplicationSubDir(subDirName);
+        var filesList = readAllFiles(result);
+        var firstFileName = filesList.getFirst().getName();
+        log().info("FileSystemPlannedTournamentsStreamProvider :: First file name is {}", firstFileName);
+        return firstFileName;
     }
 }

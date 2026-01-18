@@ -7,8 +7,10 @@ import com.vaadin.flow.theme.lumo.Lumo;
 import de.ostfale.va.common.UseLogging;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
+@EnableScheduling
 @StyleSheet(Lumo.STYLESHEET) // Use Aura.STYLESHEET to use Aura instead
 @StyleSheet(Lumo.UTILITY_STYLESHEET)
 @StyleSheet("./themes/custom-theme/styles.css")

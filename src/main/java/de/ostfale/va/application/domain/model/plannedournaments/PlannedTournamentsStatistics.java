@@ -14,4 +14,6 @@ public record PlannedTournamentsStatistics(
     public String getNextYearsStatistic() {
         return String.format("Total: %d", totalTournamentsNextYear);
     }
+
+
 }

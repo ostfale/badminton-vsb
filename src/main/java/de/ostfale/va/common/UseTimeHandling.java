@@ -1,6 +1,7 @@
 package de.ostfale.va.common;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.WeekFields;
 import java.util.Locale;
@@ -9,6 +10,7 @@ public interface UseTimeHandling {
 
     String TOURNAMENT_DATE_FILE_PATTERN = "yyyy-MM-dd";
     String TOURNAMENT_DATE_DISPLAY_PATTERN = "dd.MM.yyyy";
+    String TOURNAMENT_DATE_TIME_DISPLAY_PATTERN = "dd.MM.yyyy HH:mm";
 
     DateTimeFormatter FILE_FORMATTER = DateTimeFormatter.ofPattern(TOURNAMENT_DATE_FILE_PATTERN);
     DateTimeFormatter DISPLAY_FORMATTER = DateTimeFormatter.ofPattern(TOURNAMENT_DATE_DISPLAY_PATTERN);
@@ -40,5 +42,15 @@ public interface UseTimeHandling {
 
     default LocalDate parseDateToTournamentFormat(String date) {
         return LocalDate.parse(date, DISPLAY_FORMATTER);
+    }
+
+    default String getCurrentDateTimeFormatted() {
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(TOURNAMENT_DATE_TIME_DISPLAY_PATTERN);
+        return LocalDateTime.now().format(dateTimeFormatter);
+    }
+
+    default String getProvidedDateTimeFormatted(LocalDateTime providedDateTime) {
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(TOURNAMENT_DATE_TIME_DISPLAY_PATTERN);
+        return providedDateTime.format(dateTimeFormatter);
     }
 }
