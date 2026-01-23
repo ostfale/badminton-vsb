@@ -1,4 +1,4 @@
-@import '../../styles/custom-styles.css';
+@import "planned-tournaments-info-card.css";
 
 /* Medium drop shadow */
 vaadin-text-field::part(input-field) {
@@ -32,4 +32,30 @@ vaadin-text-field::part(clear-button) {
 
 vaadin-text-field::part(clear-button):hover {
     color: #333;
+}
+
+/* Grid header styling */
+.tournament-grid::part(header-cell) {
+    font-family: 'Arial', monospace; /* Example font change */
+    font-weight: bold;
+    font-size: 1.1em;
+    background-color: #f0f0f0; /* Optional background change */
+}
+
+.tournament-link-icon {
+    width: 16px;
+    height: 16px;
+    color: darkgreen;
+}
+
+#view-title {
+    font-family: 'Arial', monospace; /* Example font change */
+    font-weight: bold;
+    font-size: 1.5em;
+    color: #ae1732;
+}
+
+.centered-content {
+    margin: 0 auto;
+    max-width: 250px;
 }
