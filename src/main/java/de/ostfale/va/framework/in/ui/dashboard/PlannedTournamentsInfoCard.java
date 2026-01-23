@@ -14,20 +14,20 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournamentsStatistics;
 import de.ostfale.va.application.port.in.ForCalculatingTournamentsStatisticsUC;
 import de.ostfale.va.application.port.in.ForDownloadingPlannedTournaments;
-import de.ostfale.va.application.port.in.ForImportingPlannedTournaments;
+import de.ostfale.va.application.port.in.ForLoadingPlannedTournaments;
 import de.ostfale.va.common.UseLogging;
 import de.ostfale.va.common.UseTimeHandling;
 
 public class PlannedTournamentsInfoCard extends Div implements UseLogging, UseTimeHandling {
 
     private final ForCalculatingTournamentsStatisticsUC calcService;
-    private final ForImportingPlannedTournaments importService;
+    private final ForLoadingPlannedTournaments importService;
     private final ForDownloadingPlannedTournaments downloadService;
     private final VerticalLayout statsContainer = new VerticalLayout();
 
     public PlannedTournamentsInfoCard(
             ForCalculatingTournamentsStatisticsUC statCalcService,
-            ForImportingPlannedTournaments importService,
+            ForLoadingPlannedTournaments importService,
             ForDownloadingPlannedTournaments downloadService) {
         log().debug("PlannedTournamentsInfoCard :: Created");
         this.importService = importService;
@@ -141,7 +141,7 @@ public class PlannedTournamentsInfoCard extends Div implements UseLogging, UseTi
     }
 
     private void refreshStatistics() {
-        var tournamentsList = importService.importFromSource();
+        var tournamentsList = importService.loadFromSource();
         var lastDownloadDateFromFile = importService.getLastDownloadDate();
         var statResult = calcService.loadTournamentsStatistik(tournamentsList, lastDownloadDateFromFile);
         updateStatisticsRows(statResult);

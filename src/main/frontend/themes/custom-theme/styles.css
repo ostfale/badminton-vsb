@@ -1,0 +1,35 @@
+@import '../../styles/custom-styles.css';
+
+/* Medium drop shadow */
+vaadin-text-field::part(input-field) {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+
+/* For MultiSelectComboBox */
+vaadin-multi-select-combo-box::part(input-field) {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* For text fields */
+vaadin-text-field::part(label) {
+    font-weight: bold;
+    color: #ae1732;
+}
+
+/* For combo boxes */
+vaadin-combo-box::part(label),
+vaadin-multi-select-combo-box::part(label) {
+    font-weight: bold;
+    color: #ae1732;
+}
+
+
+/* Style the clear button */
+vaadin-text-field::part(clear-button) {
+    color: #999;
+}
+
+vaadin-text-field::part(clear-button):hover {
+    color: #333;
+}

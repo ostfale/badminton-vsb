@@ -1,22 +1,15 @@
 package de.ostfale.va.framework.in.web;
 
-import de.ostfale.va.application.port.in.ForImportingPlannedTournaments;
+import de.ostfale.va.application.port.in.ForLoadingPlannedTournaments;
 import de.ostfale.va.common.UseLogging;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Arrays;
 
 @RestController
 public class PlannedTournamentController implements UseLogging {
 
-    private final ForImportingPlannedTournaments importUC;
+    private final ForLoadingPlannedTournaments importUC;
 
-    public PlannedTournamentController(ForImportingPlannedTournaments importUC) {
+    public PlannedTournamentController(ForLoadingPlannedTournaments importUC) {
         this.importUC = importUC;
     }
 

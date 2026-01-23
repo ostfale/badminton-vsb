@@ -11,14 +11,11 @@ import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.select.SelectVariant;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import de.ostfale.va.common.UseLogging;
-import org.springframework.context.ApplicationEventPublisher;
-
 
 public class PaginationComponent extends HorizontalLayout implements UseLogging {
 
     private static final int DEFAULT_PAGE_SIZE = 25;
-
-    private final ApplicationEventPublisher eventPublisher;
+    private Runnable pageChangedListener;
 
     private final Span currentPageLabel;
     private final Button firstPageButton;
@@ -31,8 +28,7 @@ public class PaginationComponent extends HorizontalLayout implements UseLogging 
     private int pageSize = DEFAULT_PAGE_SIZE;
     private int currentPage = 1;
 
-    public PaginationComponent(ApplicationEventPublisher eventPublisher) {
-        this.eventPublisher = eventPublisher;
+    public PaginationComponent() {
         currentPageLabel = createCurrentPageLabel();
         firstPageButton = createFirstPageButton();
         lastPageButton = createLastPageButton();
@@ -70,6 +66,10 @@ public class PaginationComponent extends HorizontalLayout implements UseLogging 
 
     public void reset() {
         this.currentPage = 1;
+    }
+
+    public void setPageChangedListener(Runnable pageChangedListener) {
+        this.pageChangedListener = pageChangedListener;
     }
 
     private Component createPageSizeField() {
@@ -130,11 +130,8 @@ public class PaginationComponent extends HorizontalLayout implements UseLogging 
     }
 
     private void firePageChangedEvent() {
-        // Publish Spring event
-        if (eventPublisher != null) {
-            eventPublisher.publishEvent(
-                    new PageChangedEvent(this, currentPage, pageSize, calculateOffset())
-            );
+        if (pageChangedListener != null) {
+            pageChangedListener.run();
         }
     }
 

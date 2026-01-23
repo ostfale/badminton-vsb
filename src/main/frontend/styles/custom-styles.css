@@ -2,3 +2,22 @@
 
 /* Component styles */
 @import './planned-tournaments-info-card.css';
+
+
+.tournament-link-icon {
+    width: 16px;
+    height: 16px;
+    color: darkgreen;
+}
+
+#view-title {
+    font-family: 'Arial', monospace; /* Example font change */
+    font-weight: bold;
+    font-size: 1.5em;
+    color: #ae1732;
+}
+
+.centered-content {
+    margin: 0 auto;
+    max-width: 250px;
+}
