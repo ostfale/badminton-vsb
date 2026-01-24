@@ -41,6 +41,12 @@ public class FilterPlannedTournamentsService implements ForFilteringPlannedTourn
                 .count();
     }
 
+    @Override
+    public void reload() {
+        log().info("FilterPlannedTournamentsService :: Reloading tournaments from source");
+        this.tournaments = loadingService.loadFromSource();
+    }
+
     private boolean matchesFilter(PlannedTournament tournament, PlannedTournamentsFilter filter) {
         if (filter == null) {
             return true;

@@ -86,6 +86,11 @@ public class PlannedTournamentsView extends VerticalLayout implements UseLogging
             tListComponent.refresh(filter);
         });
 
+        filterComponent.addReloadTournamentsListener(event -> {
+            forFilteringPlannedTournaments.reload();
+            tListComponent.refresh(filterComponent.getCurrentFilter());
+        });
+
         return filterComponent;
     }
 

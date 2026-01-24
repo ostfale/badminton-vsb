@@ -48,6 +48,17 @@ public interface UseFileSystemHandling extends UseLogging {
         log().debug("UseFileSystemHandling :: Reading all files in {}", dirPath);
         Path rootPath = Paths.get(dirPath);
 
+        if (!Files.exists(rootPath)) {
+            log().warn("UseFileSystemHandling :: Directory does not exist: {}", dirPath);
+            try {
+                Files.createDirectories(rootPath);
+                log().info("UseFileSystemHandling :: Created directory: {}", dirPath);
+            } catch (IOException e) {
+                log().error("UseFileSystemHandling :: Failed to create directory: {}", dirPath, e);
+                return Collections.emptyList();
+            }
+        }
+
         try (Stream<Path> pathStream = Files.list(rootPath)) {
             return pathStream
                     .filter(Files::isRegularFile)

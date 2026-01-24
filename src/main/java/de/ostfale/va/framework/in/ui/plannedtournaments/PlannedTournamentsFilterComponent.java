@@ -32,6 +32,7 @@ public class PlannedTournamentsFilterComponent extends VerticalLayout implements
 
     private static final String FILTER_BUTTON_LABEL = "Filter";
     private static final String RESET_BUTTON_LABEL = "Reset";
+    private static final String RELOAD_BUTTON_LABEL = "Reload";
 
     private static final String FIELD_WIDTH = "15%";
 
@@ -43,6 +44,7 @@ public class PlannedTournamentsFilterComponent extends VerticalLayout implements
 
     private final Button applyButton = new Button(FILTER_BUTTON_LABEL);
     private final Button clearButton = new Button(RESET_BUTTON_LABEL);
+    private final Button reloadButton = new Button(RELOAD_BUTTON_LABEL);
 
     private final Checkbox remainingTournamentsCheckbox = new Checkbox(TOUR_VALID_NAME);
     private final Checkbox currentYearTournamentsCheckbox = new Checkbox(TOUR_CURRENT_YEAR_NAME);
@@ -119,15 +121,26 @@ public class PlannedTournamentsFilterComponent extends VerticalLayout implements
     private Component createButtonLayout() {
         applyButton.setIcon(VaadinIcon.FILTER.create());
         applyButton.addClickListener(e -> fireFilterChangeEvent());
+        applyButton.setTooltipText("Alle Filter anwenden");
 
         clearButton.setIcon(VaadinIcon.CLOSE_CIRCLE.create());
         clearButton.addClickListener(e -> clearFilters());
+        clearButton.setTooltipText("Alle Filter löschen");
 
-        HorizontalLayout buttons = new HorizontalLayout(applyButton, clearButton);
+        reloadButton.setIcon(VaadinIcon.ROTATE_RIGHT.create());
+        reloadButton.addClickListener(e -> reloadTournaments());
+        reloadButton.setTooltipText("Lade alle Turniere neu");
+
+        HorizontalLayout buttons = new HorizontalLayout(applyButton, clearButton, reloadButton);
         buttons.setSpacing(true);
         buttons.setJustifyContentMode(JustifyContentMode.END);
         buttons.getStyle().set("margin-top", "20px");
         return buttons;
+    }
+
+    private void reloadTournaments() {
+        log().debug("TournamentFilterPanel :: reloadTournaments");
+        fireEvent(new ReloadTournamentsEvent(this, false));
     }
 
     private void clearFilters() {
@@ -136,6 +149,10 @@ public class PlannedTournamentsFilterComponent extends VerticalLayout implements
         ageClassFilter.clear();
         tourCategoryFilter.clear();
         fireFilterChangeEvent();
+    }
+
+    public void addReloadTournamentsListener(ComponentEventListener<ReloadTournamentsEvent> listener) {
+        addListener(ReloadTournamentsEvent.class, listener);
     }
 
     private void fireFilterChangeEvent() {
@@ -152,6 +169,12 @@ public class PlannedTournamentsFilterComponent extends VerticalLayout implements
 
         public PlannedTournamentsFilter getFilter() {
             return filter;
+        }
+    }
+
+    public static class ReloadTournamentsEvent extends ComponentEvent<PlannedTournamentsFilterComponent> {
+        public ReloadTournamentsEvent(PlannedTournamentsFilterComponent source, boolean fromClient) {
+            super(source, fromClient);
         }
     }
 }

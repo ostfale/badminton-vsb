@@ -10,4 +10,6 @@ public interface ForFilteringPlannedTournaments {
     Stream<PlannedTournament> fetch(PlannedTournamentsFilter filter, int offset, int limit);
 
     int count(PlannedTournamentsFilter filter);
+
+    void reload();
 }

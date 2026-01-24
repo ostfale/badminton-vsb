@@ -35,12 +35,12 @@ public class ImportPlannedTournamentsService implements ForLoadingPlannedTournam
     @Override
     public String getLastDownloadDate() {
         var result = streamsProvider.getDownloadDateInFileName();
-        if (result != null) {
+        if (result != null && !result.isEmpty()) {
             var dateTimeFromFile = downloadConfig.readDateTimeFromFileName(result);
             log().debug("ImportPlannedTournamentsService :: Last download date from file: {}", dateTimeFromFile);
             return dateTimeFromFile;
         }
-        log().error("ImportPlannedTournamentsService :: Last download date not found");
+        log().warn("ImportPlannedTournamentsService :: Last download date not found");
         return "";
     }
 }
