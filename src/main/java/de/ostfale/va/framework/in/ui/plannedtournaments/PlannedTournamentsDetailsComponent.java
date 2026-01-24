@@ -10,6 +10,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournament;
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournamentAgeClassDisciplines;
+import de.ostfale.va.application.port.out.ForCalculatingTournamentRoutes;
 import de.ostfale.va.common.UseLogging;
 
 public class PlannedTournamentsDetailsComponent extends VerticalLayout implements UseLogging {
@@ -31,8 +32,17 @@ public class PlannedTournamentsDetailsComponent extends VerticalLayout implement
     private final Span tournamentOrganizationValue;
     private final Span tournamentCategoryValue;
     private final Div disciplinesContainer;
+    private final Span routeDistanceValue;
+    private final Span routeDurationValue;
+    private final ForCalculatingTournamentRoutes routingService;
 
-    public PlannedTournamentsDetailsComponent() {
+    public PlannedTournamentsDetailsComponent(ForCalculatingTournamentRoutes routingService) {
+        this.routingService = routingService;
+
+        // Initialize route fields
+        routeDistanceValue = new Span();
+        routeDurationValue = new Span();
+
         tournamentNameValue = new Span();
         tournamentLocationValue = new Span();
         tournamentCountryValue = new Span();
@@ -41,7 +51,6 @@ public class PlannedTournamentsDetailsComponent extends VerticalLayout implement
         tournamentOrganizationValue = new Span();
         tournamentCategoryValue = new Span();
         disciplinesContainer = new Div();
-        disciplinesContainer.getStyle().set("height", ROW_HEIGHT);
 
         // Row 1: Tournament Name (full width)
         Div nameRow = createDataRow(TOURNAMENT_NAME_LABEL, tournamentNameValue);
@@ -54,7 +63,9 @@ public class PlannedTournamentsDetailsComponent extends VerticalLayout implement
                 createTwoColumnRow(TOURNAMENT_DATE_LABEL, tournamentDateValue, TOURNAMENT_CLOSING_DATE_LABEL, tournamentClosingDateValue),
                 createTwoColumnRow(TOURNAMENT_ORGANIZATION_LABEL, tournamentOrganizationValue, TOURNAMENT_CATEGORY_LABEL, tournamentCategoryValue),
                 createDisciplinesHeader(),
-                disciplinesContainer
+                disciplinesContainer,
+                createRouteHeader(),
+                createTwoColumnRow("Entfernung", routeDistanceValue, "Fahrzeit", routeDurationValue)
         );
         setPadding(true);
         setSpacing(true);
@@ -70,6 +81,7 @@ public class PlannedTournamentsDetailsComponent extends VerticalLayout implement
             tournamentOrganizationValue.setText(tournament.organizer());
             tournamentCategoryValue.setText(tournament.tourCategory().getBaseCategory());
             updateDisciplines(tournament);
+            updateRoute(tournament);
         } else {
             clearFields();
         }
@@ -77,6 +89,36 @@ public class PlannedTournamentsDetailsComponent extends VerticalLayout implement
 
     public void addCloseListener(ComponentEventListener<CloseEvent> listener) {
         addListener(CloseEvent.class, listener);
+    }
+
+    private Div createRouteHeader() {
+        Div headerContainer = new Div();
+        headerContainer.getStyle().set("margin-top", "var(--lumo-space-m)");
+
+        Span header = new Span("Route von Hamburg");
+        header.getStyle()
+                .set("font-size", "var(--lumo-font-size-m)")
+                .set("font-weight", "bold")
+                .set("color", "var(--lumo-primary-text-color)");
+
+        headerContainer.add(header);
+        return headerContainer;
+    }
+
+    private void updateRoute(PlannedTournament tournament) {
+        routeDistanceValue.setText("Berechne...");
+        routeDurationValue.setText("Berechne...");
+
+        routingService.calculateRouteFromHamburg(tournament).ifPresentOrElse(
+                route -> {
+                    routeDistanceValue.setText(route.getFormattedDistance());
+                    routeDurationValue.setText(route.getFormattedDuration());
+                },
+                () -> {
+                    routeDistanceValue.setText("Nicht verfügbar");
+                    routeDurationValue.setText("Nicht verfügbar");
+                }
+        );
     }
 
     private HorizontalLayout createTwoColumnRow(String label1, Span value1, String label2, Span value2) {
@@ -123,6 +165,8 @@ public class PlannedTournamentsDetailsComponent extends VerticalLayout implement
         tournamentOrganizationValue.setText("");
         tournamentCategoryValue.setText("");
         disciplinesContainer.removeAll();
+        routeDistanceValue.setText("");
+        routeDurationValue.setText("");
     }
 
     private Div createDataRow(String label, Span valueSpan) {
