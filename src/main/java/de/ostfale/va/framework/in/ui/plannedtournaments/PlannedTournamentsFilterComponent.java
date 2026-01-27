@@ -1,5 +1,6 @@
 package de.ostfale.va.framework.in.ui.plannedtournaments;
 
+import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.ComponentEvent;
 import com.vaadin.flow.component.ComponentEventListener;
@@ -119,23 +120,21 @@ public class PlannedTournamentsFilterComponent extends VerticalLayout implements
     }
 
     private Component createButtonLayout() {
-        applyButton.setIcon(VaadinIcon.FILTER.create());
-        applyButton.addClickListener(e -> fireFilterChangeEvent());
-        applyButton.setTooltipText("Alle Filter anwenden");
-
-        clearButton.setIcon(VaadinIcon.CLOSE_CIRCLE.create());
-        clearButton.addClickListener(e -> clearFilters());
-        clearButton.setTooltipText("Alle Filter löschen");
-
-        reloadButton.setIcon(VaadinIcon.ROTATE_RIGHT.create());
-        reloadButton.addClickListener(e -> reloadTournaments());
-        reloadButton.setTooltipText("Lade alle Turniere neu");
+        configureButton(applyButton, VaadinIcon.FILTER, "Alle Filter anwenden", e -> fireFilterChangeEvent());
+        configureButton(clearButton, VaadinIcon.CLOSE_CIRCLE, "Alle Filter löschen", e -> clearFilters());
+        configureButton(reloadButton, VaadinIcon.ROTATE_RIGHT, "Lade alle Turniere neu", e -> reloadTournaments());
 
         HorizontalLayout buttons = new HorizontalLayout(applyButton, clearButton, reloadButton);
         buttons.setSpacing(true);
         buttons.setJustifyContentMode(JustifyContentMode.END);
         buttons.getStyle().set("margin-top", "20px");
         return buttons;
+    }
+
+    private void configureButton(Button button, VaadinIcon icon, String tooltip, ComponentEventListener<ClickEvent<Button>> clickListener) {
+        button.setIcon(icon.create());
+        button.addClickListener(clickListener);
+        button.setTooltipText(tooltip);
     }
 
     private void reloadTournaments() {
