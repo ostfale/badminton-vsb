@@ -8,10 +8,9 @@ import com.vaadin.flow.router.Route;
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournament;
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournamentsFilter;
 import de.ostfale.va.application.port.in.ForFilteringPlannedTournaments;
-import de.ostfale.va.application.port.out.ForCalculatingTournamentRoutes;
+import de.ostfale.va.application.port.out.ForRoutingAndGeocoding;
 import de.ostfale.va.common.UseLogging;
 import de.ostfale.va.framework.in.ui.app.MainLayout;
-import org.springframework.context.event.EventListener;
 
 import java.util.stream.Stream;
 
@@ -20,12 +19,12 @@ public class PlannedTournamentsView extends VerticalLayout implements UseLogging
 
     public static final String PATH = "planned-tournaments-view";
     private final ForFilteringPlannedTournaments forFilteringPlannedTournaments;
-    private final ForCalculatingTournamentRoutes routingService;
+    private final ForRoutingAndGeocoding routingService;
     private final DataProvider<PlannedTournament, PlannedTournamentsFilter> pagingDataProvider;
     private PaginationComponent paginationComponent = new PaginationComponent();
 
 
-    public PlannedTournamentsView(ForFilteringPlannedTournaments filter,ForCalculatingTournamentRoutes routingService) {
+    public PlannedTournamentsView(ForFilteringPlannedTournaments filter, ForRoutingAndGeocoding routingService) {
         this.forFilteringPlannedTournaments = filter;
         this.routingService = routingService;
         this.pagingDataProvider = DataProvider.fromFilteringCallbacks(this::fetchTournaments, this::countTournaments);

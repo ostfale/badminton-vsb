@@ -2,7 +2,6 @@ package de.ostfale.va.framework.out.routing;
 
 import de.ostfale.va.application.domain.model.routing.Coordinates;
 import de.ostfale.va.application.domain.model.routing.RouteInfo;
-import de.ostfale.va.application.port.out.ForCalculatingRoutes;
 import de.ostfale.va.common.UseLogging;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.JsonNode;
@@ -18,7 +17,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Component
-public class OsrmRoutingAdapter implements ForCalculatingRoutes, UseLogging {
+public class OsrmRoutingAdapter implements UseLogging {
 
     private static final String OSRM_URL = "https://router.project-osrm.org/route/v1/driving";
 
@@ -32,7 +31,6 @@ public class OsrmRoutingAdapter implements ForCalculatingRoutes, UseLogging {
         this.objectMapper = new ObjectMapper();
     }
 
-    @Override
     public Optional<RouteInfo> calculateRoute(Coordinates origin, Coordinates destination) {
         try {
             String url = buildOsrmUrl(origin, destination);

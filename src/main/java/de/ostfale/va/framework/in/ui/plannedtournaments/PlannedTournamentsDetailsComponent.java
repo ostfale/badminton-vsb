@@ -10,7 +10,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournament;
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournamentAgeClassDisciplines;
-import de.ostfale.va.application.port.out.ForCalculatingTournamentRoutes;
+import de.ostfale.va.application.port.out.ForRoutingAndGeocoding;
 import de.ostfale.va.common.UseLogging;
 
 public class PlannedTournamentsDetailsComponent extends VerticalLayout implements UseLogging {
@@ -34,9 +34,9 @@ public class PlannedTournamentsDetailsComponent extends VerticalLayout implement
     private final Div disciplinesContainer;
     private final Span routeDistanceValue;
     private final Span routeDurationValue;
-    private final ForCalculatingTournamentRoutes routingService;
+    private final ForRoutingAndGeocoding routingService;
 
-    public PlannedTournamentsDetailsComponent(ForCalculatingTournamentRoutes routingService) {
+    public PlannedTournamentsDetailsComponent(ForRoutingAndGeocoding routingService) {
         this.routingService = routingService;
 
         // Initialize route fields

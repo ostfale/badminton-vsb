@@ -3,24 +3,18 @@ package de.ostfale.va.application.domain.service;
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournament;
 import de.ostfale.va.application.domain.model.routing.Coordinates;
 import de.ostfale.va.application.domain.model.routing.RouteInfo;
-import de.ostfale.va.application.port.out.ForCalculatingRoutes;
-import de.ostfale.va.application.port.out.ForCalculatingTournamentRoutes;
-import de.ostfale.va.application.port.out.ForGeoCodingLocations;
+import de.ostfale.va.application.port.out.ForRoutingAndGeocoding;
 import de.ostfale.va.common.UseLogging;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
-@Service
-public class CalculateTournamentRoutesService implements ForCalculatingTournamentRoutes, UseLogging {
+public class CalculateTournamentRoutesService implements ForRoutingAndGeocoding, UseLogging {
 
-    private final ForGeoCodingLocations geocodingAdapter;
-    private final ForCalculatingRoutes routingAdapter;
+    private final ForRoutingAndGeocoding routingAndGeocodingAdapter;
 
-    public CalculateTournamentRoutesService(ForGeoCodingLocations geocodingAdapter,
-                                            ForCalculatingRoutes routingAdapter) {
-        this.geocodingAdapter = geocodingAdapter;
-        this.routingAdapter = routingAdapter;
+    public CalculateTournamentRoutesService(ForRoutingAndGeocoding routingAndGeocodingAdapter) {
+        this.routingAndGeocodingAdapter = routingAndGeocodingAdapter;
     }
 
     @Override
@@ -34,7 +28,7 @@ public class CalculateTournamentRoutesService implements ForCalculatingTournamen
             return Optional.empty();
         }
 
-        Optional<RouteInfo> route = routingAdapter.calculateRoute(
+        Optional<RouteInfo> route = routingAndGeocodingAdapter.calculateRoute(
                 HAMBURG_COORDINATES,
                 destinationCoords.get()
         );
@@ -51,17 +45,48 @@ public class CalculateTournamentRoutesService implements ForCalculatingTournamen
     }
 
     @Override
+    public Optional<Coordinates> geocode(String location) {
+        return routingAndGeocodingAdapter.geocode(location);
+    }
+
+    @Override
+    public Optional<Coordinates> geocodeCity(String cityName, String countryCode) {
+        return routingAndGeocodingAdapter.geocodeCity(cityName, countryCode);
+    }
+
+    @Override
+    public Optional<Coordinates> geocodeByPostalCode(String postalCode, String countryCode) {
+        return routingAndGeocodingAdapter.geocodeByPostalCode(postalCode, countryCode);
+    }
+
+    @Override
+    public Optional<RouteInfo> calculateRoute(Coordinates origin, Coordinates destination) {
+        return routingAndGeocodingAdapter.calculateRoute(origin, destination);
+    }
+
+    @Override
     public Optional<Coordinates> getTournamentCoordinates(PlannedTournament tournament) {
-        // Try with city name and country code first (more precise)
-        Optional<Coordinates> coords = geocodingAdapter.geocodeCity(
+        // Try with postal code and country code first (most precise)
+        if (tournament.postalCode() != null && !tournament.postalCode().isBlank()) {
+            Optional<Coordinates> coords = routingAndGeocodingAdapter.geocodeByPostalCode(
+                    tournament.postalCode(),
+                    tournament.countryCode()
+            );
+            if (coords.isPresent()) {
+                return coords;
+            }
+        }
+
+        // Fallback to city name and country code
+        Optional<Coordinates> coords = routingAndGeocodingAdapter.geocodeCity(
                 tournament.location(),
                 tournament.countryCode()
         );
 
-        // Fallback to general geocoding with full location string
+        // Final fallback to general geocoding with full location string
         if (coords.isEmpty()) {
             String fullLocation = tournament.location() + ", " + tournament.countryCode();
-            coords = geocodingAdapter.geocode(fullLocation);
+            coords = routingAndGeocodingAdapter.geocode(fullLocation);
         }
 
         return coords;

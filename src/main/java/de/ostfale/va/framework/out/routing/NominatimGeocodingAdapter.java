@@ -1,7 +1,6 @@
 package de.ostfale.va.framework.out.routing;
 
 import de.ostfale.va.application.domain.model.routing.Coordinates;
-import de.ostfale.va.application.port.out.ForGeoCodingLocations;
 import de.ostfale.va.common.UseLogging;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.JsonNode;
@@ -17,7 +16,7 @@ import java.time.Duration;
 import java.util.Optional;
 
 @Component
-public class NominatimGeocodingAdapter implements ForGeoCodingLocations, UseLogging {
+public class NominatimGeocodingAdapter implements UseLogging {
 
     private static final String NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
     private static final String USER_AGENT = "BadmintonVSB/1.0";
@@ -32,7 +31,6 @@ public class NominatimGeocodingAdapter implements ForGeoCodingLocations, UseLogg
         this.objectMapper = new ObjectMapper();
     }
 
-    @Override
     public Optional<Coordinates> geocode(String location) {
         try {
             String encodedLocation = URLEncoder.encode(location, StandardCharsets.UTF_8);
@@ -60,10 +58,38 @@ public class NominatimGeocodingAdapter implements ForGeoCodingLocations, UseLogg
         }
     }
 
-    @Override
     public Optional<Coordinates> geocodeCity(String cityName, String countryCode) {
         String query = cityName + ", " + countryCode;
         return geocode(query);
+    }
+
+    public Optional<Coordinates> geocodeByPostalCode(String postalCode, String countryCode) {
+        try {
+            String encodedPostalCode = URLEncoder.encode(postalCode, StandardCharsets.UTF_8);
+            String encodedCountryCode = URLEncoder.encode(countryCode, StandardCharsets.UTF_8);
+            String url = String.format("%s?postalcode=%s&country=%s&format=json&limit=1",
+                    NOMINATIM_URL, encodedPostalCode, encodedCountryCode);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .header("User-Agent", USER_AGENT)
+                    .timeout(Duration.ofSeconds(5))
+                    .GET()
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() != 200) {
+                log().warn("Geocoding request failed with status: {}", response.statusCode());
+                return Optional.empty();
+            }
+
+            return parseGeocodingResponse(response.body());
+
+        } catch (Exception e) {
+            log().error("Error geocoding postal code: {} in country: {}", postalCode, countryCode, e);
+            return Optional.empty();
+        }
     }
 
     private Optional<Coordinates> parseGeocodingResponse(String jsonResponse) throws Exception {
