@@ -69,6 +69,8 @@ public class PlannedTournamentsDetailsComponent extends VerticalLayout implement
         );
         setPadding(true);
         setSpacing(true);
+        setSizeFull();
+        getStyle().set("overflow-y", "auto");
     }
 
     public void setTournament(PlannedTournament tournament) {

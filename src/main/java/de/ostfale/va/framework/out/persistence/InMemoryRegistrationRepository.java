@@ -5,6 +5,7 @@ import de.ostfale.va.application.port.out.ForRetrievingRegistrations;
 import de.ostfale.va.application.port.out.ForStoringRegistrations;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -15,6 +16,9 @@ public class InMemoryRegistrationRepository implements ForStoringRegistrations, 
 
     @Override
     public void store(RegistrationRecord record) {
+        if (isThereAnyRegistrationWithinTheLastMinute(record)) {
+            return;
+        }
         registrations.add(record);
     }
 
@@ -26,5 +30,14 @@ public class InMemoryRegistrationRepository implements ForStoringRegistrations, 
     @Override
     public long count() {
         return registrations.size();
+    }
+
+    private boolean isThereAnyRegistrationWithinTheLastMinute(RegistrationRecord registration) {
+        var lastMinute = System.currentTimeMillis() - 60_000;
+        return registrations.stream().
+                anyMatch(r -> {
+                    var diff = Duration.between(r.timestamp(), registration.timestamp()).getSeconds();
+                    return Math.abs(diff) < 60;
+                });
     }
 }
