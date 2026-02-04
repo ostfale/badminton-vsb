@@ -2,8 +2,6 @@ spring:
   application:
     name: badminton-vsb
 
-
-
 server:
   port: ${PORT:8181}
 
@@ -31,3 +29,4 @@ management:
   endpoint:
     health:
       show-details: always
+

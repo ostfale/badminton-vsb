@@ -37,7 +37,7 @@ class ApplicationDirectoryConfigurationTest {
     @DisplayName("structure should return all required directories")
     void structure_shouldReturnAllRequiredDirectories() {
         // given
-        var expectedNumberOfDirectories = 11;
+        var expectedNumberOfDirectories = 5;
 
         // when
         List<ForDirectoryConfig.DirectoryEntry> structure = config.structure();
@@ -87,28 +87,6 @@ class ApplicationDirectoryConfigurationTest {
     }
 
     @Test
-    @DisplayName("structure should contain nested directories")
-    void structure_shouldContainNestedDirectories() {
-        // given
-        var searchNameDashboard = "dashboard";
-        var searchNamePlayer = "favPlayerMatches";
-        var expectedEntryPath = "data/favPlayer/matches";
-        var expectedDashboardPath = "data/dashboard";
-
-        // when
-        List<ForDirectoryConfig.DirectoryEntry> structure = config.structure();
-
-        // then
-        ForDirectoryConfig.DirectoryEntry dashboardEntry = findEntryByName(structure, searchNameDashboard);
-        assertNotNull(dashboardEntry);
-        assertEquals(expectedDashboardPath, dashboardEntry.path());
-
-        ForDirectoryConfig.DirectoryEntry favPlayerMatchesEntry = findEntryByName(structure, searchNamePlayer);
-        assertNotNull(favPlayerMatchesEntry);
-        assertEquals(expectedEntryPath, favPlayerMatchesEntry.path());
-    }
-
-    @Test
     @DisplayName("structure should contain all entries with createIfMissing=true")
     void structure_allEntriesShouldHaveCreateIfMissingTrue() {
         // when
@@ -138,13 +116,7 @@ class ApplicationDirectoryConfigurationTest {
         // then
         assertAll(
                 () -> assertTrue(names.contains("config")),
-                () -> assertTrue(names.contains("db")),
                 () -> assertTrue(names.contains("data")),
-                () -> assertTrue(names.contains("dashboard")),
-                () -> assertTrue(names.contains("favPlayer")),
-                () -> assertTrue(names.contains("favPlayerMatches")),
-                () -> assertTrue(names.contains("favTournament")),
-                () -> assertTrue(names.contains("favTournamentFavorites")),
                 () -> assertTrue(names.contains("logs")),
                 () -> assertTrue(names.contains("tournament")),
                 () -> assertTrue(names.contains("ranking"))

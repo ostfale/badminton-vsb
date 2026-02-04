@@ -71,7 +71,28 @@
         </dependency>
 
 
-        <!-- logging -->
+        <!-- libs -->
+        <!-- Source: https://mvnrepository.com/artifact/org.eclipse.store/integrations-spring-boot3 -->
+        <dependency>
+            <groupId>org.eclipse.store</groupId>
+            <artifactId>integrations-spring-boot3</artifactId>
+            <version>3.1.0</version>
+            <scope>compile</scope>
+        </dependency>
+        <!-- Source: https://mvnrepository.com/artifact/org.eclipse.store/storage-restservice-springboot -->
+        <dependency>
+            <groupId>org.eclipse.store</groupId>
+            <artifactId>storage-restservice-springboot</artifactId>
+            <version>3.1.0</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.store</groupId>
+            <artifactId>storage-restservice</artifactId>
+            <version>3.1.0</version>
+        </dependency>
+
+
         <dependency>
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>
@@ -105,6 +126,14 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <jvmArguments>
+                        --add-exports java.base/jdk.internal.misc=ALL-UNNAMED
+                        --add-opens java.base/java.lang=ALL-UNNAMED
+                        --add-opens java.base/java.util=ALL-UNNAMED
+                        --add-opens java.base/java.time=ALL-UNNAMED
+                    </jvmArguments>
+                </configuration>
                 <executions>
                     <execution>
                         <goals>

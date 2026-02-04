@@ -5,7 +5,6 @@ import de.ostfale.va.application.domain.model.routing.Coordinates;
 import de.ostfale.va.application.domain.model.routing.RouteInfo;
 import de.ostfale.va.application.port.out.ForRoutingAndGeocoding;
 import de.ostfale.va.common.UseLogging;
-import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 

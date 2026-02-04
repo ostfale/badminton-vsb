@@ -24,13 +24,7 @@ public class ApplicationDirectoryConfiguration implements ForDirectoryConfig, Us
     public List<DirectoryEntry> structure() {
         return List.of(
                 createDirectoryEntry("config", "config"),
-                createDirectoryEntry("db", "db"),
                 createDirectoryEntry("data", "data"),
-                createDirectoryEntry("dashboard", "data/dashboard"),
-                createDirectoryEntry("favPlayer", "data/favPlayer"),
-                createDirectoryEntry("favPlayerMatches", "data/favPlayer/matches"),
-                createDirectoryEntry("favTournament", "data/favTournaments"),
-                createDirectoryEntry("favTournamentFavorites", "data/favTournaments/favorites"),
                 createDirectoryEntry("logs", "logs"),
                 createDirectoryEntry(TOURNAMENT_DIR_NAME, "tournament"),
                 createDirectoryEntry("ranking", "ranking")
