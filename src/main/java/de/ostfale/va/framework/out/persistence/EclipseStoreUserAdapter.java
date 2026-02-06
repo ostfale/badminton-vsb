@@ -23,20 +23,34 @@ public class EclipseStoreUserAdapter implements ForStoringUserData, UseLogging {
     }
 
     @Override
-    public void updatePlannedTournamentFavorites(UserIdendityVO identity, PlannedTournamentKey key) {
-
+    public void addFavorite(UserIdendityVO identity, PlannedTournamentKey key) {
         Map<UserIdendityVO, UserData> map = dataRoot.getUsersMap();
         UserData data = map.get(identity);
+
         if (data == null) {
             data = new UserData(identity);
             data.getFavoriteKeys().add(key);
             map.put(identity, data);
             storageManager.store(map);
-            log().debug("EclipseStoreUserAdapter :: Created new UserData for user {}", identity);
+            log().debug("EclipseStoreUserAdapter :: Created new UserData for user {} with favorite", identity);
         } else {
             data.getFavoriteKeys().add(key);
-            storageManager.store(data);
-            log().debug("EclipseStoreUserAdapter :: Updated UserData for user {}", identity);
+            storageManager.store(data.getFavoriteKeys());
+            log().debug("EclipseStoreUserAdapter :: Added favorite for user {}", identity);
+        }
+    }
+
+    @Override
+    public void removeFavorite(UserIdendityVO identity, PlannedTournamentKey key) {
+        Map<UserIdendityVO, UserData> map = dataRoot.getUsersMap();
+        UserData data = map.get(identity);
+
+        if (data != null) {
+            data.getFavoriteKeys().remove(key);
+            storageManager.store(data.getFavoriteKeys());
+            log().debug("EclipseStoreUserAdapter :: Removed favorite for user {}", identity);
+        } else {
+            log().warn("EclipseStoreUserAdapter :: Cannot remove favorite, user not found: {}", identity);
         }
     }
 

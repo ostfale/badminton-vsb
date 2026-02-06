@@ -6,7 +6,9 @@ import de.ostfale.va.application.domain.model.plannedournaments.vo.UserIdendityV
 
 public interface ForStoringUserData {
 
-    void updatePlannedTournamentFavorites(UserIdendityVO userIdendityVO, PlannedTournamentKey plannedTournamentKey);
+    void addFavorite(UserIdendityVO userIdendityVO, PlannedTournamentKey plannedTournamentKey);
+
+    void removeFavorite(UserIdendityVO userIdendityVO, PlannedTournamentKey plannedTournamentKey);
 
     UserData findUserByEmail(String email);
 

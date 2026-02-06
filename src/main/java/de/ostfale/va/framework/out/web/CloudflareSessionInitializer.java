@@ -1,7 +1,6 @@
 package de.ostfale.va.framework.out.web;
 
 import com.vaadin.flow.server.*;
-import de.ostfale.va.application.domain.model.UserContext;
 import de.ostfale.va.application.domain.model.UserData;
 import de.ostfale.va.application.domain.model.plannedournaments.vo.UserIdendityVO;
 import de.ostfale.va.application.port.in.ForTrackingUserRegistrations;
@@ -12,12 +11,14 @@ import org.springframework.stereotype.Component;
 public class CloudflareSessionInitializer implements VaadinServiceInitListener, UseLogging {
 
     private static final String CLOUDFLARE_EMAIL_HEADER = "Cf-Access-Authenticated-User-Email";
-    private final UserContext userContext;
     private final ForTrackingUserRegistrations trackRegistrations;
 
-    public CloudflareSessionInitializer(UserContext userContext, ForTrackingUserRegistrations trackRegistrationService) {
-        this.userContext = userContext;
+    private final SessionUserContextProviderAdapter sessionUserContextProviderAdapter;
+
+    public CloudflareSessionInitializer(ForTrackingUserRegistrations trackRegistrationService,
+                                        SessionUserContextProviderAdapter sessionUserContextProviderAdapter) {
         this.trackRegistrations = trackRegistrationService;
+        this.sessionUserContextProviderAdapter = sessionUserContextProviderAdapter;
     }
 
     @Override
@@ -41,7 +42,7 @@ public class CloudflareSessionInitializer implements VaadinServiceInitListener, 
 
             var userData = new UserData(UserIdendityVO.fromEmail(email));
             log().info("CloudflareSessionInitializer :: Current user:: {}", userData);
-            userContext.setCurrentUser(userData);
+            sessionUserContextProviderAdapter.setCurrentUserData(userData);
             trackRegistrations.trackRegistration(email);
         });
     }

@@ -17,11 +17,12 @@ import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.data.provider.Query;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.function.ValueProvider;
-import de.ostfale.va.application.domain.model.UserContext;
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournament;
+import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournamentKey;
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournamentsFilter;
 import de.ostfale.va.application.domain.model.plannedournaments.vo.UserIdendityVO;
-import de.ostfale.va.application.port.out.ForStoringUserData;
+import de.ostfale.va.application.port.in.ForManagingFavorites;
+import de.ostfale.va.application.port.out.ForGettingUserConfiguration;
 import de.ostfale.va.common.UseLogging;
 
 import java.util.function.Function;
@@ -31,15 +32,18 @@ public class PlannedTournamentsListCompoment extends VerticalLayout implements U
     private final Grid<PlannedTournament> grid;
     private final PaginationComponent paginationComponent;
     private final DataProvider<PlannedTournament, PlannedTournamentsFilter> dataProvider;
-    private final ForStoringUserData forStoringUserData;
-    private final UserContext userContext;
+    private final ForManagingFavorites forManagingFavorites;
+    private final ForGettingUserConfiguration userConfig;
 
-    public PlannedTournamentsListCompoment(DataProvider<PlannedTournament, PlannedTournamentsFilter> dataProvider, PaginationComponent paginationComponent, ForStoringUserData forStoringUserData, UserContext userContext) {
+    public PlannedTournamentsListCompoment(DataProvider<PlannedTournament, PlannedTournamentsFilter> dataProvider,
+                                           PaginationComponent paginationComponent,
+                                           ForManagingFavorites forManagingFavorites,
+                                           ForGettingUserConfiguration userConfig) {
         this.grid = new Grid<>();
         this.paginationComponent = paginationComponent;
         this.dataProvider = dataProvider;
-        this.forStoringUserData = forStoringUserData;
-        this.userContext = userContext;
+        this.forManagingFavorites = forManagingFavorites;
+        this.userConfig = userConfig;
 
         setSizeFull();
         setPadding(false);
@@ -80,17 +84,12 @@ public class PlannedTournamentsListCompoment extends VerticalLayout implements U
                             @SuppressWarnings("unchecked")
                             var typedQuery = (Query<PlannedTournament, PlannedTournamentsFilter>) (Object) query;
                             var stream = this.dataProvider.fetch(typedQuery);
-                            return stream.map(tournament -> {
-                                var synced = syncFavoriteState(tournament);
-                              //  log().debug("Wrapped provider: {} -> isFavorite={}", tournament.tournamentName(), synced.isFavorite());
-                                return synced;
-                            });
+                            var currentUser = userConfig.getCurrentUser();
+                            var identity = UserIdendityVO.fromEmail(currentUser.getEmail());
+                            var favoriteKeys = forManagingFavorites.getFavorites(identity);
+                            return stream.map(tournament -> forManagingFavorites.syncFavoriteState(tournament, favoriteKeys));
                         },
-                        query -> {
-                            @SuppressWarnings("unchecked")
-                            var typedQuery = (Query<PlannedTournament, PlannedTournamentsFilter>) (Object) query;
-                            return this.dataProvider.size(typedQuery);
-                        }
+                        this.dataProvider::size
                 );
 
         var configurableDataProvider = wrappedDataProvider.withConfigurableFilter();
@@ -163,40 +162,17 @@ public class PlannedTournamentsListCompoment extends VerticalLayout implements U
         return layout;
     }
 
-    private PlannedTournament syncFavoriteState(PlannedTournament tournament) {
-        var user = userContext.getCurrentUser();
-        if (user == null) {
-            log().debug("No user in context, tournament {} will not have favorite state", tournament.tournamentName());
-            return tournament;
-        }
-
-        var key = tournament.createKey();
-        var isFavorite = user.isFavorite(key);
-
-        if (tournament.isFavorite() != isFavorite) {
-            log().debug("Syncing favorite state for tournament {}: {}", tournament.tournamentName(), isFavorite);
-            return tournament.setFavorite(isFavorite);
-        }
-        return tournament;
-    }
-
     private void toggleFavorite(PlannedTournament tournament) {
-        var user = userContext.getCurrentUser();
+        var user = userConfig.getCurrentUser();
         if (user == null) {
             log().warn("Cannot toggle favorite - no user in context");
             return;
         }
 
+        var identity = UserIdendityVO.fromEmail(user.getEmail());
         var key = tournament.createKey();
 
-        if (user.isFavorite(key)) {
-            user.removeFavorite(key);
-            log().debug("PlannedTournamentsListCompoment :: Removed tournament {} from favorites", tournament.tournamentName());
-        } else {
-            user.addFavorite(key);
-            log().debug("PlannedTournamentsListCompoment :: Added tournament {} to favorites", tournament.tournamentName());
-        }
-
-        forStoringUserData.updatePlannedTournamentFavorites(UserIdendityVO.fromEmail(user.getEmail()),key);
+        forManagingFavorites.toggleFavorite(identity, key);
+        log().debug("PlannedTournamentsListCompoment :: Toggled favorite for tournament {}", tournament.tournamentName());
     }
 }
