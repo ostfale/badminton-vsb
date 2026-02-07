@@ -20,12 +20,13 @@ class PlannedTournamentsFilterTest {
         String name = "Summer Championship";
         boolean validOnly = true;
         boolean thisYear = true;
+        boolean onlyFavorites = false;
         Set<TournamentAgeClassesVO> ageClasses = Set.of(TournamentAgeClassesVO.U19, TournamentAgeClassesVO.U15);
         Set<PlannedTournamentCategoriesVO> categories = Set.of(PlannedTournamentCategoriesVO.A);
 
         // when
         PlannedTournamentsFilter filter = new PlannedTournamentsFilter(
-                location, name, validOnly, thisYear, ageClasses, categories
+                location, name, validOnly, thisYear, onlyFavorites, ageClasses, categories
         );
 
         // then
@@ -47,12 +48,13 @@ class PlannedTournamentsFilterTest {
         String name = null;
         boolean validOnly = false;
         boolean thisYear = false;
+        boolean onlyFavorites = false;
         Set<TournamentAgeClassesVO> ageClasses = Set.of(TournamentAgeClassesVO.U13);
         Set<PlannedTournamentCategoriesVO> categories = Set.of(PlannedTournamentCategoriesVO.C);
 
         // when
         PlannedTournamentsFilter filter = new PlannedTournamentsFilter(
-                location, name, validOnly, thisYear, ageClasses, categories
+                location, name, validOnly, thisYear, onlyFavorites, ageClasses, categories
         );
 
         // then
@@ -75,7 +77,7 @@ class PlannedTournamentsFilterTest {
 
         // when
         PlannedTournamentsFilter filter = new PlannedTournamentsFilter(
-                "Munich", "Winter Cup", true, false, ageClasses, categories
+                "Munich", "Winter Cup", true, false, false, ageClasses, categories
         );
 
         // then
@@ -95,7 +97,7 @@ class PlannedTournamentsFilterTest {
 
         // when
         PlannedTournamentsFilter filter = new PlannedTournamentsFilter(
-                "Hamburg", "Spring Open", false, true, ageClasses, categories
+                "Hamburg", "Spring Open", false, true, false, ageClasses, categories
         );
 
         // then

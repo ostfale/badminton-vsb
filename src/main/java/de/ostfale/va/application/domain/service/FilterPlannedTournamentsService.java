@@ -4,8 +4,11 @@ import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournamen
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournamentsFilter;
 import de.ostfale.va.application.domain.model.plannedournaments.vo.PlannedTournamentCategoriesVO;
 import de.ostfale.va.application.domain.model.plannedournaments.vo.TournamentAgeClassesVO;
+import de.ostfale.va.application.domain.model.plannedournaments.vo.UserIdendityVO;
 import de.ostfale.va.application.port.in.ForFilteringPlannedTournaments;
 import de.ostfale.va.application.port.in.ForLoadingPlannedTournaments;
+import de.ostfale.va.application.port.in.ForManagingFavorites;
+import de.ostfale.va.application.port.out.ForGettingUserConfiguration;
 import de.ostfale.va.common.UseLogging;
 import de.ostfale.va.common.UseTimeHandling;
 import org.springframework.stereotype.Service;
@@ -13,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
@@ -20,15 +24,26 @@ public class FilterPlannedTournamentsService implements ForFilteringPlannedTourn
 
     private List<PlannedTournament> tournaments;
     private final ForLoadingPlannedTournaments loadingService;
+    private final ForManagingFavorites forManagingFavorites;
+    private final ForGettingUserConfiguration userConfig;
 
-    public FilterPlannedTournamentsService(ForLoadingPlannedTournaments loadingService) {
+    public FilterPlannedTournamentsService(ForLoadingPlannedTournaments loadingService,
+                                          ForManagingFavorites forManagingFavorites,
+                                          ForGettingUserConfiguration userConfig) {
         this.loadingService = loadingService;
+        this.forManagingFavorites = forManagingFavorites;
+        this.userConfig = userConfig;
         this.tournaments = loadingService.loadFromSource();
     }
 
     @Override
     public Stream<PlannedTournament> fetch(PlannedTournamentsFilter filter, int offset, int limit) {
+        var currentUser = userConfig.getCurrentUser();
+        var identity = UserIdendityVO.fromEmail(currentUser.getEmail());
+        var favoriteKeys = forManagingFavorites.getFavorites(identity);
+
         return tournaments.stream()
+                .map(tournament -> forManagingFavorites.syncFavoriteState(tournament, favoriteKeys))
                 .filter(tournament -> matchesFilter(tournament, filter))
                 .skip(offset)
                 .limit(limit);
@@ -36,7 +51,12 @@ public class FilterPlannedTournamentsService implements ForFilteringPlannedTourn
 
     @Override
     public int count(PlannedTournamentsFilter filter) {
+        var currentUser = userConfig.getCurrentUser();
+        var identity = UserIdendityVO.fromEmail(currentUser.getEmail());
+        var favoriteKeys = forManagingFavorites.getFavorites(identity);
+
         return (int) tournaments.stream()
+                .map(tournament -> forManagingFavorites.syncFavoriteState(tournament, favoriteKeys))
                 .filter(tournament -> matchesFilter(tournament, filter))
                 .count();
     }
@@ -57,6 +77,10 @@ public class FilterPlannedTournamentsService implements ForFilteringPlannedTourn
         }
 
         if (filter.onlyThisYearsTournaments() && !isTournamentInThisYear(tournament)) {
+            return false;
+        }
+
+        if (filter.showOnlyFavorites() && !tournament.isFavorite()) {
             return false;
         }
 

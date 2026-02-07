@@ -30,6 +30,7 @@ public class PlannedTournamentsFilterComponent extends VerticalLayout implements
     private static final String TOUR_CAT_PLACEHOLDER = "Auswählen";
     private static final String TOUR_VALID_NAME = "Verbleibende Turniere";
     private static final String TOUR_CURRENT_YEAR_NAME = "Turniere dieses Jahr";
+    private static final String TOUR_FAVORITES = "Favoriten";
 
     private static final String FILTER_BUTTON_LABEL = "Filter";
     private static final String RESET_BUTTON_LABEL = "Reset";
@@ -49,6 +50,7 @@ public class PlannedTournamentsFilterComponent extends VerticalLayout implements
 
     private final Checkbox remainingTournamentsCheckbox = new Checkbox(TOUR_VALID_NAME);
     private final Checkbox currentYearTournamentsCheckbox = new Checkbox(TOUR_CURRENT_YEAR_NAME);
+    private final Checkbox showOnlyFavorites = new Checkbox(TOUR_FAVORITES);
 
     public PlannedTournamentsFilterComponent() {
         log().debug("PlannedTournamentsFilterComponent :: Created");
@@ -62,6 +64,7 @@ public class PlannedTournamentsFilterComponent extends VerticalLayout implements
                 .withLocation(locationFilter.getValue())
                 .withOnlyThisYearsTournaments(currentYearTournamentsCheckbox.getValue())
                 .withValidTournamentsOnly(remainingTournamentsCheckbox.getValue())
+                .withShowOnlyFavorites(showOnlyFavorites.getValue())
                 .withAgeClasses(ageClassFilter.getValue())
                 .withTourCategories(tourCategoryFilter.getValue())
                 .build();
@@ -88,8 +91,9 @@ public class PlannedTournamentsFilterComponent extends VerticalLayout implements
     private Component createCheckboxLayout() {
         remainingTournamentsCheckbox.setValue(true);
         currentYearTournamentsCheckbox.setValue(false);
+        showOnlyFavorites.setValue(false);
 
-        HorizontalLayout checkboxLayout = new HorizontalLayout(remainingTournamentsCheckbox, currentYearTournamentsCheckbox);
+        HorizontalLayout checkboxLayout = new HorizontalLayout(remainingTournamentsCheckbox, currentYearTournamentsCheckbox, showOnlyFavorites);
         checkboxLayout.setSpacing(true);
 
         return checkboxLayout;

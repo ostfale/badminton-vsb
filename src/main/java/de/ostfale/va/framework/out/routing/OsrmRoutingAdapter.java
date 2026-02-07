@@ -38,7 +38,7 @@ public class OsrmRoutingAdapter implements UseLogging {
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
-                    .timeout(Duration.ofSeconds(5))
+                    .timeout(Duration.ofSeconds(10))
                     .GET()
                     .build();
 

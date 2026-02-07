@@ -14,6 +14,7 @@ public class PlannedTournamentsFilter implements UseLogging {
     private final String name;
     private final boolean validTournamentsOnly;
     private final boolean onlyThisYearsTournaments;
+    private final boolean showOnlyFavorites;
     private final Set<TournamentAgeClassesVO> ageClasses;
     private final Set<PlannedTournamentCategoriesVO> tourCategories;
 
@@ -21,6 +22,7 @@ public class PlannedTournamentsFilter implements UseLogging {
                                     String name,
                                     boolean validTournamentsOnly,
                                     boolean onlyThisYearsTournaments,
+                                    boolean showOnlyFavorites,
                                     Set<TournamentAgeClassesVO> ageClasses,
                                     Set<PlannedTournamentCategoriesVO> tourCategories
     ) {
@@ -29,6 +31,7 @@ public class PlannedTournamentsFilter implements UseLogging {
         this.name = name;
         this.validTournamentsOnly = validTournamentsOnly;
         this.onlyThisYearsTournaments = onlyThisYearsTournaments;
+        this.showOnlyFavorites = showOnlyFavorites;
         this.ageClasses = (ageClasses != null) ? ageClasses : Collections.emptySet();
         this.tourCategories = (tourCategories != null) ? tourCategories : Collections.emptySet();
     }
@@ -53,6 +56,10 @@ public class PlannedTournamentsFilter implements UseLogging {
         return onlyThisYearsTournaments;
     }
 
+    public boolean showOnlyFavorites() {
+        return showOnlyFavorites;
+    }
+
     public Set<TournamentAgeClassesVO> ageClasses() {
         return ageClasses;
     }
@@ -67,9 +74,10 @@ public class PlannedTournamentsFilter implements UseLogging {
                         TournamentsFilter:
                           valid tournaments: %b
                           only this year:    %b
+                          favorites:         %b
                           name:              %s
                           location:          %s""",
-                validTournamentsOnly, onlyThisYearsTournaments, name, location);
+                validTournamentsOnly, onlyThisYearsTournaments,showOnlyFavorites, name, location);
     }
 
     public static final class Builder {
@@ -79,6 +87,8 @@ public class PlannedTournamentsFilter implements UseLogging {
 
         private boolean validTournamentsOnly;
         private boolean onlyThisYearsTournaments;
+        private boolean showOnlyFavorites;
+
         private Set<TournamentAgeClassesVO> ageClasses;
         private Set<PlannedTournamentCategoriesVO> tourCategories;
 
@@ -102,6 +112,11 @@ public class PlannedTournamentsFilter implements UseLogging {
             return this;
         }
 
+        public Builder withShowOnlyFavorites(boolean showOnlyFavorites) {
+            this.showOnlyFavorites = showOnlyFavorites;
+            return this;
+        }
+
         public Builder withAgeClasses(Set<TournamentAgeClassesVO> ageClasses) {
             this.ageClasses = ageClasses;
             return this;
@@ -113,7 +128,7 @@ public class PlannedTournamentsFilter implements UseLogging {
         }
 
         public PlannedTournamentsFilter build() {
-            return new PlannedTournamentsFilter(location, name, validTournamentsOnly, onlyThisYearsTournaments, ageClasses, tourCategories);
+            return new PlannedTournamentsFilter(location, name, validTournamentsOnly, onlyThisYearsTournaments,showOnlyFavorites, ageClasses, tourCategories);
         }
     }
 }
