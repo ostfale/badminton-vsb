@@ -23,12 +23,7 @@ public class FavoriteService implements ForManagingFavorites, UseLogging {
     public void toggleFavorite(UserIdendityVO identity, PlannedTournamentKey key) {
         UserData userData = forStoringUserData.findUserByEmail(identity.email());
 
-        if (userData == null) {
-            log().warn("FavoriteService :: User not found for identity {}", identity);
-            return;
-        }
-
-        if (userData.isFavorite(key)) {
+        if (userData != null && userData.isFavorite(key)) {
             forStoringUserData.removeFavorite(identity, key);
             log().debug("FavoriteService :: Removed favorite {} for user {}", key, identity.email());
         } else {

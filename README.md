@@ -20,3 +20,8 @@ You can also start the application from the command line by running:
 docker build -t my-application:latest .                              # builds a docker image
 docker build --secret id=proKey,src=$HOME/.vaadin/proKey .           # builds a docker image with a commercial component
 ```
+Run local jar: 
+
+```bash
+java --add-exports java.base/jdk.internal.misc=ALL-UNNAMED -Dspring.profiles.active=prod -jar target/bad-vsb.jar
+```

@@ -163,6 +163,7 @@ public class PlannedTournamentsListCompoment extends VerticalLayout implements U
     }
 
     private void toggleFavorite(PlannedTournament tournament) {
+        log().info("PlannedTournamentsListCompoment :: Toggle favorite for tournament {}", tournament.tournamentName());
         var user = userConfig.getCurrentUser();
         if (user == null) {
             log().warn("Cannot toggle favorite - no user in context");

@@ -6,7 +6,8 @@ public enum UserIdendityVO {
     gisbert("gisbert.benecke@hamburg-badminton.de", "Gisbert Benecke"),
     johannes("meyer@multicash-solutions.de", "Johannes Meyer"),
     marianne("marianneflato@gmx.de", "Marianne Flato"),
-    uwe("info@uwe-sauerbrei.de", "Uwe Sauerbrei");
+    uwe("info@uwe-sauerbrei.de", "Uwe Sauerbrei"),
+    develop("dev@dev.de", "Developer");
 
     private final String email;
     private final String fullName;
@@ -20,7 +21,7 @@ public enum UserIdendityVO {
         return Arrays.stream(values())
                 .filter(v -> v.email.equalsIgnoreCase(email))
                 .findFirst()
-                .orElse(uwe);
+                .orElse(develop);
     }
 
     public String email() {
