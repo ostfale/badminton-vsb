@@ -5,12 +5,12 @@
 
     <groupId>de.ostfale.va</groupId>
     <artifactId>badminton-vsb</artifactId>
-    <version>1.1.2</version>
+    <version>1.1.3</version>
     <packaging>jar</packaging>
 
     <properties>
         <java.version>25</java.version>
-        <vaadin.version>25.0.4</vaadin.version>
+        <vaadin.version>25.0.5</vaadin.version>
 
         <!-- monitor -->
         <logstash-logback-encoder.version>9.0</logstash-logback-encoder.version>
@@ -19,6 +19,8 @@
         <versions-maven-plugin.version>2.21.0</versions-maven-plugin.version>
         <maven-enforcer-plugin.version>3.6.2</maven-enforcer-plugin.version>
 
+        <!-- libs -->
+        <htmlunit.version>4.21.0</htmlunit.version>
 
         <!-- test -->
         <archunit.version>1.4.1</archunit.version>
@@ -72,6 +74,11 @@
 
 
         <!-- libs -->
+        <dependency>
+            <groupId>org.htmlunit</groupId>
+            <artifactId>htmlunit</artifactId>
+            <version>${htmlunit.version}</version>
+        </dependency>
         <!-- Source: https://mvnrepository.com/artifact/org.eclipse.store/integrations-spring-boot3 -->
         <dependency>
             <groupId>org.eclipse.store</groupId>
@@ -84,6 +91,10 @@
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>
             <version>${logstash-logback-encoder.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
         </dependency>
 
         <!-- test -->

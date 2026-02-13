@@ -13,12 +13,12 @@
     <!-- PROD: Uses ROLLING_FILE -->
     <springProfile name="prod">
         <appender name="ROLLING_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-            <file>${user.home}/.badminton-vsb/logs/application.log</file>
+            <file>${user.home}/.badminton-vsb/logs/application.json</file>
             <encoder class="net.logstash.logback.encoder.LogstashEncoder">
                 <customFields>{"name":"${APP_NAME}"}</customFields>
             </encoder>
             <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-                <fileNamePattern>${user.home}/.badminton-vsb/logs/application.%d{yyyy-MM-dd}.log</fileNamePattern>
+                <fileNamePattern>${user.home}/.badminton-vsb/logs/application.%d{yyyy-MM-dd}.json</fileNamePattern>
                 <maxHistory>20</maxHistory>
                 <totalSizeCap>50MB</totalSizeCap>
             </rollingPolicy>
