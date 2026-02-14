@@ -1,6 +1,6 @@
 package de.ostfale.va.framework.out.web;
 
-import de.ostfale.va.application.port.out.ForLoadingExternalWebsites;
+import de.ostfale.va.application.port.out.ranking.ForLoadingExternalWebsites;
 import de.ostfale.va.common.UseLogging;
 import org.htmlunit.WebClient;
 import org.htmlunit.html.HtmlElement;

@@ -10,7 +10,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournament;
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournamentAgeClassDisciplines;
-import de.ostfale.va.application.port.out.ForRoutingAndGeocoding;
+import de.ostfale.va.application.port.out.plannedtournaments.ForRoutingAndGeocoding;
 import de.ostfale.va.common.UseLogging;
 
 public class PlannedTournamentsDetailsComponent extends VerticalLayout implements UseLogging {

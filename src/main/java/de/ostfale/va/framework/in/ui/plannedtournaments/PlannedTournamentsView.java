@@ -10,7 +10,7 @@ import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournamen
 import de.ostfale.va.application.port.in.ForFilteringPlannedTournaments;
 import de.ostfale.va.application.port.in.ForManagingFavorites;
 import de.ostfale.va.application.port.out.ForGettingUserConfiguration;
-import de.ostfale.va.application.port.out.ForRoutingAndGeocoding;
+import de.ostfale.va.application.port.out.plannedtournaments.ForRoutingAndGeocoding;
 import de.ostfale.va.common.UseLogging;
 import de.ostfale.va.framework.in.ui.app.MainLayout;
 

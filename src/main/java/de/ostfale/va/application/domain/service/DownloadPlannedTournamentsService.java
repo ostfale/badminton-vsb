@@ -2,7 +2,7 @@ package de.ostfale.va.application.domain.service;
 
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournamentDownloadTask;
 import de.ostfale.va.application.port.in.ForDownloadingPlannedTournaments;
-import de.ostfale.va.application.port.out.ForPlannedTournamentsDownloadConfig;
+import de.ostfale.va.application.port.out.plannedtournaments.ForPlannedTournamentsDownloadConfig;
 import de.ostfale.va.common.UseFileSystemHandling;
 import de.ostfale.va.common.UseLogging;
 import org.springframework.scheduling.annotation.Async;

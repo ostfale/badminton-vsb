@@ -3,7 +3,7 @@ package de.ostfale.va.application.domain.service;
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournament;
 import de.ostfale.va.application.domain.model.routing.Coordinates;
 import de.ostfale.va.application.domain.model.routing.RouteInfo;
-import de.ostfale.va.application.port.out.ForRoutingAndGeocoding;
+import de.ostfale.va.application.port.out.plannedtournaments.ForRoutingAndGeocoding;
 import de.ostfale.va.common.UseLogging;
 
 import java.util.Optional;

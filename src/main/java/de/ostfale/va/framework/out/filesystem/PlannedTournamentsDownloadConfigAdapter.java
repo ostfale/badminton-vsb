@@ -1,7 +1,7 @@
 package de.ostfale.va.framework.out.filesystem;
 
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournamentDownloadTask;
-import de.ostfale.va.application.port.out.ForPlannedTournamentsDownloadConfig;
+import de.ostfale.va.application.port.out.plannedtournaments.ForPlannedTournamentsDownloadConfig;
 import de.ostfale.va.common.UseFileSystemHandling;
 import de.ostfale.va.common.UseLogging;
 import de.ostfale.va.common.UseTimeHandling;

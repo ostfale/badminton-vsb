@@ -5,7 +5,7 @@ import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournamen
 import de.ostfale.va.application.domain.model.plannedournaments.vo.PlannedTournamentCategoriesVO;
 import de.ostfale.va.application.domain.model.plannedournaments.vo.PlannedTournamentTypesVO;
 import de.ostfale.va.application.domain.model.plannedournaments.vo.TournamentAgeClassesVO;
-import de.ostfale.va.application.port.out.ForParsingPlannedTournaments;
+import de.ostfale.va.application.port.out.plannedtournaments.ForParsingPlannedTournaments;
 import de.ostfale.va.common.UseLogging;
 import org.springframework.stereotype.Component;
 

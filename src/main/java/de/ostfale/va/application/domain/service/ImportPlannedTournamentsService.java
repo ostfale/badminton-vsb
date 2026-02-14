@@ -3,8 +3,8 @@ package de.ostfale.va.application.domain.service;
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournament;
 import de.ostfale.va.application.port.in.ForLoadingPlannedTournaments;
 import de.ostfale.va.application.port.in.ForProvidingPlannedTournamentStreams;
-import de.ostfale.va.application.port.out.ForParsingPlannedTournaments;
-import de.ostfale.va.application.port.out.ForPlannedTournamentsDownloadConfig;
+import de.ostfale.va.application.port.out.plannedtournaments.ForParsingPlannedTournaments;
+import de.ostfale.va.application.port.out.plannedtournaments.ForPlannedTournamentsDownloadConfig;
 import de.ostfale.va.common.UseLogging;
 import org.springframework.stereotype.Service;
 

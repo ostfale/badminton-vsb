@@ -1,4 +1,4 @@
-package de.ostfale.va.application.port.out;
+package de.ostfale.va.application.port.out.plannedtournaments;
 
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournament;
 import de.ostfale.va.application.domain.model.routing.Coordinates;

@@ -1,0 +1,5 @@
+### Read last update timestamp for ranking file
+
+GET  http://localhost:8181/api/ranking/timestamp
+
+###

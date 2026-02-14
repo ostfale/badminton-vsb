@@ -1,4 +1,4 @@
-package de.ostfale.va.application.port.out;
+package de.ostfale.va.application.port.out.ranking;
 
 import org.htmlunit.html.HtmlPage;
 

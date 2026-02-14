@@ -3,7 +3,7 @@ package de.ostfale.va.framework.out.routing;
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournament;
 import de.ostfale.va.application.domain.model.routing.Coordinates;
 import de.ostfale.va.application.domain.model.routing.RouteInfo;
-import de.ostfale.va.application.port.out.ForRoutingAndGeocoding;
+import de.ostfale.va.application.port.out.plannedtournaments.ForRoutingAndGeocoding;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
