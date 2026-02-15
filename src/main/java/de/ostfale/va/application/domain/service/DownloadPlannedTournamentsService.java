@@ -38,8 +38,8 @@ public class DownloadPlannedTournamentsService implements ForDownloadingPlannedT
         performDownload();
     }
 
-    @Override
     @Async
+    @Override
     public void performDownload() {
         log().info("DownloadPlannedTournamentsService :: Starting asynchronous download...");
         var tasks = downloadConfig.getDownloadTasks();
