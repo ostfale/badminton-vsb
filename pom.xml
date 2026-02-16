@@ -21,6 +21,7 @@
 
         <!-- libs -->
         <htmlunit.version>4.21.0</htmlunit.version>
+        <fastexcel-reader.version>0.19.0</fastexcel-reader.version>
 
         <!-- test -->
         <archunit.version>1.4.1</archunit.version>
@@ -85,6 +86,11 @@
             <artifactId>integrations-spring-boot3</artifactId>
             <version>3.1.0</version>
             <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.dhatim</groupId>
+            <artifactId>fastexcel-reader</artifactId>
+            <version>${fastexcel-reader.version}</version>
         </dependency>
 
         <dependency>
