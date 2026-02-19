@@ -59,18 +59,29 @@ public class PlayerDetailsView extends VerticalLayout implements UseLogging {
     private HorizontalLayout createActionRow(Select<Player> cbPlayer) {
         ComboBox<Player> searchPlayer = createSearchComboBox();
 
+        // Listener für die ComboBox (Suche)
+        searchPlayer.addValueChangeListener(event -> {
+            Player selectedPlayer = event.getValue();
+            if (selectedPlayer != null) {
+                updatePlayerDetails(selectedPlayer);
+                cbPlayer.setValue(null); // Optional: Favoriten-Auswahl leeren
+            }
+            else {
+                clearDetails();
+            }
+        });
+
         Button reloadButton = createIconButton(VaadinIcon.REFRESH, "Neu laden");
         Button removeFavorite = createIconButton(VaadinIcon.ARROW_RIGHT, "Favoriten entfernen");
         Button addFavorite = createIconButton(VaadinIcon.ARROW_LEFT, "Favoriten hinzufügen");
-        Button viewPlayer = createViewButton(searchPlayer);
 
 
         HorizontalLayout actionRow = new HorizontalLayout(cbPlayer, reloadButton, removeFavorite,
-                addFavorite, searchPlayer, viewPlayer);
+                addFavorite, searchPlayer);
         actionRow.setFlexGrow(1.0, cbPlayer, searchPlayer);
-        actionRow.setFlexGrow(0, reloadButton, removeFavorite, addFavorite, viewPlayer);
+        actionRow.setFlexGrow(0, reloadButton, removeFavorite, addFavorite);
         actionRow.setVerticalComponentAlignment(FlexComponent.Alignment.BASELINE,
-                cbPlayer, reloadButton, removeFavorite, addFavorite, searchPlayer, viewPlayer);
+                cbPlayer, reloadButton, removeFavorite, addFavorite, searchPlayer);
         actionRow.setSpacing(true);
         actionRow.setWidthFull();
 
@@ -78,19 +89,7 @@ public class PlayerDetailsView extends VerticalLayout implements UseLogging {
     }
 
 
-    private Button createViewButton(ComboBox<Player> searchPlayer) {
-        Button viewPlayer = createIconButton(VaadinIcon.EYE, "Zeige Details");
-        viewPlayer.addClickListener(e -> {
-            Player selectedPlayer = searchPlayer.getValue();
 
-            if (selectedPlayer != null) {
-                log().debug("PlayerDetailsView :: viewPlayer");
-                updatePlayerDetails(selectedPlayer);
-            }
-
-        });
-        return viewPlayer;
-    }
 
 
     private Button createIconButton(VaadinIcon icon, String tooltip) {
@@ -173,5 +172,17 @@ public class PlayerDetailsView extends VerticalLayout implements UseLogging {
         playerDistrictNameField.setValue(player.getDistrictName());
         playerStateNameField.setValue(player.getStateName());
         playerStateGroupField.setValue(player.getStateGroup());
+    }
+
+    private void clearDetails() {
+        playerNameField.clear();
+        playerGenderField.clear();
+        playerIdField.clear();
+        playerAgeClassField.clear();
+        playerYearOfBirthField.clear();
+        playerClubNameField.clear();
+        playerDistrictNameField.clear();
+        playerStateNameField.clear();
+        playerStateGroupField.clear();
     }
 }
