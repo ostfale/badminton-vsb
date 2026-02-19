@@ -20,6 +20,7 @@ import java.util.stream.Stream;
 public class PlannedTournamentsView extends VerticalLayout implements UseLogging {
 
     public static final String PATH = "planned-tournaments-view";
+
     private final ForFilteringPlannedTournaments forFilteringPlannedTournaments;
     private final ForRoutingAndGeocoding routingService;
     private final ForManagingFavorites forManagingFavorites;

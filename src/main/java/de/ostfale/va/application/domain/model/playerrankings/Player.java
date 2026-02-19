@@ -7,20 +7,39 @@ public class Player implements UseLogging {
     private PlayerId playerId;
     private String firstName;
     private String lastName;
+    private String ageClassGeneral;
+    private String clubName;
+    private String districtName;
+    private String stateName;
+    private String stateGroup;
     private GenderType gender;
     private int yearOfBirth;
 
-
-    public Player(String playerId, String firstName, String lastName, GenderType gender, int yearOfBirth) {
+    public Player(String playerId,
+                  String firstName,
+                  String lastName,
+                  GenderType gender,
+                  int yearOfBirth,
+                  String ageClassGeneral,
+                  String clubName,
+                  String districtName,
+                  String stateName,
+                  String stateGroup) {
         setPlayerId(playerId);
         this.firstName = firstName;
         this.lastName = lastName;
         this.gender = gender;
         this.yearOfBirth = yearOfBirth;
+        this.ageClassGeneral = ageClassGeneral;
+        this.clubName = clubName;
+        this.districtName = districtName;
+        this.stateName = stateName;
+        this.stateGroup = stateGroup;
     }
 
-    public void setPlayerId(String playerId) {
-        this.playerId = new PlayerId(playerId);
+    @Override
+    public String toString() {
+        return firstName + " " + lastName;
     }
 
     public String getFirstName() {
@@ -57,5 +76,49 @@ public class Player implements UseLogging {
 
     public PlayerId getPlayerId() {
         return playerId;
+    }
+
+    public void setPlayerId(String playerId) {
+        this.playerId = new PlayerId(playerId);
+    }
+
+    public String getAgeClassGeneral() {
+        return ageClassGeneral;
+    }
+
+    public void setAgeClassGeneral(String ageClassGeneral) {
+        this.ageClassGeneral = ageClassGeneral;
+    }
+
+    public String getClubName() {
+        return clubName;
+    }
+
+    public void setClubName(String clubName) {
+        this.clubName = clubName;
+    }
+
+    public String getDistrictName() {
+        return districtName;
+    }
+
+    public void setDistrictName(String districtName) {
+        this.districtName = districtName;
+    }
+
+    public String getStateName() {
+        return stateName;
+    }
+
+    public void setStateName(String stateName) {
+        this.stateName = stateName;
+    }
+
+    public String getStateGroup() {
+        return stateGroup;
+    }
+
+    public void setStateGroup(String stateGroup) {
+        this.stateGroup = stateGroup;
     }
 }

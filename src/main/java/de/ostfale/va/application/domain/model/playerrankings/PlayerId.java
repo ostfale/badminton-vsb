@@ -13,4 +13,10 @@ public record PlayerId(@Nonnull String playerId) {
             throw new IllegalArgumentException(PLAYER_ID_ERROR);
         }
     }
+
+    @Override
+    @Nonnull
+    public String toString() {
+        return playerId;
+    }
 }

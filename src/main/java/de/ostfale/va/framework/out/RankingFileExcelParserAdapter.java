@@ -22,7 +22,12 @@ enum ExcelFileRankingColIndex {
     LAST_NAME_INDEX(4),
     FIRST_NAME_INDEX(5),
     PLAYER_ID_INDEX(6),
-    BIRTH_YEAR_INDEX(7);
+    BIRTH_YEAR_INDEX(7),
+    AGE_CLASS_GENERAL_INDEX(9),
+    CLUB_NAME_INDEX(12),
+    DISTRICT_NAME_INDEX(13),
+    STATE_NAME_INDEX(14),
+    STATE_GROUP_INDEX(15);
 
     final int index;
 
@@ -52,15 +57,30 @@ public class RankingFileExcelParserAdapter implements ForParsingRankingFile, Use
     }
 
     private void mapToDomainModel(Row row, Map<String, Player> playerMap) {
-        String playerId = row.getCellText(ExcelFileRankingColIndex.PLAYER_ID_INDEX.index);
-        String firstName = row.getCellText(ExcelFileRankingColIndex.FIRST_NAME_INDEX.index);
-        String lastName = row.getCellText(ExcelFileRankingColIndex.LAST_NAME_INDEX.index);
-        String gender = row.getCellText(ExcelFileRankingColIndex.GENDER_INDEX.index);
+        String playerId = row.getCellText(ExcelFileRankingColIndex.PLAYER_ID_INDEX.index).trim();
+        String firstName = row.getCellText(ExcelFileRankingColIndex.FIRST_NAME_INDEX.index).trim().trim().trim();
+        String lastName = row.getCellText(ExcelFileRankingColIndex.LAST_NAME_INDEX.index).trim();
+        String gender = row.getCellText(ExcelFileRankingColIndex.GENDER_INDEX.index).trim();
+        String ageClassGeneral = row.getCellText(ExcelFileRankingColIndex.AGE_CLASS_GENERAL_INDEX.index).trim();
+        String clubName = row.getCellText(ExcelFileRankingColIndex.CLUB_NAME_INDEX.index).trim();
+        String districtName = row.getCellText(ExcelFileRankingColIndex.DISTRICT_NAME_INDEX.index).trim();
+        String stateName = row.getCellText(ExcelFileRankingColIndex.STATE_NAME_INDEX.index).trim();
+        String stateGroup = row.getCellText(ExcelFileRankingColIndex.STATE_GROUP_INDEX.index).trim();
         GenderType genderType = GenderType.lookup(gender);
         int yearOfBirth = row.getCellAsNumber(ExcelFileRankingColIndex.BIRTH_YEAR_INDEX.index)
                 .orElse(BigDecimal.ONE)
                 .intValue();
 
-        playerMap.computeIfAbsent(playerId, id -> new Player(id, firstName, lastName, genderType, yearOfBirth));
+        playerMap.computeIfAbsent(playerId, id -> new Player(id,
+                firstName,
+                lastName,
+                genderType,
+                yearOfBirth,
+                ageClassGeneral,
+                clubName,
+                districtName,
+                stateName,
+                stateGroup
+        ));
     }
 }

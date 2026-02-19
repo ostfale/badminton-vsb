@@ -1,0 +1,55 @@
+.form-section-header {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.form-section-header h3 {
+    margin: 0;
+    padding: 0 var(--lumo-space-m);
+    font-weight: 600;
+    font-size: 1.2rem;
+    color: #ae1732;
+    white-space: nowrap;
+}
+
+.form-section-header hr {
+    flex-grow: 1;
+    align-self: center;
+}
+
+/* Den Container des Eingabefelds komplett bereinigen */
+.no-shadow-field::part(input-field) {
+    box-shadow: none !important;
+    border: none !important;
+    background-color: transparent !important; /* Entfernt den grauen Hintergrund */
+}
+
+/* WICHTIG: Vaadin nutzt ::after für die Fokus-Linie und Rahmen-Effekte */
+.no-shadow-field::part(input-field)::after {
+    content: none !important;
+    display: none !important;
+}
+
+/* Auch das ::before Element vorsichtshalber entfernen */
+.no-shadow-field::part(input-field)::before {
+    content: none !important;
+    display: none !important;
+}
+
+/* Entfernt jegliche Outline beim Klicken */
+.no-shadow-field:focus-within {
+    outline: none !important;
+}
+
+/* Das Label direkt ansprechen */
+.no-shadow-field::part(label) {
+    color: var(--lumo-body-text-color) !important;
+    /* Falls sie vorher rot waren (Error-State), müssen wir auch die Deckkraft prüfen */
+    opacity: 1 !important;
+}
+
+/* Den Text im Feld nach links rücken, damit er mit dem Label fluchtet */
+.no-shadow-field::part(value) {
+    padding-left: 0 !important;
+}
