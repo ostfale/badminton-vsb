@@ -13,9 +13,13 @@
     white-space: nowrap;
 }
 
+/* --- Trennlinien in Rot --- */
 .form-section-header hr {
-    flex-grow: 1;
-    align-self: center;
+    flex-grow: 1 !important;
+    border: none !important;
+    border-top: 2px solid #ae1732 !important; /* Deine Farbe */
+    height: 0 !important;
+    opacity: 1 !important;
 }
 
 /* Den Container des Eingabefelds komplett bereinigen */
@@ -52,4 +56,12 @@
 /* Den Text im Feld nach links rücken, damit er mit dem Label fluchtet */
 .no-shadow-field::part(value) {
     padding-left: 0 !important;
+}
+
+/* ranking matrix */
+
+/* --- Fettschrift für die erste Spalte im Grid --- */
+.bold-column {
+    font-weight: bold !important;
+    color: var(--lumo-body-text-color) !important;
 }

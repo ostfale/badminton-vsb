@@ -1,14 +1,19 @@
 package de.ostfale.va.framework.in.ui.playerranking;
 
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import de.ostfale.va.application.domain.model.playerrankings.Player;
 import de.ostfale.va.application.port.in.ranking.ForLoadingRankings;
 import de.ostfale.va.common.UseLogging;
@@ -54,6 +59,7 @@ public class PlayerDetailsView extends VerticalLayout implements UseLogging {
         add(createDetailsBlock());
 
         add(new FormSectionHeader(PLAYER_RANKING_POINTS));
+        add(createRankingMatrix());
     }
 
     private HorizontalLayout createActionRow(Select<Player> cbPlayer) {
@@ -87,10 +93,6 @@ public class PlayerDetailsView extends VerticalLayout implements UseLogging {
 
         return actionRow;
     }
-
-
-
-
 
     private Button createIconButton(VaadinIcon icon, String tooltip) {
         Button button = new Button();
@@ -184,5 +186,62 @@ public class PlayerDetailsView extends VerticalLayout implements UseLogging {
         playerDistrictNameField.clear();
         playerStateNameField.clear();
         playerStateGroupField.clear();
+    }
+
+    private Grid<RankingRow> rankingGrid;
+    private List<RankingRow> matrixData;
+
+    private Component createRankingMatrix() {
+        rankingGrid = new Grid<>();
+        rankingGrid.addClassName("ranking-grid");
+        rankingGrid.setWidth("50%"); // Tabelle auf die Hälfte begrenzen
+        rankingGrid.setAllRowsVisible(true); // Alle 3 Zeilen ohne Scrollbar anzeigen
+
+        // 1. Spalte: Disziplin (Hier wird das Label FETT gemacht)
+        rankingGrid.addColumn(new ComponentRenderer<>(item -> {
+                    Span span = new Span(item.getDiscipline());
+                    span.getStyle().set("font-weight", "bold");
+                    return span;
+                }))
+                .setHeader("Disziplin")
+                .setFlexGrow(0)
+                .setWidth("150px");
+
+        // Datenspalten
+        rankingGrid.addColumn(RankingRow::getTournaments).setHeader("Turniere");
+        rankingGrid.addColumn(RankingRow::getPoints).setHeader("Punkte");
+        rankingGrid.addColumn(RankingRow::getRank).setHeader("Rang");
+        rankingGrid.addColumn(RankingRow::getRankAk).setHeader("Rang AK");
+
+        // Daten initialisieren
+        matrixData = List.of(
+                new RankingRow("Einzel"),
+                new RankingRow("Doppel"),
+                new RankingRow("Mixed")
+        );
+        rankingGrid.setItems(matrixData);
+
+        rankingGrid.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_ROW_STRIPES);
+
+        return rankingGrid;
+    }
+
+    public static class RankingRow {
+        private final String discipline;
+        private String tournaments = "";
+        private String points = "";
+        private String rank = "";
+        private String rankAk = "";
+
+        public RankingRow(String discipline) { this.discipline = discipline; }
+        public String getDiscipline() { return discipline; }
+        public String getTournaments() { return tournaments; }
+        public void setTournaments(String t) { this.tournaments = t; }
+        public String getPoints() { return points; }
+        public void setPoints(String p) { this.points = p; }
+        public String getRank() { return rank; }
+        public void setRank(String r) { this.rank = r; }
+        public String getRankAk() { return rankAk; }
+        public void setRankAk(String ra) { this.rankAk = ra; }
     }
 }
