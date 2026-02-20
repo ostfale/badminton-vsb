@@ -8,12 +8,25 @@ public class Player implements UseLogging {
     private String firstName;
     private String lastName;
     private String ageClassGeneral;
+    private String ageClassDetail;
     private String clubName;
     private String districtName;
     private String stateName;
-    private String stateGroup;
+    private Group stateGroup;
     private GenderType gender;
     private int yearOfBirth;
+    private Integer singlePoints = 0;
+    private Integer singleRanking = 0;
+    private Integer singleAgeRanking = 0;
+    private Integer singleTournaments = 0;
+    private Integer doublePoints = 0;
+    private Integer doubleRanking = 0;
+    private Integer doubleAgeRanking = 0;
+    private Integer doubleTournaments = 0;
+    private Integer mixedPoints = 0;
+    private Integer mixedRanking = 0;
+    private Integer mixedAgeRanking = 0;
+    private Integer mixedTournaments = 0;
 
     public Player(String playerId,
                   String firstName,
@@ -21,16 +34,18 @@ public class Player implements UseLogging {
                   GenderType gender,
                   int yearOfBirth,
                   String ageClassGeneral,
+                  String ageClassDetail,
                   String clubName,
                   String districtName,
                   String stateName,
-                  String stateGroup) {
+                  Group stateGroup) {
         setPlayerId(playerId);
         this.firstName = firstName;
         this.lastName = lastName;
         this.gender = gender;
         this.yearOfBirth = yearOfBirth;
         this.ageClassGeneral = ageClassGeneral;
+        this.ageClassDetail = ageClassDetail;
         this.clubName = clubName;
         this.districtName = districtName;
         this.stateName = stateName;
@@ -40,6 +55,27 @@ public class Player implements UseLogging {
     @Override
     public String toString() {
         return firstName + " " + lastName;
+    }
+
+    public void setSinglePointsAndRanking(Integer singlePoints, Integer singleRanking, Integer ageRanking, Integer noOfTournaments) {
+        this.singlePoints = singlePoints;
+        this.singleRanking = singleRanking;
+        this.singleAgeRanking = ageRanking;
+        this.singleTournaments = noOfTournaments;
+    }
+
+    public void setDoublePointsAndRanking(Integer doublePoints, Integer doubleRanking, Integer ageRanking, Integer noOfTournaments) {
+        this.doublePoints = doublePoints;
+        this.doubleRanking = doubleRanking;
+        this.doubleAgeRanking = ageRanking;
+        this.doubleTournaments = noOfTournaments;
+    }
+
+    public void setMixedPointsAndRanking(Integer mixedPoints, Integer mixedRanking, Integer ageRanking, Integer noOfTournaments) {
+        this.mixedPoints = mixedPoints;
+        this.mixedRanking = mixedRanking;
+        this.mixedAgeRanking = ageRanking;
+        this.mixedTournaments = noOfTournaments;
     }
 
     public String getFirstName() {
@@ -114,11 +150,59 @@ public class Player implements UseLogging {
         this.stateName = stateName;
     }
 
-    public String getStateGroup() {
+    public Group getStateGroup() {
         return stateGroup;
     }
 
-    public void setStateGroup(String stateGroup) {
+    public void setStateGroup(Group stateGroup) {
         this.stateGroup = stateGroup;
+    }
+
+    public Integer getSinglePoints() {
+        return singlePoints;
+    }
+
+    public Integer getSingleRanking() {
+        return singleRanking;
+    }
+
+    public Integer getSingleAgeRanking() {
+        return singleAgeRanking;
+    }
+
+    public Integer getSingleTournaments() {
+        return singleTournaments;
+    }
+
+    public Integer getDoublePoints() {
+        return doublePoints;
+    }
+
+    public Integer getDoubleRanking() {
+        return doubleRanking;
+    }
+
+    public Integer getDoubleAgeRanking() {
+        return doubleAgeRanking;
+    }
+
+    public Integer getDoubleTournaments() {
+        return doubleTournaments;
+    }
+
+    public Integer getMixedPoints() {
+        return mixedPoints;
+    }
+
+    public Integer getMixedRanking() {
+        return mixedRanking;
+    }
+
+    public Integer getMixedAgeRanking() {
+        return mixedAgeRanking;
+    }
+
+    public Integer getMixedTournaments() {
+        return mixedTournaments;
     }
 }

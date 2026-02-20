@@ -173,7 +173,34 @@ public class PlayerDetailsView extends VerticalLayout implements UseLogging {
         playerClubNameField.setValue(player.getClubName());
         playerDistrictNameField.setValue(player.getDistrictName());
         playerStateNameField.setValue(player.getStateName());
-        playerStateGroupField.setValue(player.getStateGroup());
+        playerStateGroupField.setValue(player.getStateGroup().getDisplayName());
+
+        // --- Ranking Matrix (Grid) befüllen ---
+
+        List<Player> allPlayers = rankingService.loadPlayer();
+
+        // Zeile 1: Einzel (Index 0)
+        RankingRow einzelRow = matrixData.getFirst();
+        einzelRow.setTournaments(String.valueOf(player.getSingleTournaments()));
+        einzelRow.setPoints(String.valueOf(player.getSinglePoints()));
+        einzelRow.setRank(String.valueOf(player.getSingleRanking()));
+        einzelRow.setRankAk(String.valueOf(calculateAkRank(player, allPlayers, Player::getSinglePoints)));
+        // Zeile 2: Doppel (Index 1)
+        RankingRow doppelRow = matrixData.get(1);
+        doppelRow.setTournaments(String.valueOf(player.getDoubleTournaments()));
+        doppelRow.setPoints(String.valueOf(player.getDoublePoints()));
+        doppelRow.setRank(String.valueOf(player.getDoubleRanking()));
+        doppelRow.setRankAk(String.valueOf(calculateAkRank(player, allPlayers, Player::getDoublePoints)));
+
+        // Zeile 3: Mixed (Index 2)
+        RankingRow mixedRow = matrixData.get(2);
+        mixedRow.setTournaments(String.valueOf(player.getMixedTournaments()));
+        mixedRow.setPoints(String.valueOf(player.getMixedPoints()));
+        mixedRow.setRank(String.valueOf(player.getMixedRanking()));
+        mixedRow.setRankAk(String.valueOf(calculateAkRank(player, allPlayers, Player::getMixedPoints)));
+
+        // Grid aktualisieren, um die Änderungen anzuzeigen
+        rankingGrid.getDataProvider().refreshAll();
     }
 
     private void clearDetails() {
@@ -186,6 +213,17 @@ public class PlayerDetailsView extends VerticalLayout implements UseLogging {
         playerDistrictNameField.clear();
         playerStateNameField.clear();
         playerStateGroupField.clear();
+
+        // Matrix-Daten leeren
+        matrixData.forEach(row -> {
+            row.setTournaments("");
+            row.setPoints("");
+            row.setRank("");
+            row.setRankAk("");
+        });
+
+        // Grid aktualisieren
+        rankingGrid.getDataProvider().refreshAll();
     }
 
     private Grid<RankingRow> rankingGrid;
@@ -243,5 +281,15 @@ public class PlayerDetailsView extends VerticalLayout implements UseLogging {
         public void setRank(String r) { this.rank = r; }
         public String getRankAk() { return rankAk; }
         public void setRankAk(String ra) { this.rankAk = ra; }
+    }
+
+    private int calculateAkRank(Player target, List<Player> allPlayers, java.util.function.Function<Player, Integer> pointGetter) {
+        int targetPoints = pointGetter.apply(target);
+
+        return (int) allPlayers.stream()
+                .filter(p -> p.getGender() == target.getGender())
+                .filter(p -> p.getAgeClassGeneral().equals(target.getAgeClassGeneral()))
+                .filter(p -> pointGetter.apply(p) > targetPoints)
+                .count() + 1;
     }
 }
