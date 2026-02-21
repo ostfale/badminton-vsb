@@ -1,7 +1,7 @@
 package de.ostfale.va.application.domain.service;
 
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournamentDownloadTask;
-import de.ostfale.va.application.port.in.ForDownloadingPlannedTournaments;
+import de.ostfale.va.application.port.in.ForDownloadingFromWeb;
 import de.ostfale.va.application.port.out.plannedtournaments.ForPlannedTournamentsDownloadConfig;
 import de.ostfale.va.common.UseFileSystemHandling;
 import de.ostfale.va.common.UseLogging;
@@ -19,7 +19,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 
 @Service
-public class DownloadPlannedTournamentsService implements ForDownloadingPlannedTournaments, UseFileSystemHandling, UseLogging {
+public class DownloadPlannedTournamentsService implements ForDownloadingFromWeb, UseFileSystemHandling, UseLogging {
 
     private final ForPlannedTournamentsDownloadConfig downloadConfig;
     private final HttpClient httpClient;
@@ -32,6 +32,7 @@ public class DownloadPlannedTournamentsService implements ForDownloadingPlannedT
                 .build();
     }
 
+    @Override
     @Scheduled(cron = "0 0 3 * * *") // Runs every night at 3:00 AM
     public void runScheduledDownload() {
         log().info("DownloadPlannedTournamentsService :: Starting scheduled download tasks...");

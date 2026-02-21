@@ -1,17 +1,12 @@
 package de.ostfale.va.framework.in.ui.playerranking;
 
 import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import de.ostfale.va.application.domain.model.playerrankings.Player;
@@ -19,13 +14,14 @@ import de.ostfale.va.application.port.in.ranking.ForLoadingRankings;
 import de.ostfale.va.common.UseLogging;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 public class PlayerDetailsView extends VerticalLayout implements UseLogging {
 
     private static final String PLAYER_SEPARATOR_SELECTION = "Spieler Suchen";
     private static final String PLAYER_SEPARATOR_DETAILS = "Spieler Details";
     private static final String PLAYER_RANKING_POINTS = "Spieler Ranglistenpunkte";
+
+    private final PlayerDetailsSearchComponent searchComponent ;
 
     ForLoadingRankings rankingService;
 
@@ -40,6 +36,7 @@ public class PlayerDetailsView extends VerticalLayout implements UseLogging {
     private TextField playerStateGroupField;
 
     public PlayerDetailsView(ForLoadingRankings rankingService) {
+        this.searchComponent = new PlayerDetailsSearchComponent(rankingService, this);
         log().debug("PlayerDetailsView :: constructor");
         this.rankingService = rankingService;
         initLayout();
@@ -48,89 +45,16 @@ public class PlayerDetailsView extends VerticalLayout implements UseLogging {
     public void initLayout() {
         add(new FormSectionHeader(PLAYER_SEPARATOR_SELECTION));
 
-        Select<Player> cbPlayer = new Select<>();
-        HorizontalLayout actionRow = createActionRow(cbPlayer);
+        HorizontalLayout actionRow = searchComponent.getComponent();
 
-        FormLayout dataBlock = new FormLayout();
-        dataBlock.addFormItem(actionRow, "Favoriten");
-        add(dataBlock);
+        add(actionRow);
+        actionRow.setWidth("50%");
 
         add(new FormSectionHeader(PLAYER_SEPARATOR_DETAILS));
         add(createDetailsBlock());
 
         add(new FormSectionHeader(PLAYER_RANKING_POINTS));
         add(createRankingMatrix());
-    }
-
-    private HorizontalLayout createActionRow(Select<Player> cbPlayer) {
-        ComboBox<Player> searchPlayer = createSearchComboBox();
-
-        // Listener für die ComboBox (Suche)
-        searchPlayer.addValueChangeListener(event -> {
-            Player selectedPlayer = event.getValue();
-            if (selectedPlayer != null) {
-                updatePlayerDetails(selectedPlayer);
-                cbPlayer.setValue(null); // Optional: Favoriten-Auswahl leeren
-            }
-            else {
-                clearDetails();
-            }
-        });
-
-        Button reloadButton = createIconButton(VaadinIcon.REFRESH, "Neu laden");
-        Button removeFavorite = createIconButton(VaadinIcon.ARROW_RIGHT, "Favoriten entfernen");
-        Button addFavorite = createIconButton(VaadinIcon.ARROW_LEFT, "Favoriten hinzufügen");
-
-
-        HorizontalLayout actionRow = new HorizontalLayout(cbPlayer, reloadButton, removeFavorite,
-                addFavorite, searchPlayer);
-        actionRow.setFlexGrow(1.0, cbPlayer, searchPlayer);
-        actionRow.setFlexGrow(0, reloadButton, removeFavorite, addFavorite);
-        actionRow.setVerticalComponentAlignment(FlexComponent.Alignment.BASELINE,
-                cbPlayer, reloadButton, removeFavorite, addFavorite, searchPlayer);
-        actionRow.setSpacing(true);
-        actionRow.setWidthFull();
-
-        return actionRow;
-    }
-
-    private Button createIconButton(VaadinIcon icon, String tooltip) {
-        Button button = new Button();
-        button.setIcon(icon.create());
-        button.setTooltipText(tooltip);
-        return button;
-    }
-
-    private ComboBox<Player> createSearchComboBox() {
-        ComboBox<Player> searchPlayer = new ComboBox<>();
-        searchPlayer.setPlaceholder("Spieler suchen...");
-        searchPlayer.setHelperText("Mindestens 3 Buchstaben eingeben");
-        searchPlayer.setClearButtonVisible(true);
-        searchPlayer.setPrefixComponent(VaadinIcon.SEARCH.create());
-
-        // define data provider
-        searchPlayer.setItems(
-                query -> {
-                    String filter = query.getFilter().orElse("").trim();
-                    // needed to be called -> contract
-                    int offset = query.getOffset();
-                    int limit = query.getLimit();
-
-                    if (filter.length() < 3) return Stream.empty();
-
-                    return rankingService.findPlayers(filter, offset, limit).stream();
-                },
-                query -> {
-                    String filter = query.getFilter().orElse("").trim();
-                    if (filter.length() < 3) return 0;
-
-                    // needed to know the total number of items
-                    return rankingService.countPlayers(filter);
-                }
-        );
-
-        searchPlayer.setItemLabelGenerator(p -> p.getFirstName() + " " + p.getLastName());
-        return searchPlayer;
     }
 
     private FormLayout createDetailsBlock() {
@@ -164,7 +88,7 @@ public class PlayerDetailsView extends VerticalLayout implements UseLogging {
         return detailsBlock;
     }
 
-    private void updatePlayerDetails(Player player) {
+    public void updatePlayerDetails(Player player) {
         playerNameField.setValue(player.toString());
         playerGenderField.setValue(player.getGender().getDisplayName());
         playerIdField.setValue(player.getPlayerId().toString());
@@ -203,7 +127,7 @@ public class PlayerDetailsView extends VerticalLayout implements UseLogging {
         rankingGrid.getDataProvider().refreshAll();
     }
 
-    private void clearDetails() {
+    public void clearDetails() {
         playerNameField.clear();
         playerGenderField.clear();
         playerIdField.clear();

@@ -13,7 +13,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournamentsStatistics;
 import de.ostfale.va.application.port.in.ForCalculatingTournamentsStatisticsUC;
-import de.ostfale.va.application.port.in.ForDownloadingPlannedTournaments;
+import de.ostfale.va.application.port.in.ForDownloadingFromWeb;
 import de.ostfale.va.application.port.in.ForLoadingPlannedTournaments;
 import de.ostfale.va.common.UseLogging;
 import de.ostfale.va.common.UseTimeHandling;
@@ -22,13 +22,13 @@ public class PlannedTournamentsInfoCard extends Div implements UseLogging, UseTi
 
     private final ForCalculatingTournamentsStatisticsUC calcService;
     private final ForLoadingPlannedTournaments importService;
-    private final ForDownloadingPlannedTournaments downloadService;
+    private final ForDownloadingFromWeb downloadService;
     private final VerticalLayout statsContainer = new VerticalLayout();
 
     public PlannedTournamentsInfoCard(
             ForCalculatingTournamentsStatisticsUC statCalcService,
             ForLoadingPlannedTournaments importService,
-            ForDownloadingPlannedTournaments downloadService) {
+            ForDownloadingFromWeb downloadService) {
         log().debug("PlannedTournamentsInfoCard :: Created");
         this.importService = importService;
         this.calcService = statCalcService;
