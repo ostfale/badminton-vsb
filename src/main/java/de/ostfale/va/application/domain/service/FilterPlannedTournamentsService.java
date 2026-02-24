@@ -7,7 +7,7 @@ import de.ostfale.va.application.domain.model.plannedournaments.vo.PlannedTourna
 import de.ostfale.va.application.domain.model.plannedournaments.vo.TournamentAgeClassesVO;
 import de.ostfale.va.application.domain.model.plannedournaments.vo.UserIdendityVO;
 import de.ostfale.va.application.port.in.ForFilteringPlannedTournaments;
-import de.ostfale.va.application.port.in.ForLoadingPlannedTournaments;
+import de.ostfale.va.application.port.in.plannedtournaments.ForLoadingPlannedTournaments;
 import de.ostfale.va.application.port.in.ForManagingFavorites;
 import de.ostfale.va.application.port.out.ForGettingUserConfiguration;
 import de.ostfale.va.common.UseLogging;

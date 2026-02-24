@@ -1,6 +1,6 @@
 package de.ostfale.va.framework.in.web;
 
-import de.ostfale.va.application.port.in.ForLoadingPlannedTournaments;
+import de.ostfale.va.application.port.in.plannedtournaments.ForLoadingPlannedTournaments;
 import de.ostfale.va.common.UseLogging;
 import org.springframework.web.bind.annotation.RestController;
 

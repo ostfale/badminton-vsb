@@ -1,4 +1,4 @@
-package de.ostfale.va.application.port.in;
+package de.ostfale.va.application.port.in.plannedtournaments;
 
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournament;
 

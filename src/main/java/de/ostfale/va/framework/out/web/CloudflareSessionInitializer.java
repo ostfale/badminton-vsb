@@ -36,8 +36,8 @@ public class CloudflareSessionInitializer implements VaadinServiceInitListener, 
             String email = request.getHeader(CLOUDFLARE_EMAIL_HEADER);
 
             if (email == null || email.isBlank()) {
-                log().error("CloudflareSessionInitializer :: No Cloudflare header found!");
-                return;
+                log().warn("CloudflareSessionInitializer :: No Cloudflare header found, using default user for local development");
+                email = "info@uwe-sauerbrei.de"; // Default user for local development
             }
 
             var userData = new UserData(UserIdendityVO.fromEmail(email));

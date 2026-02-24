@@ -8,6 +8,8 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -33,6 +35,26 @@ public interface UseFileSystemHandling extends UseLogging {
     default String getApplicationSubDir(String subDirName) {
         log().debug("UseFileSystemHandling :: Getting subdirectory {} ", subDirName);
         return Paths.get(getApplicationHomeDir(), subDirName).toString();
+    }
+
+    default LocalDateTime getFirstFileTimestamp(Path dirPath) {
+        Objects.requireNonNull(dirPath, "Path must not be null");
+        if (Files.isDirectory(dirPath)) {
+            log().debug("UseFileSystemHandling :: Given path is a directory {}", dirPath);
+            List<File> files = readAllFiles(dirPath.toString());
+            if (files.isEmpty()) {
+                log().warn("UseFileSystemHandling :: No files found in directory {}", dirPath);
+                return LocalDateTime.MIN;
+            }
+            return getFirstFileTimestamp(files.getFirst().toPath());
+        }
+        log().debug("UseFileSystemHandling :: Getting first file timestamp in {}", dirPath);
+        try {
+            return LocalDateTime.ofInstant(Files.getLastModifiedTime(dirPath).toInstant(), ZoneId.systemDefault());
+        } catch (IOException e) {
+            log().error("UpdateRankingService :: Failure retrieving timestamp for {}", dirPath, e);
+            return LocalDateTime.MIN;
+        }
     }
 
     default List<File> readAllFiles(String dirPath) {

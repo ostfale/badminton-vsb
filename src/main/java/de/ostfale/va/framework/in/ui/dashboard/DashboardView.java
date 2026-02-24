@@ -3,8 +3,8 @@ package de.ostfale.va.framework.in.ui.dashboard;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 import de.ostfale.va.application.port.in.ForCalculatingTournamentsStatisticsUC;
-import de.ostfale.va.application.port.in.ForDownloadingFromWeb;
-import de.ostfale.va.application.port.in.ForLoadingPlannedTournaments;
+import de.ostfale.va.application.port.out.ForDownloadingFiles;
+import de.ostfale.va.application.port.in.plannedtournaments.ForLoadingPlannedTournaments;
 import de.ostfale.va.common.UseLogging;
 import de.ostfale.va.framework.in.ui.app.MainLayout;
 
@@ -15,7 +15,7 @@ public class DashboardView extends VerticalLayout implements UseLogging {
     public DashboardView(
             ForCalculatingTournamentsStatisticsUC calcService,
             ForLoadingPlannedTournaments importService,
-            ForDownloadingFromWeb downloadService) {
+            ForDownloadingFiles downloadService) {
         log().info("OverviewView :: constructor");
         setSizeFull();
         setPadding(true);

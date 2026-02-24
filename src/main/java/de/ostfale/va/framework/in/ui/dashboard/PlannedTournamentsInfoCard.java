@@ -13,8 +13,8 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournamentsStatistics;
 import de.ostfale.va.application.port.in.ForCalculatingTournamentsStatisticsUC;
-import de.ostfale.va.application.port.in.ForDownloadingFromWeb;
-import de.ostfale.va.application.port.in.ForLoadingPlannedTournaments;
+import de.ostfale.va.application.port.out.ForDownloadingFiles;
+import de.ostfale.va.application.port.in.plannedtournaments.ForLoadingPlannedTournaments;
 import de.ostfale.va.common.UseLogging;
 import de.ostfale.va.common.UseTimeHandling;
 
@@ -22,13 +22,13 @@ public class PlannedTournamentsInfoCard extends Div implements UseLogging, UseTi
 
     private final ForCalculatingTournamentsStatisticsUC calcService;
     private final ForLoadingPlannedTournaments importService;
-    private final ForDownloadingFromWeb downloadService;
+    private final ForDownloadingFiles downloadService;
     private final VerticalLayout statsContainer = new VerticalLayout();
 
     public PlannedTournamentsInfoCard(
             ForCalculatingTournamentsStatisticsUC statCalcService,
             ForLoadingPlannedTournaments importService,
-            ForDownloadingFromWeb downloadService) {
+            ForDownloadingFiles downloadService) {
         log().debug("PlannedTournamentsInfoCard :: Created");
         this.importService = importService;
         this.calcService = statCalcService;
@@ -149,7 +149,7 @@ public class PlannedTournamentsInfoCard extends Div implements UseLogging, UseTi
 
     private void handleDownload() {
         log().info("Download button clicked");
-        downloadService.performDownload();
+       // downloadService.performDownload();        // TODO: Implement download
         refreshStatistics();
     }
 

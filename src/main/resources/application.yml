@@ -39,3 +39,10 @@ org:
       storage-directory: ${user.home}/.badminton-vsb/data
       rest:
         enabled: true
+
+app:
+  download:
+    ranking:
+      schedule: 0 44 4 * * *
+    tournaments:
+      schedule: 0 33 3 * * *

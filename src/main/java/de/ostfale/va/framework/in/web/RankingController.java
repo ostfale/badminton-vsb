@@ -20,7 +20,7 @@ public class RankingController implements UseLogging {
         this.rankingFileDownload = rankingFileDownload;
     }
 
-    @GetMapping("/timestamp")
+   /* @GetMapping("/timestamp")
     public LocalDateTime getLastRankingUpdateTimestamp() {
         log().info("RankingController :: Fetching latest ranking update timestamp");
         var result = rankingFileDownload.getLatestRemoteTimestamp(ForRankingFileDownloadConfig.DBV_RANKING_URL);
@@ -39,5 +39,5 @@ public class RankingController implements UseLogging {
         String targetFileName = rankingFileDownload.prepareDownloadFileName(LocalDateTime.now());
         Path rankingFilePath = Path.of(destinationPath + targetFileName);
         return rankingFileDownload.downloadRankingFileIfNewer(ForRankingFileDownloadConfig.CURRENT_RANKING_FILE_URL, rankingFilePath);
-    }
+    }*/
 }

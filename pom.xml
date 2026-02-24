@@ -5,12 +5,12 @@
 
     <groupId>de.ostfale.va</groupId>
     <artifactId>badminton-vsb</artifactId>
-    <version>1.1.3</version>
+    <version>1.2.0</version>
     <packaging>jar</packaging>
 
     <properties>
         <java.version>25</java.version>
-        <vaadin.version>25.0.5</vaadin.version>
+        <vaadin.version>25.0.4</vaadin.version>
 
         <!-- monitor -->
         <logstash-logback-encoder.version>9.0</logstash-logback-encoder.version>
@@ -131,6 +131,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
+                    <mainClass>de.ostfale.va.Application</mainClass>
                     <jvmArguments>
                         --add-exports java.base/jdk.internal.misc=ALL-UNNAMED
                         --add-opens java.base/java.lang=ALL-UNNAMED
