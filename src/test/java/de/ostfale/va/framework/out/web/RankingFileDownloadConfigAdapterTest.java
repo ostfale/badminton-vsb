@@ -54,11 +54,11 @@ class RankingFileDownloadConfigAdapterTest {
     @Test
     @DisplayName("Should return empty list when no newer ranking is available")
     void shouldReturnEmptyListWhenNoNewerRankingAvailable() throws Exception {
-        // Given
+        // Given - remote timestamp is older than LocalDateTime.MIN (impossible scenario)
         when(clientProvider.getIfAvailable()).thenReturn(webClient);
         when(webClient.getOptions()).thenReturn(new org.htmlunit.WebClientOptions());
         when(webClient.getPage(any(java.net.URL.class))).thenReturn(htmlPage);
-        when(timestampParser.parseLastUpdate(htmlPage)).thenReturn(Optional.of(LocalDateTime.now().minusDays(1)));
+        when(timestampParser.parseLastUpdate(htmlPage)).thenReturn(Optional.of(LocalDateTime.MIN));
 
         // When
         List<DownloadTask> result = sut.getDownloadTasks();

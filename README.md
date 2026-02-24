@@ -7,7 +7,8 @@ dd
 ## Configuration
 
 ### Links
-    + https://vaadin.com/docs/latest/flow/integrations/spring/configuration#special-configuration-parameters
+    + https://vaadin.com/docs/latest/flow/integrations/spring/configuration#special-configuration-parameters 
+    + https://github.com/xdev-software/spring-data-eclipse-store
 
 ### Run Application
 
