@@ -1,21 +1,19 @@
 package de.ostfale.va.application.domain.service;
 
+import de.ostfale.va.application.domain.model.UserData;
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournament;
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournamentKey;
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournamentsFilter;
 import de.ostfale.va.application.domain.model.plannedournaments.vo.PlannedTournamentCategoriesVO;
 import de.ostfale.va.application.domain.model.plannedournaments.vo.TournamentAgeClassesVO;
-import de.ostfale.va.application.domain.model.plannedournaments.vo.UserIdendityVO;
 import de.ostfale.va.application.port.in.ForFilteringPlannedTournaments;
 import de.ostfale.va.application.port.in.plannedtournaments.ForLoadingPlannedTournaments;
-import de.ostfale.va.application.port.in.ForManagingFavorites;
 import de.ostfale.va.application.port.out.ForGettingUserConfiguration;
 import de.ostfale.va.common.UseLogging;
 import de.ostfale.va.common.UseTimeHandling;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -24,24 +22,21 @@ import java.util.stream.Stream;
 public class FilterPlannedTournamentsService implements ForFilteringPlannedTournaments, UseTimeHandling, UseLogging {
 
     private final ForLoadingPlannedTournaments loadingService;
-    private final ForManagingFavorites forManagingFavorites;
-    private final ForGettingUserConfiguration userConfig;
+    private final ForGettingUserConfiguration userConfiguration;
     private List<PlannedTournament> tournaments;
 
     public FilterPlannedTournamentsService(ForLoadingPlannedTournaments loadingService,
-                                           ForManagingFavorites forManagingFavorites,
-                                           ForGettingUserConfiguration userConfig) {
+                                           ForGettingUserConfiguration userConfiguration) {
         this.loadingService = loadingService;
-        this.forManagingFavorites = forManagingFavorites;
-        this.userConfig = userConfig;
+        this.userConfiguration = userConfiguration;
         this.tournaments = loadingService.loadFromSource();
     }
 
     @Override
     public Stream<PlannedTournament> fetch(PlannedTournamentsFilter filter, int offset, int limit) {
-        var favoriteKeys = getFavoriteKeysForCurrentUser();
+        var favoriteKeys = getFavoritePlannedTournamentKeys();
         return tournaments.stream()
-                .map(tournament -> forManagingFavorites.syncFavoriteState(tournament, favoriteKeys))
+                .map(tournament -> syncFavoriteState(tournament, favoriteKeys))
                 .filter(tournament -> matchesFilter(tournament, filter))
                 .skip(offset)
                 .limit(limit);
@@ -49,20 +44,25 @@ public class FilterPlannedTournamentsService implements ForFilteringPlannedTourn
 
     @Override
     public int count(PlannedTournamentsFilter filter) {
-        Set<PlannedTournamentKey> favoriteKeys = getFavoriteKeysForCurrentUser();
+        Set<PlannedTournamentKey> favoriteKeys = getFavoritePlannedTournamentKeys();
         return (int) tournaments.stream()
-                .map(tournament -> forManagingFavorites.syncFavoriteState(tournament, favoriteKeys))
+                .map(tournament -> syncFavoriteState(tournament, favoriteKeys))
                 .filter(tournament -> matchesFilter(tournament, filter))
                 .count();
     }
 
-    private Set<PlannedTournamentKey> getFavoriteKeysForCurrentUser() {
-        var currentUser = userConfig.getCurrentUser();
-        if (currentUser == null) {
-            return Collections.emptySet();
+    private Set<PlannedTournamentKey> getFavoritePlannedTournamentKeys() {
+        UserData user = userConfiguration.getCurrentUser();
+        return user != null ? user.getFavoriteKeys() : Set.of();
+    }
+
+    private PlannedTournament syncFavoriteState(PlannedTournament tournament, Set<PlannedTournamentKey> favoriteKeys) {
+        var tournamentKey = tournament.createKey();
+        if (favoriteKeys.contains(tournamentKey)) {
+            return tournament.setFavorite(true);
         }
-        var identity = UserIdendityVO.fromEmail(currentUser.getEmail());
-        return forManagingFavorites.getFavorites(identity);
+        tournament.setFavorite(false);
+        return tournament;
     }
 
     @Override

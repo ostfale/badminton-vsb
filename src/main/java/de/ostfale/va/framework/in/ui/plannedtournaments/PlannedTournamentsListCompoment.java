@@ -21,10 +21,11 @@ import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournamen
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournamentKey;
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournamentsFilter;
 import de.ostfale.va.application.domain.model.plannedournaments.vo.UserIdendityVO;
-import de.ostfale.va.application.port.in.ForManagingFavorites;
 import de.ostfale.va.application.port.out.ForGettingUserConfiguration;
+import de.ostfale.va.application.port.out.ForStoringUserData;
 import de.ostfale.va.common.UseLogging;
 
+import java.util.Set;
 import java.util.function.Function;
 
 public class PlannedTournamentsListCompoment extends VerticalLayout implements UseLogging {
@@ -32,17 +33,17 @@ public class PlannedTournamentsListCompoment extends VerticalLayout implements U
     private final Grid<PlannedTournament> grid;
     private final PaginationComponent paginationComponent;
     private final DataProvider<PlannedTournament, PlannedTournamentsFilter> dataProvider;
-    private final ForManagingFavorites forManagingFavorites;
+    private final ForStoringUserData forStoringUserData;
     private final ForGettingUserConfiguration userConfig;
 
     public PlannedTournamentsListCompoment(DataProvider<PlannedTournament, PlannedTournamentsFilter> dataProvider,
                                            PaginationComponent paginationComponent,
-                                           ForManagingFavorites forManagingFavorites,
+                                           ForStoringUserData forStoringUserData,
                                            ForGettingUserConfiguration userConfig) {
         this.grid = new Grid<>();
         this.paginationComponent = paginationComponent;
         this.dataProvider = dataProvider;
-        this.forManagingFavorites = forManagingFavorites;
+        this.forStoringUserData = forStoringUserData;
         this.userConfig = userConfig;
 
         setSizeFull();
@@ -84,10 +85,8 @@ public class PlannedTournamentsListCompoment extends VerticalLayout implements U
                             @SuppressWarnings("unchecked")
                             var typedQuery = (Query<PlannedTournament, PlannedTournamentsFilter>) (Object) query;
                             var stream = this.dataProvider.fetch(typedQuery);
-                            var currentUser = userConfig.getCurrentUser();
-                            var identity = UserIdendityVO.fromEmail(currentUser.getEmail());
-                            var favoriteKeys = forManagingFavorites.getFavorites(identity);
-                            return stream.map(tournament -> forManagingFavorites.syncFavoriteState(tournament, favoriteKeys));
+                            var favoriteKeys = getFavoritePlannedTournamentKeys();
+                            return stream.map(tournament -> syncFavoriteState(tournament, favoriteKeys));
                         },
                         this.dataProvider::size
                 );
@@ -173,7 +172,26 @@ public class PlannedTournamentsListCompoment extends VerticalLayout implements U
         var identity = UserIdendityVO.fromEmail(user.getEmail());
         var key = tournament.createKey();
 
-        forManagingFavorites.toggleFavorite(identity, key);
-        log().debug("PlannedTournamentsListCompoment :: Toggled favorite for tournament {}", tournament.tournamentName());
+        if (user.isFavorite(key)) {
+            forStoringUserData.removeFavorite(identity, key);
+            log().debug("PlannedTournamentsListCompoment :: Removed favorite for tournament {}", tournament.tournamentName());
+        } else {
+            forStoringUserData.addFavorite(identity, key);
+            log().debug("PlannedTournamentsListCompoment :: Added favorite for tournament {}", tournament.tournamentName());
+        }
+    }
+
+    private Set<PlannedTournamentKey> getFavoritePlannedTournamentKeys() {
+        var user = userConfig.getCurrentUser();
+        return user != null ? user.getFavoriteKeys() : Set.of();
+    }
+
+    private PlannedTournament syncFavoriteState(PlannedTournament tournament, Set<PlannedTournamentKey> favoriteKeys) {
+        var tournamentKey = tournament.createKey();
+        if (favoriteKeys.contains(tournamentKey)) {
+            return tournament.setFavorite(true);
+        }
+        tournament.setFavorite(false);
+        return tournament;
     }
 }

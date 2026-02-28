@@ -23,9 +23,9 @@ public class EclipseStoreUserAdapter implements ForStoringUserData, UseLogging {
 
     @Override
     public void addFavorite(UserIdendityVO identity, PlannedTournamentKey key) {
-        UserData data = findOrCreateUser(identity);
-        data.addFavorite(key);
-        repository.save(data);
+        UserData user = userConfiguration.getCurrentUser();
+        user.addFavorite(key);
+        repository.save(user);
         log().debug("EclipseStoreUserAdapter :: Favorite added for {}", identity.email());
     }
 
@@ -39,11 +39,10 @@ public class EclipseStoreUserAdapter implements ForStoringUserData, UseLogging {
 
     @Override
     public void removeFavorite(UserIdendityVO identity, PlannedTournamentKey key) {
-        repository.findByEmail(identity.email()).ifPresentOrElse(data -> {
-            data.removeFavorite(key);
-            repository.save(data);
-            log().debug("EclipseStoreUserAdapter :: Removed favorite for user {}", identity);
-        }, () -> log().warn("EclipseStoreUserAdapter :: Cannot remove favorite, user not found: {}", identity));
+        UserData user = userConfiguration.getCurrentUser();
+        user.removeFavorite(key);
+        repository.save(user);
+        log().debug("EclipseStoreUserAdapter :: Removed favorite for user {}", identity);
     }
 
     @Override

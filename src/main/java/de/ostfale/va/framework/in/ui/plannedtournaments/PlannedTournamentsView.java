@@ -8,8 +8,8 @@ import com.vaadin.flow.router.Route;
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournament;
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournamentsFilter;
 import de.ostfale.va.application.port.in.ForFilteringPlannedTournaments;
-import de.ostfale.va.application.port.in.ForManagingFavorites;
 import de.ostfale.va.application.port.out.ForGettingUserConfiguration;
+import de.ostfale.va.application.port.out.ForStoringUserData;
 import de.ostfale.va.application.port.out.plannedtournaments.ForRoutingAndGeocoding;
 import de.ostfale.va.common.UseLogging;
 import de.ostfale.va.framework.in.ui.app.MainLayout;
@@ -23,7 +23,7 @@ public class PlannedTournamentsView extends VerticalLayout implements UseLogging
 
     private final ForFilteringPlannedTournaments forFilteringPlannedTournaments;
     private final ForRoutingAndGeocoding routingService;
-    private final ForManagingFavorites forManagingFavorites;
+    private final ForStoringUserData forStoringUserData;
     private final ForGettingUserConfiguration userConfiguration;
     private final DataProvider<PlannedTournament, PlannedTournamentsFilter> pagingDataProvider;
     private PaginationComponent paginationComponent = new PaginationComponent();
@@ -31,11 +31,11 @@ public class PlannedTournamentsView extends VerticalLayout implements UseLogging
 
     public PlannedTournamentsView(ForFilteringPlannedTournaments filter,
                                   ForRoutingAndGeocoding routingService,
-                                  ForManagingFavorites forManagingFavorites,
+                                  ForStoringUserData forStoringUserData,
                                   ForGettingUserConfiguration userConfiguration) {
         this.forFilteringPlannedTournaments = filter;
         this.routingService = routingService;
-        this.forManagingFavorites = forManagingFavorites;
+        this.forStoringUserData = forStoringUserData;
         this.userConfiguration = userConfiguration;
         this.pagingDataProvider = DataProvider.fromFilteringCallbacks(this::fetchTournaments, this::countTournaments);
 
@@ -100,12 +100,15 @@ public class PlannedTournamentsView extends VerticalLayout implements UseLogging
             tListComponent.refresh(filterComponent.getCurrentFilter());
         });
 
+        // Apply initial filter with "Verbleibende Turniere" checkbox enabled
+        tListComponent.refresh(filterComponent.getCurrentFilter());
+
         return filterComponent;
     }
 
     private PlannedTournamentsListCompoment createTournamentListComponent(DataProvider<PlannedTournament, PlannedTournamentsFilter> pagingDataProvider, PaginationComponent paginationComponent) {
         log().debug("TournamentView :: createTournamentListComponent");
-        var component = new PlannedTournamentsListCompoment(pagingDataProvider, paginationComponent, forManagingFavorites, userConfiguration);
+        var component = new PlannedTournamentsListCompoment(pagingDataProvider, paginationComponent, forStoringUserData, userConfiguration);
         component.setSizeFull();
         return component;
     }
