@@ -1,67 +1,66 @@
 package de.ostfale.va.framework.out.persistence;
 
-import de.ostfale.va.application.domain.model.DataRoot;
 import de.ostfale.va.application.domain.model.UserData;
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournamentKey;
 import de.ostfale.va.application.domain.model.plannedournaments.vo.UserIdendityVO;
+import de.ostfale.va.application.domain.model.playerrankings.PlayerId;
+import de.ostfale.va.application.port.out.ForGettingUserConfiguration;
 import de.ostfale.va.application.port.out.ForStoringUserData;
+import de.ostfale.va.application.port.out.UserDataRepository;
 import de.ostfale.va.common.UseLogging;
-import org.eclipse.store.storage.types.StorageManager;
 import org.springframework.stereotype.Component;
-
-import java.util.Map;
 
 @Component
 public class EclipseStoreUserAdapter implements ForStoringUserData, UseLogging {
+    private final UserDataRepository repository;
 
-    private final DataRoot dataRoot;
-    private final StorageManager storageManager;
+    private final ForGettingUserConfiguration userConfiguration;
 
-    public EclipseStoreUserAdapter(StorageManager storageManager, DataRoot dataRoot) {
-        this.storageManager = storageManager;
-        this.dataRoot = dataRoot;
+    public EclipseStoreUserAdapter(UserDataRepository repository, ForGettingUserConfiguration userConfiguration) {
+        this.repository = repository;
+        this.userConfiguration = userConfiguration;
     }
 
     @Override
     public void addFavorite(UserIdendityVO identity, PlannedTournamentKey key) {
-        Map<UserIdendityVO, UserData> map = dataRoot.getUsersMap();
-        UserData data = map.get(identity);
+        UserData data = findOrCreateUser(identity);
+        data.addFavorite(key);
+        repository.save(data);
+        log().debug("EclipseStoreUserAdapter :: Favorite added for {}", identity.email());
+    }
 
-        if (data == null) {
-            data = new UserData(identity);
-            data.getFavoriteKeys().add(key);
-            map.put(identity, data);
-            storageManager.store(map);
-            log().debug("EclipseStoreUserAdapter :: Created new UserData for user {} with favorite", identity);
-        } else {
-            data.getFavoriteKeys().add(key);
-            storageManager.store(data.getFavoriteKeys());
-            log().debug("EclipseStoreUserAdapter :: Added favorite for user {}", identity);
-        }
+    @Override
+    public void addPlayerFavorite(PlayerId playerId) {
+        UserData user = userConfiguration.getCurrentUser();
+        user.addPlayerFavorite(playerId);
+        repository.save(user);
+        log().debug("EclipseStoreUserAdapter :: Player favorite {} added for {}", playerId, user.getEmail());
     }
 
     @Override
     public void removeFavorite(UserIdendityVO identity, PlannedTournamentKey key) {
-        Map<UserIdendityVO, UserData> map = dataRoot.getUsersMap();
-        UserData data = map.get(identity);
-
-        if (data != null) {
-            data.getFavoriteKeys().remove(key);
-            storageManager.store(data.getFavoriteKeys());
+        repository.findByEmail(identity.email()).ifPresentOrElse(data -> {
+            data.removeFavorite(key);
+            repository.save(data);
             log().debug("EclipseStoreUserAdapter :: Removed favorite for user {}", identity);
-        } else {
-            log().warn("EclipseStoreUserAdapter :: Cannot remove favorite, user not found: {}", identity);
-        }
+        }, () -> log().warn("EclipseStoreUserAdapter :: Cannot remove favorite, user not found: {}", identity));
+    }
+
+    @Override
+    public void removePlayerFavorite(PlayerId playerId) {
+        UserData user = userConfiguration.getCurrentUser();
+        user.removePlayerFavorite(playerId);
+        repository.save(user);
+        log().debug("EclipseStoreUserAdapter :: Removed favorite playerId {} for user {}", playerId, user.getEmail());
     }
 
     @Override
     public UserData findUserByEmail(String email) {
-        log().debug("EclipseStoreUserAdapter :: Finding user by email: {}", email);
-        var usersFound = dataRoot.getUsersMap();
-        return usersFound.get(UserIdendityVO.fromEmail(email));
+        return repository.findByEmail(email).orElse(null);
     }
 
-    public UserData getUserData(UserIdendityVO identity) {
-        return dataRoot.getUsersMap().get(identity);
+    private UserData findOrCreateUser(UserIdendityVO identity) {
+        return repository.findByEmail(identity.email())
+                .orElseGet(() -> new UserData(identity));
     }
 }

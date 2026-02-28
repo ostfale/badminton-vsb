@@ -4,6 +4,7 @@ import com.vaadin.flow.server.*;
 import de.ostfale.va.application.domain.model.UserData;
 import de.ostfale.va.application.domain.model.plannedournaments.vo.UserIdendityVO;
 import de.ostfale.va.application.port.in.ForTrackingUserRegistrations;
+import de.ostfale.va.application.port.out.ForStoringUserData;
 import de.ostfale.va.common.UseLogging;
 import org.springframework.stereotype.Component;
 
@@ -15,10 +16,14 @@ public class CloudflareSessionInitializer implements VaadinServiceInitListener, 
 
     private final SessionUserContextProviderAdapter sessionUserContextProviderAdapter;
 
+    private final ForStoringUserData forStoringUserData;
+
     public CloudflareSessionInitializer(ForTrackingUserRegistrations trackRegistrationService,
-                                        SessionUserContextProviderAdapter sessionUserContextProviderAdapter) {
+                                        SessionUserContextProviderAdapter sessionUserContextProviderAdapter,
+                                        ForStoringUserData forStoringUserData) {
         this.trackRegistrations = trackRegistrationService;
         this.sessionUserContextProviderAdapter = sessionUserContextProviderAdapter;
+        this.forStoringUserData = forStoringUserData;
     }
 
     @Override
@@ -40,8 +45,13 @@ public class CloudflareSessionInitializer implements VaadinServiceInitListener, 
                 email = "info@uwe-sauerbrei.de"; // Default user for local development
             }
 
-            var userData = new UserData(UserIdendityVO.fromEmail(email));
-            log().info("CloudflareSessionInitializer :: Current user:: {}", userData);
+            UserData userData = forStoringUserData.findUserByEmail(email);
+            if (userData == null) {
+                userData = new UserData(UserIdendityVO.fromEmail(email));
+                log().info("CloudflareSessionInitializer :: Created new user: {}", userData);
+            } else {
+                log().info("CloudflareSessionInitializer :: Loaded existing user: {}", userData);
+            }
             sessionUserContextProviderAdapter.setCurrentUserData(userData);
             trackRegistrations.trackRegistration(email);
         });

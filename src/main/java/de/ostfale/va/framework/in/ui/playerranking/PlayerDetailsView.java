@@ -11,6 +11,8 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import de.ostfale.va.application.domain.model.playerrankings.Player;
 import de.ostfale.va.application.port.in.ranking.ForLoadingRankings;
+import de.ostfale.va.application.port.out.ForGettingUserConfiguration;
+import de.ostfale.va.application.port.out.ForStoringUserData;
 import de.ostfale.va.common.UseLogging;
 
 import java.util.List;
@@ -21,9 +23,9 @@ public class PlayerDetailsView extends VerticalLayout implements UseLogging {
     private static final String PLAYER_SEPARATOR_DETAILS = "Spieler Details";
     private static final String PLAYER_RANKING_POINTS = "Spieler Ranglistenpunkte";
 
-    private final PlayerDetailsSearchComponent searchComponent ;
+    private final PlayerDetailsSearchComponent searchComponent;
 
-    ForLoadingRankings rankingService;
+    private final ForLoadingRankings rankingService;
 
     private TextField playerNameField;
     private TextField playerIdField;
@@ -34,9 +36,13 @@ public class PlayerDetailsView extends VerticalLayout implements UseLogging {
     private TextField playerDistrictNameField;
     private TextField playerStateNameField;
     private TextField playerStateGroupField;
+    private Grid<RankingRow> rankingGrid;
+    private List<RankingRow> matrixData;
 
-    public PlayerDetailsView(ForLoadingRankings rankingService) {
-        this.searchComponent = new PlayerDetailsSearchComponent(rankingService, this);
+    public PlayerDetailsView(ForLoadingRankings rankingService,
+                             ForStoringUserData forStoringUserData,
+                             ForGettingUserConfiguration userConfiguration) {
+        this.searchComponent = new PlayerDetailsSearchComponent(rankingService, this, userConfiguration, forStoringUserData);
         log().debug("PlayerDetailsView :: constructor");
         this.rankingService = rankingService;
         initLayout();
@@ -150,9 +156,6 @@ public class PlayerDetailsView extends VerticalLayout implements UseLogging {
         rankingGrid.getDataProvider().refreshAll();
     }
 
-    private Grid<RankingRow> rankingGrid;
-    private List<RankingRow> matrixData;
-
     private Component createRankingMatrix() {
         rankingGrid = new Grid<>();
         rankingGrid.addClassName("ranking-grid");
@@ -188,25 +191,6 @@ public class PlayerDetailsView extends VerticalLayout implements UseLogging {
         return rankingGrid;
     }
 
-    public static class RankingRow {
-        private final String discipline;
-        private String tournaments = "";
-        private String points = "";
-        private String rank = "";
-        private String rankAk = "";
-
-        public RankingRow(String discipline) { this.discipline = discipline; }
-        public String getDiscipline() { return discipline; }
-        public String getTournaments() { return tournaments; }
-        public void setTournaments(String t) { this.tournaments = t; }
-        public String getPoints() { return points; }
-        public void setPoints(String p) { this.points = p; }
-        public String getRank() { return rank; }
-        public void setRank(String r) { this.rank = r; }
-        public String getRankAk() { return rankAk; }
-        public void setRankAk(String ra) { this.rankAk = ra; }
-    }
-
     private int calculateAkRank(Player target, List<Player> allPlayers, java.util.function.Function<Player, Integer> pointGetter) {
         int targetPoints = pointGetter.apply(target);
 
@@ -215,5 +199,53 @@ public class PlayerDetailsView extends VerticalLayout implements UseLogging {
                 .filter(p -> p.getAgeClassGeneral().equals(target.getAgeClassGeneral()))
                 .filter(p -> pointGetter.apply(p) > targetPoints)
                 .count() + 1;
+    }
+
+    public static class RankingRow {
+        private final String discipline;
+        private String tournaments = "";
+        private String points = "";
+        private String rank = "";
+        private String rankAk = "";
+
+        public RankingRow(String discipline) {
+            this.discipline = discipline;
+        }
+
+        public String getDiscipline() {
+            return discipline;
+        }
+
+        public String getTournaments() {
+            return tournaments;
+        }
+
+        public void setTournaments(String t) {
+            this.tournaments = t;
+        }
+
+        public String getPoints() {
+            return points;
+        }
+
+        public void setPoints(String p) {
+            this.points = p;
+        }
+
+        public String getRank() {
+            return rank;
+        }
+
+        public void setRank(String r) {
+            this.rank = r;
+        }
+
+        public String getRankAk() {
+            return rankAk;
+        }
+
+        public void setRankAk(String ra) {
+            this.rankAk = ra;
+        }
     }
 }

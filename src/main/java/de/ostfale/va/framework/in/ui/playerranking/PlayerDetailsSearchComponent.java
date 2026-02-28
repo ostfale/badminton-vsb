@@ -6,25 +6,40 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.select.Select;
+import de.ostfale.va.application.domain.model.UserData;
 import de.ostfale.va.application.domain.model.playerrankings.Player;
+import de.ostfale.va.application.domain.model.playerrankings.PlayerId;
 import de.ostfale.va.application.port.in.ranking.ForLoadingRankings;
+import de.ostfale.va.application.port.out.ForGettingUserConfiguration;
+import de.ostfale.va.application.port.out.ForStoringUserData;
 import de.ostfale.va.common.UseLogging;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
 
 public class PlayerDetailsSearchComponent implements UseLogging {
 
     private final ForLoadingRankings rankingService;
     private final PlayerDetailsView parentView;
+    private final ForGettingUserConfiguration userConfiguration;
+    private final ForStoringUserData forStoringUserData;
+
 
     // UI-components as fields for access
     private ComboBox<Player> searchBox;
     private Select<Player> favoritesSelect;
     private Button favoriteButton;
 
-    public PlayerDetailsSearchComponent(ForLoadingRankings rankingUseCase, PlayerDetailsView playerDetailsView) {
+    public PlayerDetailsSearchComponent(ForLoadingRankings rankingUseCase,
+                                        PlayerDetailsView playerDetailsView,
+                                        ForGettingUserConfiguration userConfiguration,
+                                        ForStoringUserData userDataStorage) {
         this.rankingService = rankingUseCase;
         this.parentView = playerDetailsView;
+        this.userConfiguration = userConfiguration;
+        this.forStoringUserData = userDataStorage;
     }
 
     public HorizontalLayout getComponent() {
@@ -52,6 +67,25 @@ public class PlayerDetailsSearchComponent implements UseLogging {
     }
 
     private void refreshFavorites() {
+        Set<PlayerId> favoritePlayerIds = getFavoritePlayerIds();
+        if (favoritePlayerIds.isEmpty()) {
+            favoritesSelect.setItems(Collections.emptyList());
+            return;
+        }
+        List<Player> favoritePlayers = filterFavoritePlayers(rankingService.loadPlayer(), favoritePlayerIds);
+        log().debug("PlayerDetailsSearchComponent :: Found number of favorites: {}", favoritePlayers.size());
+        favoritesSelect.setItems(favoritePlayers);
+    }
+
+    private Set<PlayerId> getFavoritePlayerIds() {
+        UserData user = userConfiguration.getCurrentUser();
+        return user != null ? user.getFavoritePlayerIds() : Set.of();
+    }
+
+    private List<Player> filterFavoritePlayers(List<Player> players, Set<PlayerId> favoritePlayerIds) {
+        return players.stream()
+                .filter(player -> favoritePlayerIds.contains(player.getPlayerId()))
+                .toList();
     }
 
     private Select<Player> createFavoritesSelect() {
@@ -117,8 +151,10 @@ public class PlayerDetailsSearchComponent implements UseLogging {
             Player selectedPlayer = event.getValue();
             if (selectedPlayer != null) {
                 parentView.updatePlayerDetails(selectedPlayer);
+                updateFavoriteButtonIcon(selectedPlayer);
             } else {
                 parentView.clearDetails();
+                favoriteButton.setIcon(VaadinIcon.STAR_O.create());
             }
         });
     }
@@ -135,21 +171,31 @@ public class PlayerDetailsSearchComponent implements UseLogging {
     }
 
     private void toggleFavorite(Player player) {
-        // Logik für EclipseStore
-        // Hier rufen Sie Ihren Service auf: rankingService.toggleFavorite(player.getPlayerId());
-        log().info("PlayerDetailsSearchComponent :: Toggle Favorite für Player-ID: {}", player.getPlayerId());
+        Set<PlayerId> favoritePlayerIds = getFavoritePlayerIds();
 
-        // UI Refresh
+        if (!favoritePlayerIds.contains(player.getPlayerId())) {
+            log().debug("PlayerDetailsSearchComponent :: toggle on for {}", player.getPlayerId());
+            forStoringUserData.addPlayerFavorite(player.getPlayerId());
+            favoriteButton.setIcon(VaadinIcon.STAR.create());
+        } else {
+            log().debug("PlayerDetailsSearchComponent :: toggle off for {}", player.getPlayerId());
+            forStoringUserData.removePlayerFavorite(player.getPlayerId());
+            favoriteButton.setIcon(VaadinIcon.STAR_O.create());
+        }
+
+        log().info("PlayerDetailsSearchComponent :: Toggle Favorite für Player-ID: {}", player.getPlayerId());
         refreshFavorites();
-        updateFavoriteButtonIcon(player);
     }
 
     private void updateFavoriteButtonIcon(Player player) {
-        // Prüfen ob Favorit (via Service/EclipseStore)
-        // boolean isFav = rankingService.isFavorite(player.getPlayerId());
-        // favoriteButton.setIcon(isFav ? VaadinIcon.STAR.create() : VaadinIcon.STAR_O.create());
-        // favoriteButton.getStyle().set("color", isFav ? "gold" : "");
+        Set<PlayerId> favoritePlayerIds = getFavoritePlayerIds();
+        if (favoritePlayerIds.contains(player.getPlayerId())) {
+            favoriteButton.setIcon(VaadinIcon.STAR.create());
+        } else {
+            favoriteButton.setIcon(VaadinIcon.STAR_O.create());
+        }
     }
+
 
     private Button createReloadButton() {
         return createIconButton(VaadinIcon.REFRESH, "Spielerdaten aktualisieren");

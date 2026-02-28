@@ -4,6 +4,7 @@ import de.ostfale.va.common.UseLogging;
 
 public class Player implements UseLogging {
 
+    private boolean isFavorite;
     private PlayerId playerId;
     private String firstName;
     private String lastName;
@@ -76,6 +77,14 @@ public class Player implements UseLogging {
         this.mixedRanking = mixedRanking;
         this.mixedAgeRanking = ageRanking;
         this.mixedTournaments = noOfTournaments;
+    }
+
+    public boolean isFavorite() {
+        return isFavorite;
+    }
+
+    public void setFavorite(boolean favorite) {
+        isFavorite = favorite;
     }
 
     public String getFirstName() {

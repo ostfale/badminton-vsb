@@ -22,6 +22,7 @@
         <!-- libs -->
         <htmlunit.version>4.21.0</htmlunit.version>
         <fastexcel-reader.version>0.19.0</fastexcel-reader.version>
+        <spring-data-eclipse-store.version>3.0.0</spring-data-eclipse-store.version>
 
         <!-- test -->
         <archunit.version>1.4.1</archunit.version>
@@ -80,12 +81,10 @@
             <artifactId>htmlunit</artifactId>
             <version>${htmlunit.version}</version>
         </dependency>
-        <!-- Source: https://mvnrepository.com/artifact/org.eclipse.store/integrations-spring-boot3 -->
         <dependency>
-            <groupId>org.eclipse.store</groupId>
-            <artifactId>integrations-spring-boot3</artifactId>
-            <version>3.1.0</version>
-            <scope>compile</scope>
+            <groupId>software.xdev</groupId>
+            <artifactId>spring-data-eclipse-store</artifactId>
+            <version>${spring-data-eclipse-store.version}</version>
         </dependency>
         <dependency>
             <groupId>org.dhatim</groupId>

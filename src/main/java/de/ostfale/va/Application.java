@@ -7,9 +7,11 @@ import de.ostfale.va.common.UseLogging;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import software.xdev.spring.data.eclipse.store.repository.config.EnableEclipseStoreRepositories;
 
 @SpringBootApplication
 @EnableScheduling
+@EnableEclipseStoreRepositories
 @StyleSheet(Lumo.STYLESHEET)
 @StyleSheet(Lumo.UTILITY_STYLESHEET)
 @StyleSheet("./css/styles.css")

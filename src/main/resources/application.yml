@@ -37,8 +37,6 @@ org:
   eclipse:
     store:
       storage-directory: ${user.home}/.badminton-vsb/data
-      rest:
-        enabled: true
 
 app:
   download:
