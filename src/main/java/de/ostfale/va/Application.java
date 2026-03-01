@@ -19,7 +19,7 @@ public class Application implements AppShellConfigurator, UseLogging {
 
     private static final String LOG_MSG_CONFIGURE = "AppShell :: configurePage";
 
-    static void main(String[] args) {
+    public static void main(String[] args) {
         UseLogging.staticLog().info(LOG_MSG_CONFIGURE);
         SpringApplication.run(Application.class, args);
     }

@@ -57,9 +57,4 @@ public class EclipseStoreUserAdapter implements ForStoringUserData, UseLogging {
     public UserData findUserByEmail(String email) {
         return repository.findByEmail(email).orElse(null);
     }
-
-    private UserData findOrCreateUser(UserIdendityVO identity) {
-        return repository.findByEmail(identity.email())
-                .orElseGet(() -> new UserData(identity));
-    }
 }

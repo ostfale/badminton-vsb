@@ -136,6 +136,7 @@ public class PlayerDetailsSearchComponent implements UseLogging {
             Player selectedPlayer = event.getValue();
             if (selectedPlayer != null) {
                 log().info("PlayerDetailsSearchComponent :: Player selected: {} {}", selectedPlayer.getFirstName(), selectedPlayer.getLastName());
+                favoritesSelect.clear();
                 parentView.updatePlayerDetails(selectedPlayer);
                 updateFavoriteButtonIcon(selectedPlayer);
             } else {
@@ -150,6 +151,7 @@ public class PlayerDetailsSearchComponent implements UseLogging {
         selectPlayer.addValueChangeListener(event -> {
             Player selectedPlayer = event.getValue();
             if (selectedPlayer != null) {
+                searchBox.clear();
                 parentView.updatePlayerDetails(selectedPlayer);
                 updateFavoriteButtonIcon(selectedPlayer);
             } else {

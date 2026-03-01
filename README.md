@@ -24,5 +24,12 @@ docker build --secret id=proKey,src=$HOME/.vaadin/proKey .           # builds a 
 Run local jar: 
 
 ```bash
-java --add-exports java.base/jdk.internal.misc=ALL-UNNAMED -Dspring.profiles.active=prod -jar target/bad-vsb.jar
+java --add-exports java.base/jdk.internal.misc=ALL-UNNAMED \
+     --add-opens java.base/java.lang=ALL-UNNAMED \
+     --add-opens java.base/java.lang.reflect=ALL-UNNAMED \
+     --add-opens java.base/java.util=ALL-UNNAMED \
+     --add-opens java.base/java.time=ALL-UNNAMED \
+     --add-opens java.base/java.nio=ALL-UNNAMED \
+     -Dspring.profiles.active=prod \
+     -jar target/bad-vsb.jar
 ```

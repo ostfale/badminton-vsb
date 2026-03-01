@@ -11,7 +11,7 @@ public class UserData {
     private final String email;
     private final String name;
     private final Set<PlannedTournamentKey> favoriteKeys = new HashSet<>();
-    private  Set<PlayerId> favoritePlayerIds;
+    private final Set<PlayerId> favoritePlayerIds = new HashSet<>();
 
     public UserData(UserIdendityVO identity) {
         this.email = identity.email();
@@ -43,29 +43,19 @@ public class UserData {
     }
 
     public Set<PlayerId> getFavoritePlayerIds() {
-        init();
         return favoritePlayerIds;
     }
 
     public boolean isPlayerFavorite(PlayerId id) {
-        init();
         return favoritePlayerIds.contains(id);
     }
 
     public void addPlayerFavorite(PlayerId id) {
-        init();
         favoritePlayerIds.add(id);
     }
 
     public void removePlayerFavorite(PlayerId id) {
-        init();
         favoritePlayerIds.remove(id);
-    }
-
-    private void init() {
-        if (favoritePlayerIds == null) {
-            favoritePlayerIds = new HashSet<>();
-        }
     }
 
     @Override

@@ -5,12 +5,12 @@
 
     <groupId>de.ostfale.va</groupId>
     <artifactId>badminton-vsb</artifactId>
-    <version>1.2.0</version>
+    <version>1.2.1</version>
     <packaging>jar</packaging>
 
     <properties>
         <java.version>25</java.version>
-        <vaadin.version>25.0.4</vaadin.version>
+        <vaadin.version>25.0.6</vaadin.version>
 
         <!-- monitor -->
         <logstash-logback-encoder.version>9.0</logstash-logback-encoder.version>
@@ -21,7 +21,7 @@
 
         <!-- libs -->
         <htmlunit.version>4.21.0</htmlunit.version>
-        <fastexcel-reader.version>0.19.0</fastexcel-reader.version>
+        <fastexcel-reader.version>0.20.0</fastexcel-reader.version>
         <spring-data-eclipse-store.version>3.0.0</spring-data-eclipse-store.version>
 
         <!-- test -->
@@ -31,7 +31,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.0.1</version>
+        <version>4.0.3</version>
         <relativePath/>
     </parent>
 
@@ -204,12 +204,14 @@
                         <executions>
                             <execution>
                                 <goals>
+                                    <!-- WICHTIG: prepare-frontend muss VOR build-frontend kommen -->
+                                    <goal>prepare-frontend</goal>
                                     <goal>build-frontend</goal>
                                 </goals>
-                                <phase>compile</phase>
                             </execution>
                         </executions>
                         <configuration>
+                            <!-- Erzwingt, dass Vite läuft und das Resultat in das JAR packt -->
                             <productionMode>true</productionMode>
                         </configuration>
                     </plugin>
