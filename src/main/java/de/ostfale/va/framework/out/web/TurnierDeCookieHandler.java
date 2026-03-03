@@ -1,12 +1,10 @@
 package de.ostfale.va.framework.out.web;
 
+import com.microsoft.playwright.BrowserContext;
+import com.microsoft.playwright.Locator;
+import com.microsoft.playwright.Page;
 import de.ostfale.va.common.UseLogging;
-import org.htmlunit.WebClient;
-import org.htmlunit.html.HtmlElement;
-import org.htmlunit.html.HtmlPage;
 import org.springframework.stereotype.Component;
-
-import java.io.IOException;
 
 @Component
 public class TurnierDeCookieHandler implements UseLogging {
@@ -15,30 +13,33 @@ public class TurnierDeCookieHandler implements UseLogging {
     // searching for green div
     private static final String ACCEPT_DIV_XPATH = "//div[@id='buttons']/div[contains(@class, 'green')]";
 
-    public HtmlPage handleIfNecessary(HtmlPage page, WebClient webClient) {
-        boolean consentUiPresent = page.getElementById(CONSENT_UI_ID) != null;
+    public Page handleIfNecessary(Page page, BrowserContext context) {
+        Locator consentUi = page.locator("#" + CONSENT_UI_ID);
+        boolean consentUiPresent = consentUi.count() > 0;
+
         if (!consentUiPresent) {
             return page;
         }
 
-        log().info("Turnier.de Consent-UI (ID: consentui) found. Attempting to accept...");
-        return acceptCookieConsent(page, webClient);
+        log().info("TurnierDeCookieHandler :: Turnier.de Consent-UI (ID: consentui) found. Attempting to accept...");
+        return acceptCookieConsent(page);
     }
 
-    private HtmlPage acceptCookieConsent(HtmlPage page, WebClient webClient) {
+    private Page acceptCookieConsent(Page page) {
         try {
-            HtmlElement acceptBtnDiv = page.getFirstByXPath(ACCEPT_DIV_XPATH);
-            if (acceptBtnDiv == null) {
-                log().warn("The green accept button was not found (XPath incorrect?)");
+            Locator acceptBtn = page.locator(ACCEPT_DIV_XPATH).first();
+
+            if (acceptBtn.count() == 0) {
+                log().warn("TurnierDeCookieHandler :: The green accept button was not found (XPath incorrect?)");
                 return page;
             }
 
-            HtmlPage resultPage = acceptBtnDiv.click();
-            webClient.waitForBackgroundJavaScript(2500);
-            log().debug("Cookie wall bypassed. Current URL: {}", resultPage.getUrl());
-            return resultPage;
-        } catch (IOException e) {
-            log().error("Error clicking the consent button", e);
+            acceptBtn.click();
+            page.waitForTimeout(2500); // wait for JS to complete
+            log().debug("TurnierDeCookieHandler :: Cookie wall bypassed. Current URL: {}", page.url());
+            return page;
+        } catch (Exception e) {
+            log().error("TurnierDeCookieHandler :: Error clicking the consent button", e);
             return page;
         }
     }

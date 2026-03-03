@@ -20,7 +20,7 @@
         <maven-enforcer-plugin.version>3.6.2</maven-enforcer-plugin.version>
 
         <!-- libs -->
-        <htmlunit.version>4.21.0</htmlunit.version>
+        <playwright.version>1.58.0</playwright.version>
         <fastexcel-reader.version>0.20.0</fastexcel-reader.version>
         <spring-data-eclipse-store.version>3.0.0</spring-data-eclipse-store.version>
 
@@ -77,9 +77,9 @@
 
         <!-- libs -->
         <dependency>
-            <groupId>org.htmlunit</groupId>
-            <artifactId>htmlunit</artifactId>
-            <version>${htmlunit.version}</version>
+            <groupId>com.microsoft.playwright</groupId>
+            <artifactId>playwright</artifactId>
+            <version>${playwright.version}</version>
         </dependency>
         <dependency>
             <groupId>software.xdev</groupId>

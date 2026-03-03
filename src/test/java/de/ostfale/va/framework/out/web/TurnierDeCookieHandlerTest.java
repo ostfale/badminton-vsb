@@ -1,21 +1,21 @@
 package de.ostfale.va.framework.out.web;
 
-import org.htmlunit.MockWebConnection;
-import org.htmlunit.WebClient;
-import org.htmlunit.html.HtmlPage;
+import com.microsoft.playwright.Browser;
+import com.microsoft.playwright.BrowserType;
+import com.microsoft.playwright.Page;
+import com.microsoft.playwright.Playwright;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import java.net.URI;
-import java.net.URL;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Turnier.de Cookie Handler Tests")
 class TurnierDeCookieHandlerTest {
 
-    private static final String TEST_BASE_URL = "https://www.turnier.de";
     private static final String COOKIE_WALL_HTML = """
             <html>
             <body>
@@ -30,52 +30,64 @@ class TurnierDeCookieHandlerTest {
             """;
     private static final String NORMAL_PAGE_HTML = "<html><body><h1>Turnierliste</h1></body></html>";
 
+    private static Playwright playwright;
+    private static Browser browser;
     private TurnierDeCookieHandler sut;
-    private WebClient webClient;
+
+    @BeforeAll
+    static void setUpAll() {
+        playwright = Playwright.create();
+        browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(true));
+    }
+
+    @AfterAll
+    static void tearDownAll() {
+        if (browser != null) {
+            browser.close();
+        }
+        if (playwright != null) {
+            playwright.close();
+        }
+    }
 
     @BeforeEach
     void setUp() {
         sut = new TurnierDeCookieHandler();
-        webClient = createConfiguredWebClient();
+    }
+
+    @AfterEach
+    void tearDown() {
     }
 
     @Test
     @DisplayName("Sollte Cookie-Wall erkennen und auf 'Akzeptieren' klicken")
-    void shouldHandleCookieWall() throws Exception {
-        HtmlPage initialPage = setupMockPage("/cookiewall", COOKIE_WALL_HTML);
+    void shouldHandleCookieWall() {
+        try (var context = browser.newContext();
+             var page = context.newPage()) {
 
-        HtmlPage resultPage = sut.handleIfNecessary(initialPage, webClient);
+            page.setContent(COOKIE_WALL_HTML);
 
-        assertNotNull(resultPage);
+            Page resultPage = sut.handleIfNecessary(page, context);
+
+            assertNotNull(resultPage);
+            // Verify that the green button was clicked (consent wall should be handled)
+            assertTrue(resultPage.locator("#consentui").count() > 0);
+        }
     }
 
     @Test
     @DisplayName("Sollte nichts tun, wenn keine Cookie-Wall vorhanden ist")
-    void shouldDoNothingIfNoCookieWall() throws Exception {
-        MockWebConnection connection = new MockWebConnection();
-        HtmlPage page = setupMockPage("/tournaments", NORMAL_PAGE_HTML, connection);
+    void shouldDoNothingIfNoCookieWall() {
+        try (var context = browser.newContext();
+             var page = context.newPage()) {
 
-        HtmlPage resultPage = sut.handleIfNecessary(page, webClient);
+            page.setContent(NORMAL_PAGE_HTML);
 
-        assertEquals(page, resultPage);
-        assertEquals(0, connection.getRequestCount() - 1);
-    }
+            Page resultPage = sut.handleIfNecessary(page, context);
 
-    private WebClient createConfiguredWebClient() {
-        WebClient client = new WebClient();
-        client.getOptions().setJavaScriptEnabled(false);
-        client.getOptions().setCssEnabled(false);
-        return client;
-    }
-
-    private HtmlPage setupMockPage(String path, String htmlContent) throws Exception {
-        return setupMockPage(path, htmlContent, new MockWebConnection());
-    }
-
-    private HtmlPage setupMockPage(String path, String htmlContent, MockWebConnection connection) throws Exception {
-        URL url = URI.create(TEST_BASE_URL + path).toURL();
-        connection.setResponse(url, htmlContent);
-        webClient.setWebConnection(connection);
-        return webClient.getPage(url);
+            assertSame(page, resultPage);
+            // Verify no consent UI is present
+            assertEquals(0, resultPage.locator("#consentui").count());
+        }
     }
 }

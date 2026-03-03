@@ -1,38 +1,46 @@
 package de.ostfale.va.framework.out.web;
 
+import com.microsoft.playwright.Browser;
+import com.microsoft.playwright.BrowserContext;
+import com.microsoft.playwright.Locator;
+import com.microsoft.playwright.Page;
 import de.ostfale.va.application.port.out.ranking.ForLoadingExternalWebsites;
 import de.ostfale.va.common.UseLogging;
-import org.htmlunit.WebClient;
-import org.htmlunit.html.HtmlElement;
-import org.htmlunit.html.HtmlPage;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Objects;
 import java.util.Optional;
 
 @Component
 public class ForLoadingExternalWebsitesAdapter implements ForLoadingExternalWebsites, UseLogging {
-    private static final int BACKGROUND_JS_WAIT_MS = 1000;
 
-    private final ObjectProvider<WebClient> clientProvider;
+    private static final int NAVIGATION_TIMEOUT_MS = 30000;
+
+    private final ObjectProvider<Browser> browserProvider;
     private final TurnierDeCookieHandler cookieHandler;
 
-    public ForLoadingExternalWebsitesAdapter(ObjectProvider<WebClient> clientProvider, TurnierDeCookieHandler cookieHandler) {
-        this.clientProvider = clientProvider;
+    public ForLoadingExternalWebsitesAdapter(ObjectProvider<Browser> browserProvider, TurnierDeCookieHandler cookieHandler) {
+        this.browserProvider = browserProvider;
         this.cookieHandler = cookieHandler;
     }
 
     @Override
-    public HtmlPage loadPage(String url) {
-        try (WebClient webClient = clientProvider.getIfAvailable()) {
-            if (webClient == null) {
-                log().error("WebClient not available for loading {}", url);
-                return null;
-            }
-            return loadPageWithCookieHandling(webClient, url);
+    public Page loadPage(String url) {
+        Browser browser = browserProvider.getIfAvailable();
+        if (browser == null) {
+            log().error("Browser not available for loading {}", url);
+            return null;
+        }
+
+        try {
+            BrowserContext context = browser.newContext();
+            Page page = context.newPage();
+            page.navigate(url, new Page.NavigateOptions().setTimeout(NAVIGATION_TIMEOUT_MS));
+            page.waitForLoadState();
+
+            return cookieHandler.handleIfNecessary(page, context);
         } catch (Exception e) {
             log().error("Failed to load page from {}", url, e);
             return null;
@@ -41,16 +49,25 @@ public class ForLoadingExternalWebsitesAdapter implements ForLoadingExternalWebs
 
     @Override
     public Optional<LocalDateTime> getLastUpdateTimestamp(String url) {
-        try (WebClient client = clientProvider.getIfAvailable()) {
-            HtmlPage page = Objects.requireNonNull(client, "WebClient provider returned null").getPage(url);
-            HtmlElement timestampElement = page.getHtmlElementById("infopop");
+        Browser browser = browserProvider.getIfAvailable();
+        if (browser == null) {
+            log().error("Browser not available");
+            return Optional.empty();
+        }
 
-            if (timestampElement != null) {
-                String timestampText = timestampElement.asNormalizedText().trim();
+        BrowserContext context = browser.newContext();
+        try (Page page = context.newPage()) {
+            page.navigate(url);
+            Locator timestampElement = page.locator("#infopop");
+
+            if (timestampElement.count() > 0) {
+                String timestampText = timestampElement.textContent().trim();
                 return parseTimestamp(timestampText);
             }
         } catch (Exception e) {
             log().error("Konnte Zeitstempel nicht lesen", e);
+        } finally {
+            context.close();
         }
         return Optional.empty();
     }
@@ -60,9 +77,4 @@ public class ForLoadingExternalWebsitesAdapter implements ForLoadingExternalWebs
         return Optional.of(LocalDateTime.parse(timestampText, formatter));
     }
 
-    private HtmlPage loadPageWithCookieHandling(WebClient webClient, String url) throws Exception {
-        HtmlPage page = webClient.getPage(url);
-        webClient.waitForBackgroundJavaScript(BACKGROUND_JS_WAIT_MS);
-        return cookieHandler.handleIfNecessary(page, webClient);
-    }
 }

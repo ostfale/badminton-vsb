@@ -1,8 +1,9 @@
 package de.ostfale.va.framework.out.web;
 
+import com.microsoft.playwright.Browser;
+import com.microsoft.playwright.BrowserContext;
+import com.microsoft.playwright.Page;
 import de.ostfale.va.application.domain.model.download.DownloadTask;
-import org.htmlunit.WebClient;
-import org.htmlunit.html.HtmlPage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,15 +13,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.ObjectProvider;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -29,36 +27,33 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class RankingFileDownloadConfigAdapterTest {
 
+    @TempDir
+    Path tempDir;
     private RankingFileDownloadConfigAdapter sut;
-
     @Mock
-    private ObjectProvider<WebClient> clientProvider;
-
+    private ObjectProvider<Browser> browserProvider;
     @Mock
-    private WebClient webClient;
-
+    private Browser browser;
+    @Mock
+    private BrowserContext browserContext;
+    @Mock
+    private Page page;
     @Mock
     private BadmintonDeTimestampParser timestampParser;
 
-    @Mock
-    private HtmlPage htmlPage;
-
-    @TempDir
-    Path tempDir;
-
     @BeforeEach
     void setUp() {
-        sut = new RankingFileDownloadConfigAdapter(clientProvider, timestampParser);
+        sut = new RankingFileDownloadConfigAdapter(browserProvider, timestampParser);
     }
 
     @Test
     @DisplayName("Should return empty list when no newer ranking is available")
-    void shouldReturnEmptyListWhenNoNewerRankingAvailable() throws Exception {
+    void shouldReturnEmptyListWhenNoNewerRankingAvailable() {
         // Given - remote timestamp is older than LocalDateTime.MIN (impossible scenario)
-        when(clientProvider.getIfAvailable()).thenReturn(webClient);
-        when(webClient.getOptions()).thenReturn(new org.htmlunit.WebClientOptions());
-        when(webClient.getPage(any(java.net.URL.class))).thenReturn(htmlPage);
-        when(timestampParser.parseLastUpdate(htmlPage)).thenReturn(Optional.of(LocalDateTime.MIN));
+        when(browserProvider.getIfAvailable()).thenReturn(browser);
+        when(browser.newContext()).thenReturn(browserContext);
+        when(browserContext.newPage()).thenReturn(page);
+        when(timestampParser.parseLastUpdate(page)).thenReturn(Optional.of(LocalDateTime.MIN));
 
         // When
         List<DownloadTask> result = sut.getDownloadTasks();
@@ -69,12 +64,12 @@ class RankingFileDownloadConfigAdapterTest {
 
     @Test
     @DisplayName("Should return download task when newer ranking is available online")
-    void shouldReturnDownloadTaskWhenNewerRankingAvailable() throws Exception {
+    void shouldReturnDownloadTaskWhenNewerRankingAvailable() {
         // Given
-        when(clientProvider.getIfAvailable()).thenReturn(webClient);
-        when(webClient.getOptions()).thenReturn(new org.htmlunit.WebClientOptions());
-        when(webClient.getPage(any(java.net.URL.class))).thenReturn(htmlPage);
-        when(timestampParser.parseLastUpdate(htmlPage)).thenReturn(Optional.of(LocalDateTime.now().plusDays(1)));
+        when(browserProvider.getIfAvailable()).thenReturn(browser);
+        when(browser.newContext()).thenReturn(browserContext);
+        when(browserContext.newPage()).thenReturn(page);
+        when(timestampParser.parseLastUpdate(page)).thenReturn(Optional.of(LocalDateTime.now().plusDays(1)));
 
         // When
         List<DownloadTask> result = sut.getDownloadTasks();
@@ -87,12 +82,12 @@ class RankingFileDownloadConfigAdapterTest {
 
     @Test
     @DisplayName("Should return empty list when remote timestamp is not available")
-    void shouldReturnEmptyListWhenRemoteTimestampNotAvailable() throws Exception {
+    void shouldReturnEmptyListWhenRemoteTimestampNotAvailable() {
         // Given
-        when(clientProvider.getIfAvailable()).thenReturn(webClient);
-        when(webClient.getOptions()).thenReturn(new org.htmlunit.WebClientOptions());
-        when(webClient.getPage(any(java.net.URL.class))).thenReturn(htmlPage);
-        when(timestampParser.parseLastUpdate(htmlPage)).thenReturn(Optional.empty());
+        when(browserProvider.getIfAvailable()).thenReturn(browser);
+        when(browser.newContext()).thenReturn(browserContext);
+        when(browserContext.newPage()).thenReturn(page);
+        when(timestampParser.parseLastUpdate(page)).thenReturn(Optional.empty());
 
         // When
         List<DownloadTask> result = sut.getDownloadTasks();
@@ -102,66 +97,47 @@ class RankingFileDownloadConfigAdapterTest {
     }
 
     @Test
-    @DisplayName("Should return empty list when WebClient throws exception")
-    void shouldReturnEmptyListWhenWebClientThrowsException() throws Exception {
+    @DisplayName("Should return empty list when Browser throws exception")
+    void shouldReturnEmptyListWhenBrowserThrowsException() {
         // Given
-        when(clientProvider.getIfAvailable()).thenReturn(webClient);
-        when(webClient.getOptions()).thenReturn(new org.htmlunit.WebClientOptions());
-        when(webClient.getPage(any(java.net.URL.class))).thenThrow(new IOException("Connection failed"));
+        when(browserProvider.getIfAvailable()).thenReturn(browser);
+        when(browser.newContext()).thenReturn(browserContext);
+        when(browserContext.newPage()).thenReturn(page);
+        when(page.navigate(any(String.class))).thenThrow(new RuntimeException("Connection failed"));
 
         // When
         List<DownloadTask> result = sut.getDownloadTasks();
 
         // Then
         assertThat(result).isEmpty();
-    }
-
-    @Test
-    @DisplayName("Should configure WebClient with correct options")
-    void shouldConfigureWebClientWithCorrectOptions() throws Exception {
-        // Given
-        org.htmlunit.WebClientOptions options = new org.htmlunit.WebClientOptions();
-        when(clientProvider.getIfAvailable()).thenReturn(webClient);
-        when(webClient.getOptions()).thenReturn(options);
-        when(webClient.getPage(any(java.net.URL.class))).thenReturn(htmlPage);
-        when(timestampParser.parseLastUpdate(htmlPage)).thenReturn(Optional.of(LocalDateTime.now().plusDays(1)));
-
-        // When
-        sut.getDownloadTasks();
-
-        // Then
-        assertFalse(options.isJavaScriptEnabled());
-        assertFalse(options.isCssEnabled());
-        assertTrue(options.isUseInsecureSSL());
-        assertFalse(options.isThrowExceptionOnFailingStatusCode());
     }
 
     @Test
     @DisplayName("Should compare file timestamp with remote timestamp")
-    void shouldCompareFileTimestampWithRemoteTimestamp() throws Exception {
+    void shouldCompareFileTimestampWithRemoteTimestamp() {
         // Given - use a future timestamp to ensure it's newer than any existing file
         LocalDateTime remoteTime = LocalDateTime.now().plusDays(1);
-        when(clientProvider.getIfAvailable()).thenReturn(webClient);
-        when(webClient.getOptions()).thenReturn(new org.htmlunit.WebClientOptions());
-        when(webClient.getPage(any(java.net.URL.class))).thenReturn(htmlPage);
-        when(timestampParser.parseLastUpdate(htmlPage)).thenReturn(Optional.of(remoteTime));
+        when(browserProvider.getIfAvailable()).thenReturn(browser);
+        when(browser.newContext()).thenReturn(browserContext);
+        when(browserContext.newPage()).thenReturn(page);
+        when(timestampParser.parseLastUpdate(page)).thenReturn(Optional.of(remoteTime));
 
         // When
         List<DownloadTask> result = sut.getDownloadTasks();
 
         // Then
-        verify(timestampParser).parseLastUpdate(htmlPage);
+        verify(timestampParser).parseLastUpdate(page);
         assertThat(result).hasSize(1);
     }
 
     @Test
     @DisplayName("Should generate correct file name with calendar week and year")
-    void shouldGenerateCorrectFileNameWithCalendarWeekAndYear() throws Exception {
+    void shouldGenerateCorrectFileNameWithCalendarWeekAndYear() {
         // Given
-        when(clientProvider.getIfAvailable()).thenReturn(webClient);
-        when(webClient.getOptions()).thenReturn(new org.htmlunit.WebClientOptions());
-        when(webClient.getPage(any(java.net.URL.class))).thenReturn(htmlPage);
-        when(timestampParser.parseLastUpdate(htmlPage)).thenReturn(Optional.of(LocalDateTime.now().plusDays(1)));
+        when(browserProvider.getIfAvailable()).thenReturn(browser);
+        when(browser.newContext()).thenReturn(browserContext);
+        when(browserContext.newPage()).thenReturn(page);
+        when(timestampParser.parseLastUpdate(page)).thenReturn(Optional.of(LocalDateTime.now().plusDays(1)));
 
         // When
         List<DownloadTask> result = sut.getDownloadTasks();
@@ -172,21 +148,5 @@ class RankingFileDownloadConfigAdapterTest {
         assertThat(fileName).startsWith("Ranking_");
         assertThat(fileName).contains("_KW");
         assertThat(fileName).endsWith(".xlsx");
-    }
-
-    @Test
-    @DisplayName("Should close WebClient after use")
-    void shouldCloseWebClientAfterUse() throws Exception {
-        // Given
-        when(clientProvider.getIfAvailable()).thenReturn(webClient);
-        when(webClient.getOptions()).thenReturn(new org.htmlunit.WebClientOptions());
-        when(webClient.getPage(any(java.net.URL.class))).thenReturn(htmlPage);
-        when(timestampParser.parseLastUpdate(htmlPage)).thenReturn(Optional.of(LocalDateTime.now().plusDays(1)));
-
-        // When
-        sut.getDownloadTasks();
-
-        // Then
-        verify(webClient).close();
     }
 }
