@@ -7,8 +7,13 @@ import de.ostfale.va.common.UseLogging;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.EnableAsync;
+
+import java.util.concurrent.CompletableFuture;
 
 
+@EnableAsync
 @Configuration
 public class PlayWrightConfig implements UseLogging {
 
@@ -18,10 +23,14 @@ public class PlayWrightConfig implements UseLogging {
     }
 
     @Bean
-    @Scope("prototype")
-    public Browser browser(Playwright playwright) {
-        return playwright.chromium().launch(new BrowserType.LaunchOptions()
-                .setHeadless(true)
-                .setTimeout(15000));
+    public CompletableFuture<Browser> asyncBrowser(Playwright playwright) {
+        log().info("PlayWrightConfig :: start Playwright browser asynchron...");
+        return CompletableFuture.supplyAsync(() -> {
+            Browser browser = playwright.chromium().launch(new BrowserType.LaunchOptions()
+                    .setHeadless(true)
+                    .setTimeout(15000));
+            log().info("PlayWrightConfig :: Playwright Browser process has been initialized");
+            return browser;
+        });
     }
 }

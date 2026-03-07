@@ -2,76 +2,45 @@ package de.ostfale.va.framework.out.web;
 
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.BrowserContext;
-import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import de.ostfale.va.application.port.out.ranking.ForLoadingExternalWebsites;
+import de.ostfale.va.application.port.out.ranking.PageProcessor;
 import de.ostfale.va.common.UseLogging;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @Component
 public class ForLoadingExternalWebsitesAdapter implements ForLoadingExternalWebsites, UseLogging {
 
     private static final int NAVIGATION_TIMEOUT_MS = 30000;
 
-    private final ObjectProvider<Browser> browserProvider;
+    private final CompletableFuture<Browser> browserFuture;
     private final TurnierDeCookieHandler cookieHandler;
 
-    public ForLoadingExternalWebsitesAdapter(ObjectProvider<Browser> browserProvider, TurnierDeCookieHandler cookieHandler) {
-        this.browserProvider = browserProvider;
+    public ForLoadingExternalWebsitesAdapter(CompletableFuture<Browser> browserFuture, TurnierDeCookieHandler cookieHandler) {
+        this.browserFuture = browserFuture;
         this.cookieHandler = cookieHandler;
     }
 
     @Override
-    public Page loadPage(String url) {
-        Browser browser = browserProvider.getIfAvailable();
-        if (browser == null) {
-            log().error("Browser not available for loading {}", url);
+    public <T> T loadPageAndProcess(String url, PageProcessor<T> processor) {
+        if (!browserFuture.isDone()) {
+            log().warn("ForLoadingExternalWebsitesAdapter :: request for {}, playwright browser still starting", url);
             return null;
         }
 
-        try {
-            BrowserContext context = browser.newContext();
-            Page page = context.newPage();
+        try (BrowserContext context = browserFuture.join().newContext();
+             Page page = context.newPage()) {
+
             page.navigate(url, new Page.NavigateOptions().setTimeout(NAVIGATION_TIMEOUT_MS));
             page.waitForLoadState();
 
-            return cookieHandler.handleIfNecessary(page, context);
+            Page handledPage = cookieHandler.handleIfNecessary(page, context);
+            return processor.process(handledPage);
         } catch (Exception e) {
-            log().error("Failed to load page from {}", url, e);
+            log().error("ForLoadingExternalWebsitesAdapter :: Error loading page", e);
             return null;
         }
     }
-
-    @Override
-    public Optional<LocalDateTime> getLastUpdateTimestamp(String url) {
-        Browser browser = browserProvider.getIfAvailable();
-        if (browser == null) {
-            log().error("Browser not available");
-            return Optional.empty();
-        }
-
-        try (BrowserContext context = browser.newContext(); Page page = context.newPage()) {
-            page.navigate(url);
-            Locator timestampElement = page.locator("#infopop");
-
-            if (timestampElement.count() > 0) {
-                String timestampText = timestampElement.textContent().trim();
-                return parseTimestamp(timestampText);
-            }
-        } catch (Exception e) {
-            log().error("ForLoadingExternalWebsitesAdapter :: Could not read timestamp", e);
-        }
-        return Optional.empty();
-    }
-
-    private Optional<LocalDateTime> parseTimestamp(String timestampText) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
-        return Optional.of(LocalDateTime.parse(timestampText, formatter));
-    }
-
 }
