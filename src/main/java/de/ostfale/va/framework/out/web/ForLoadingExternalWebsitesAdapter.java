@@ -55,8 +55,7 @@ public class ForLoadingExternalWebsitesAdapter implements ForLoadingExternalWebs
             return Optional.empty();
         }
 
-        BrowserContext context = browser.newContext();
-        try (Page page = context.newPage()) {
+        try (BrowserContext context = browser.newContext(); Page page = context.newPage()) {
             page.navigate(url);
             Locator timestampElement = page.locator("#infopop");
 
@@ -65,9 +64,7 @@ public class ForLoadingExternalWebsitesAdapter implements ForLoadingExternalWebs
                 return parseTimestamp(timestampText);
             }
         } catch (Exception e) {
-            log().error("Konnte Zeitstempel nicht lesen", e);
-        } finally {
-            context.close();
+            log().error("ForLoadingExternalWebsitesAdapter :: Could not read timestamp", e);
         }
         return Optional.empty();
     }

@@ -6,6 +6,7 @@ public class Player implements UseLogging {
 
     private boolean isFavorite;
     private PlayerId playerId;
+    private PlayerTournamentId playerTournamentId;
     private String firstName;
     private String lastName;
     private String ageClassGeneral;
@@ -77,6 +78,14 @@ public class Player implements UseLogging {
         this.mixedRanking = mixedRanking;
         this.mixedAgeRanking = ageRanking;
         this.mixedTournaments = noOfTournaments;
+    }
+
+    public PlayerTournamentId getPlayerTournamentId() {
+        return playerTournamentId;
+    }
+
+    public void setPlayerTournamentId(PlayerTournamentId playerTournamentId) {
+        this.playerTournamentId = playerTournamentId;
     }
 
     public boolean isFavorite() {
