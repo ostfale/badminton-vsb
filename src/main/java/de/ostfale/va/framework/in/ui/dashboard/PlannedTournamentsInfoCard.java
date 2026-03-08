@@ -15,6 +15,7 @@ import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournamen
 import de.ostfale.va.application.port.in.ForCalculatingTournamentsStatisticsUC;
 import de.ostfale.va.application.port.out.ForDownloadingFiles;
 import de.ostfale.va.application.port.in.plannedtournaments.ForLoadingPlannedTournaments;
+import de.ostfale.va.application.port.out.plannedtournaments.ForPlannedTournamentsDownloadConfig;
 import de.ostfale.va.common.UseLogging;
 import de.ostfale.va.common.UseTimeHandling;
 
@@ -23,12 +24,15 @@ public class PlannedTournamentsInfoCard extends Div implements UseLogging, UseTi
     private final ForCalculatingTournamentsStatisticsUC calcService;
     private final ForLoadingPlannedTournaments importService;
     private final ForDownloadingFiles downloadService;
+    private final ForPlannedTournamentsDownloadConfig plannedTournamentsDownloadConfig;
     private final VerticalLayout statsContainer = new VerticalLayout();
 
     public PlannedTournamentsInfoCard(
             ForCalculatingTournamentsStatisticsUC statCalcService,
             ForLoadingPlannedTournaments importService,
-            ForDownloadingFiles downloadService) {
+            ForDownloadingFiles downloadService,
+            ForPlannedTournamentsDownloadConfig plannedTournamentsDownloadConfig) {
+        this.plannedTournamentsDownloadConfig = plannedTournamentsDownloadConfig;
         log().debug("PlannedTournamentsInfoCard :: Created");
         this.importService = importService;
         this.calcService = statCalcService;
@@ -149,7 +153,8 @@ public class PlannedTournamentsInfoCard extends Div implements UseLogging, UseTi
 
     private void handleDownload() {
         log().info("Download button clicked");
-       // downloadService.performDownload();        // TODO: Implement download
+        var downloadTasks = plannedTournamentsDownloadConfig.getDownloadTasks();
+        downloadService.downloadFiles(downloadTasks);
         refreshStatistics();
     }
 

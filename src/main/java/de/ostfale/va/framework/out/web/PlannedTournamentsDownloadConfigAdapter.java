@@ -12,8 +12,6 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Component
 public class PlannedTournamentsDownloadConfigAdapter implements ForPlannedTournamentsDownloadConfig, UseFileSystemHandling, UseTimeHandling, UseLogging {
@@ -47,7 +45,7 @@ public class PlannedTournamentsDownloadConfigAdapter implements ForPlannedTourna
         String fileNameThisYear = prepareDownloadFileName(currentYear, timestamp);
         String fileNameNextYear = prepareDownloadFileName(nextYear, timestamp);
 
-        String destinationPath = prepareDownloadTargetPath(ApplicationDirectoryConfiguration.TOURNAMENT_DIR_NAME);
+        String destinationPath = getApplicationHomeDir() + SEPARATOR + ApplicationDirectoryConfiguration.TOURNAMENT_DIR_NAME + SEPARATOR;
 
         String downloadUrlThisYear = prepareDownloadUrl(currentYear);
         String downloadUrlNextYear = prepareDownloadUrl(nextYear);
@@ -64,10 +62,6 @@ public class PlannedTournamentsDownloadConfigAdapter implements ForPlannedTourna
         var fileName = "%s%s%s%s%s%s".formatted(FILE_NAME, DATE_SEPARATOR, year, DATE_SEPARATOR, dateTimeFormatted, FILE_SUFFIX);
         log().debug("PlannedTournamentsDownloadConfigAdapter :: Prepared download file name: {}", fileName);
         return fileName;
-    }
-
-    private String prepareDownloadTargetPath(String appDirName) {
-        return getApplicationHomeDir() + SEPARATOR + appDirName + SEPARATOR;
     }
 
     private String prepareDownloadUrl(String year) {
