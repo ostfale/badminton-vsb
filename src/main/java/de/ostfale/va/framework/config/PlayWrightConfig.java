@@ -1,6 +1,7 @@
 package de.ostfale.va.framework.config;
 
 import com.microsoft.playwright.Browser;
+import com.microsoft.playwright.BrowserContext;
 import com.microsoft.playwright.BrowserType;
 import com.microsoft.playwright.Playwright;
 import de.ostfale.va.common.UseLogging;
@@ -24,12 +25,14 @@ public class PlayWrightConfig implements UseLogging {
 
     @Bean
     public CompletableFuture<Browser> asyncBrowser(Playwright playwright) {
-        log().info("PlayWrightConfig :: start Playwright browser asynchron...");
+        log().info("PlayWrightConfig :: Start Playwright Browser im Hintergrund...");
         return CompletableFuture.supplyAsync(() -> {
+            // Browser starten
             Browser browser = playwright.chromium().launch(new BrowserType.LaunchOptions()
-                    .setHeadless(true)
+                    .setHeadless(true) // Auf 'false' setzen, wenn du zuschauen willst!
                     .setTimeout(15000));
-            log().info("PlayWrightConfig :: Playwright Browser process has been initialized");
+
+            log().info("PlayWrightConfig :: Playwright Browser initialisiert.");
             return browser;
         });
     }

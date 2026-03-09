@@ -71,4 +71,6 @@ public class PlannedTournamentsDownloadConfigAdapter implements ForPlannedTourna
     private DownloadTask createDownloadTask(String url, String destination) {
         return new DownloadTask(url, Path.of(destination));
     }
+
+    // https://dbv.turnier.de//find/player?q=06-153781
 }

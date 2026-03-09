@@ -10,10 +10,13 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import de.ostfale.va.application.domain.model.playerrankings.Player;
+import de.ostfale.va.application.domain.model.playerrankings.PlayerId;
 import de.ostfale.va.application.port.in.ranking.ForLoadingRankings;
 import de.ostfale.va.application.port.out.ForGettingUserConfiguration;
 import de.ostfale.va.application.port.out.ForStoringUserData;
+import de.ostfale.va.application.port.out.ranking.ForLoadingExternalWebsites;
 import de.ostfale.va.common.UseLogging;
+import de.ostfale.va.framework.out.web.ScrapePlayerTournamentId;
 
 import java.util.List;
 
@@ -26,6 +29,7 @@ public class PlayerDetailsView extends VerticalLayout implements UseLogging {
     private final PlayerDetailsSearchComponent searchComponent;
 
     private final ForLoadingRankings rankingService;
+    private final ForLoadingExternalWebsites loadingExternalWebsites;
 
     private TextField playerNameField;
     private TextField playerIdField;
@@ -41,7 +45,9 @@ public class PlayerDetailsView extends VerticalLayout implements UseLogging {
 
     public PlayerDetailsView(ForLoadingRankings rankingService,
                              ForStoringUserData forStoringUserData,
-                             ForGettingUserConfiguration userConfiguration) {
+                             ForGettingUserConfiguration userConfiguration,
+                             ForLoadingExternalWebsites loadingExternalWebsites) {
+        this.loadingExternalWebsites = loadingExternalWebsites;
         this.searchComponent = new PlayerDetailsSearchComponent(rankingService, this, userConfiguration, forStoringUserData);
         log().debug("PlayerDetailsView :: constructor");
         this.rankingService = rankingService;
@@ -95,6 +101,7 @@ public class PlayerDetailsView extends VerticalLayout implements UseLogging {
     }
 
     public void updatePlayerDetails(Player player) {
+        readValidRankingPoints(player.getPlayerId());
         playerNameField.setValue(player.toString());
         playerGenderField.setValue(player.getGender().getDisplayName());
         playerIdField.setValue(player.getPlayerId().toString());
@@ -131,6 +138,19 @@ public class PlayerDetailsView extends VerticalLayout implements UseLogging {
 
         // Grid aktualisieren, um die Änderungen anzuzeigen
         rankingGrid.getDataProvider().refreshAll();
+    }
+
+    private void readValidRankingPoints(PlayerId playerId) {
+        log().info("PlayerDetailsView :: readValidRankingPoints for player {}", playerId);
+        String BASE_DBV_URL = "https://dbv.turnier.de/";
+        String SEARCH_PLAYER_URL = BASE_DBV_URL + "find/player?q=" + playerId.playerId();
+        ScrapePlayerTournamentId scraper = new ScrapePlayerTournamentId();
+        scraper.setTargetPlayerId(playerId.playerId());
+
+        var result = loadingExternalWebsites.loadPageAndProcess(SEARCH_PLAYER_URL, scraper);
+        log().info("PlayerDetailsView :: readValidRankingPoints result: {}", result);
+
+
     }
 
     public void clearDetails() {
