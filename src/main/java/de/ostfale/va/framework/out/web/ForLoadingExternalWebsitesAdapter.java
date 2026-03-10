@@ -20,6 +20,8 @@ public class ForLoadingExternalWebsitesAdapter implements ForLoadingExternalWebs
     private final CompletableFuture<Browser> browserFuture;
     private final TurnierDeCookieHandler cookieHandler;
 
+    private BrowserContext sharedContext;
+
     public ForLoadingExternalWebsitesAdapter(CompletableFuture<Browser> browserFuture, TurnierDeCookieHandler cookieHandler) {
         this.browserFuture = browserFuture;
         this.cookieHandler = cookieHandler;
@@ -28,16 +30,23 @@ public class ForLoadingExternalWebsitesAdapter implements ForLoadingExternalWebs
     @Override
     public <T> Optional<T> loadPageAndProcess(String url, PageProcessor<T> processor) {
         try {
-            Browser browser = browserFuture.join(); // Just wait - simpler than get() with timeout
+            Browser browser = browserFuture.join();
 
-            try (BrowserContext context = browser.newContext(new Browser.NewContextOptions()
-                    .setUserAgent(USER_AGENT)
-                    .setViewportSize(1920, 1080));
-                 Page page = context.newPage()) {
+            if (sharedContext == null) {
+                sharedContext = browser.newContext(new Browser.NewContextOptions()
+                        .setUserAgent(USER_AGENT)
+                        .setViewportSize(1920, 1080));
+                log().info("ForLoadingExternalWebsitesAdapter :: Create shared context for faster website loading");
+            }
 
-                log().debug("Adapter :: Navigiere zu {}", url);
+            try (Page page = sharedContext.newPage()) {
+                log().debug("ForLoadingExternalWebsitesAdapter :: Navigate to {} (nutze persistenten Kontext)", url);
+
                 page.navigate(url, new Page.NavigateOptions().setTimeout(NAVIGATION_TIMEOUT_MS));
-                cookieHandler.handleIfNecessary(page, context);
+
+                // Der Handler wird nur aktiv, wenn die Cookie-Wall wirklich erscheint.
+                // Da der Cookie im sharedContext gespeichert bleibt, passiert das nur beim ersten Mal.
+                cookieHandler.handleIfNecessary(page, sharedContext);
 
                 return processor.process(page);
             }
