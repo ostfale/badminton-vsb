@@ -6,7 +6,7 @@ import com.vaadin.flow.router.Route;
 import de.ostfale.va.application.port.in.ranking.ForLoadingRankings;
 import de.ostfale.va.application.port.out.ForGettingUserConfiguration;
 import de.ostfale.va.application.port.out.ForStoringUserData;
-import de.ostfale.va.application.port.out.ranking.ForLoadingExternalWebsites;
+import de.ostfale.va.application.port.out.ranking.ForScrapingPlayerTournamentId;
 import de.ostfale.va.common.UseLogging;
 import de.ostfale.va.framework.in.ui.app.MainLayout;
 import de.ostfale.va.framework.in.ui.playerranking.PlayerDetailsView;
@@ -20,15 +20,18 @@ public class PlayerStatsView extends VerticalLayout implements UseLogging {
     public PlayerStatsView(ForLoadingRankings rankingService,
                            ForStoringUserData forStoringUserData,
                            ForGettingUserConfiguration userConfiguration,
-                           ForLoadingExternalWebsites loadingExternalWebsites) {
+                           ForScrapingPlayerTournamentId tournamentIdScraper) {
         log().debug("PlayerRankingView :: constructor");
         setSizeFull();
         setPadding(true);
         setSpacing(true);
-        initLayout(rankingService, forStoringUserData, userConfiguration, loadingExternalWebsites);
+        initLayout(rankingService, forStoringUserData, userConfiguration, tournamentIdScraper);
     }
 
-    private void initLayout(ForLoadingRankings rankingService, ForStoringUserData forStoringUserData, ForGettingUserConfiguration userConfiguration, ForLoadingExternalWebsites loadingExternalWebsites) {
+    private void initLayout(ForLoadingRankings rankingService,
+                            ForStoringUserData forStoringUserData,
+                            ForGettingUserConfiguration userConfiguration,
+                            ForScrapingPlayerTournamentId loadingExternalWebsites) {
         log().debug("PlayerRankingView :: initLayout");
         PlayerDetailsView playerDetailsView = new PlayerDetailsView(rankingService, forStoringUserData, userConfiguration, loadingExternalWebsites);
         add(masterDetailLayout(playerDetailsView));
