@@ -1,4 +1,4 @@
-package de.ostfale.va.framework.out.web;
+package de.ostfale.va.framework.out.web.scraper;
 
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
@@ -27,8 +27,7 @@ public class ScrapePlayerTournamentId implements PageProcessor<PlayerTournamentI
     public Optional<PlayerTournamentId> process(Page page) {
 
         try {
-            page.waitForSelector(LIST_ITEM_SELECTOR,
-                    new Page.WaitForSelectorOptions().setTimeout(3000));
+            page.waitForSelector(LIST_ITEM_SELECTOR, new Page.WaitForSelectorOptions().setTimeout(3000));
             return findPlayerLink(page).flatMap(this::extractTournamentId);
         } catch (TimeoutError e) {
             log().warn("Scrape :: Timeout - Spieler nicht gefunden auf: {}", page.url());

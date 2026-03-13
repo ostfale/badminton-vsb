@@ -3,10 +3,10 @@ package de.ostfale.va.framework.in.ui;
 import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
+import de.ostfale.va.framework.in.ui.playerranking.GetPlayerDetailsService;
 import de.ostfale.va.application.port.in.ranking.ForLoadingRankings;
 import de.ostfale.va.application.port.out.ForGettingUserConfiguration;
 import de.ostfale.va.application.port.out.ForStoringUserData;
-import de.ostfale.va.application.port.out.ranking.ForScrapingPlayerTournamentId;
 import de.ostfale.va.common.UseLogging;
 import de.ostfale.va.framework.in.ui.app.MainLayout;
 import de.ostfale.va.framework.in.ui.playerranking.PlayerDetailsView;
@@ -20,20 +20,19 @@ public class PlayerStatsView extends VerticalLayout implements UseLogging {
     public PlayerStatsView(ForLoadingRankings rankingService,
                            ForStoringUserData forStoringUserData,
                            ForGettingUserConfiguration userConfiguration,
-                           ForScrapingPlayerTournamentId tournamentIdScraper) {
+                           GetPlayerDetailsService playerDetailsService) {
         log().debug("PlayerRankingView :: constructor");
         setSizeFull();
         setPadding(true);
         setSpacing(true);
-        initLayout(rankingService, forStoringUserData, userConfiguration, tournamentIdScraper);
+        initLayout(playerDetailsService, rankingService, forStoringUserData, userConfiguration);
     }
 
-    private void initLayout(ForLoadingRankings rankingService,
+    private void initLayout(GetPlayerDetailsService playerDetailsService, ForLoadingRankings rankingService,
                             ForStoringUserData forStoringUserData,
-                            ForGettingUserConfiguration userConfiguration,
-                            ForScrapingPlayerTournamentId loadingExternalWebsites) {
+                            ForGettingUserConfiguration userConfiguration) {
         log().debug("PlayerRankingView :: initLayout");
-        PlayerDetailsView playerDetailsView = new PlayerDetailsView(rankingService, forStoringUserData, userConfiguration, loadingExternalWebsites);
+        PlayerDetailsView playerDetailsView = new PlayerDetailsView(playerDetailsService, rankingService, forStoringUserData, userConfiguration);
         add(masterDetailLayout(playerDetailsView));
     }
 

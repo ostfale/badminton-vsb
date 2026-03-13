@@ -29,6 +29,7 @@ public class Player implements UseLogging {
     private Integer mixedRanking = 0;
     private Integer mixedAgeRanking = 0;
     private Integer mixedTournaments = 0;
+    private PlayerRankingRelevantTournaments relevantTournaments;
 
     public Player(String playerId,
                   String firstName,
@@ -78,6 +79,14 @@ public class Player implements UseLogging {
         this.mixedRanking = mixedRanking;
         this.mixedAgeRanking = ageRanking;
         this.mixedTournaments = noOfTournaments;
+    }
+
+    public PlayerRankingRelevantTournaments getRelevantTournaments() {
+        return relevantTournaments;
+    }
+
+    public void setRelevantTournaments(PlayerRankingRelevantTournaments relevantTournaments) {
+        this.relevantTournaments = relevantTournaments;
     }
 
     public PlayerTournamentId getPlayerTournamentId() {

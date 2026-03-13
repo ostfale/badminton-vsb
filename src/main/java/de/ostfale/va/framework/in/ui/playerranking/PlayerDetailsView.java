@@ -13,7 +13,6 @@ import de.ostfale.va.application.domain.model.playerrankings.Player;
 import de.ostfale.va.application.port.in.ranking.ForLoadingRankings;
 import de.ostfale.va.application.port.out.ForGettingUserConfiguration;
 import de.ostfale.va.application.port.out.ForStoringUserData;
-import de.ostfale.va.application.port.out.ranking.ForScrapingPlayerTournamentId;
 import de.ostfale.va.common.UseLogging;
 
 import java.util.List;
@@ -24,10 +23,11 @@ public class PlayerDetailsView extends VerticalLayout implements UseLogging {
     private static final String PLAYER_SEPARATOR_DETAILS = "Spieler Details";
     private static final String PLAYER_RANKING_POINTS = "Spieler Ranglistenpunkte";
 
+    private final GetPlayerDetailsService playerDetailsService;
+
     private final PlayerDetailsSearchComponent searchComponent;
 
     private final ForLoadingRankings rankingService;
-    private final ForScrapingPlayerTournamentId tournamentIdScraper;
 
     private TextField playerNameField;
     private TextField playerIdField;
@@ -41,11 +41,11 @@ public class PlayerDetailsView extends VerticalLayout implements UseLogging {
     private Grid<RankingRow> rankingGrid;
     private List<RankingRow> matrixData;
 
-    public PlayerDetailsView(ForLoadingRankings rankingService,
+    public PlayerDetailsView(GetPlayerDetailsService playerDetailsService,
+                             ForLoadingRankings rankingService,
                              ForStoringUserData forStoringUserData,
-                             ForGettingUserConfiguration userConfiguration,
-                             ForScrapingPlayerTournamentId tournamentIdScraper) {
-        this.tournamentIdScraper = tournamentIdScraper;
+                             ForGettingUserConfiguration userConfiguration) {
+        this.playerDetailsService = playerDetailsService;
         this.searchComponent = new PlayerDetailsSearchComponent(rankingService, this, userConfiguration, forStoringUserData);
         log().debug("PlayerDetailsView :: constructor");
         this.rankingService = rankingService;
@@ -146,10 +146,7 @@ public class PlayerDetailsView extends VerticalLayout implements UseLogging {
             return;
         }
 
-        tournamentIdScraper.scrapePlayerTournamentId(player.getPlayerId()).ifPresent(tournamentId -> {
-            log().info("PlayerDetailsView :: readValidRankingPoints found tournamentId {}", tournamentId);
-            player.setPlayerTournamentId(tournamentId);
-        });
+        playerDetailsService.addPlayerTournamentIdToPlayer(player);
 
         log().warn("PlayerDetailsView :: player tournamentId could not be scraped for player {}", player);
     }

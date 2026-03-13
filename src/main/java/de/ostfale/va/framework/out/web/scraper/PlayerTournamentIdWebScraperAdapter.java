@@ -5,20 +5,18 @@ import de.ostfale.va.application.domain.model.playerrankings.PlayerTournamentId;
 import de.ostfale.va.application.port.out.ranking.ForScrapingPlayerTournamentId;
 import de.ostfale.va.application.port.out.ranking.ForLoadingExternalWebsites;
 import de.ostfale.va.common.UseLogging;
-import de.ostfale.va.framework.out.web.ScrapePlayerTournamentId;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
 @Component
-public class PlayerTournamentIdWebScrapterAdapter implements ForScrapingPlayerTournamentId, UseLogging {
+public class PlayerTournamentIdWebScraperAdapter implements ForScrapingPlayerTournamentId, UseLogging {
 
     private final ForLoadingExternalWebsites webLoader;
 
-    public PlayerTournamentIdWebScrapterAdapter(ForLoadingExternalWebsites webLoader) {
+    public PlayerTournamentIdWebScraperAdapter(ForLoadingExternalWebsites webLoader) {
         this.webLoader = webLoader;
     }
-
 
     @Override
     public Optional<PlayerTournamentId> scrapePlayerTournamentId(PlayerId playerId) {
