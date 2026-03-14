@@ -1,31 +1,27 @@
 package de.ostfale.va.framework.in.ui.playerranking;
 
-import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.formlayout.FormLayout;
-import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.grid.GridVariant;
-import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.data.renderer.ComponentRenderer;
 import de.ostfale.va.application.domain.model.playerrankings.Player;
 import de.ostfale.va.application.port.in.ranking.ForLoadingRankings;
 import de.ostfale.va.application.port.out.ForGettingUserConfiguration;
 import de.ostfale.va.application.port.out.ForStoringUserData;
 import de.ostfale.va.common.UseLogging;
+import de.ostfale.va.common.UseTimeHandling;
 
 import java.util.List;
 
-public class PlayerDetailsView extends VerticalLayout implements UseLogging {
+public class PlayerDetailsView extends VerticalLayout implements UseTimeHandling, UseLogging {
 
     private static final String PLAYER_SEPARATOR_SELECTION = "Spieler Suchen";
     private static final String PLAYER_SEPARATOR_DETAILS = "Spieler Details";
     private static final String PLAYER_RANKING_POINTS = "Spieler Ranglistenpunkte";
 
-    private final GetPlayerDetailsService playerDetailsService;
 
     private final PlayerDetailsSearchComponent searchComponent;
+    private final PlayerDetailsMatrixComponent matrixComponent;
 
     private final ForLoadingRankings rankingService;
 
@@ -38,15 +34,13 @@ public class PlayerDetailsView extends VerticalLayout implements UseLogging {
     private TextField playerDistrictNameField;
     private TextField playerStateNameField;
     private TextField playerStateGroupField;
-    private Grid<RankingRow> rankingGrid;
-    private List<RankingRow> matrixData;
 
     public PlayerDetailsView(GetPlayerDetailsService playerDetailsService,
                              ForLoadingRankings rankingService,
                              ForStoringUserData forStoringUserData,
                              ForGettingUserConfiguration userConfiguration) {
-        this.playerDetailsService = playerDetailsService;
         this.searchComponent = new PlayerDetailsSearchComponent(rankingService, this, userConfiguration, forStoringUserData);
+        this.matrixComponent = new PlayerDetailsMatrixComponent(playerDetailsService);
         log().debug("PlayerDetailsView :: constructor");
         this.rankingService = rankingService;
         initLayout();
@@ -63,8 +57,8 @@ public class PlayerDetailsView extends VerticalLayout implements UseLogging {
         add(new FormSectionHeader(PLAYER_SEPARATOR_DETAILS));
         add(createDetailsBlock());
 
-        add(new FormSectionHeader(PLAYER_RANKING_POINTS));
-        add(createRankingMatrix());
+        add(new FormSectionHeader(PLAYER_RANKING_POINTS + " (KW " + getCurrentCalendarWeek() + ")"));
+        add(matrixComponent.getComponent());
     }
 
     private FormLayout createDetailsBlock() {
@@ -99,7 +93,6 @@ public class PlayerDetailsView extends VerticalLayout implements UseLogging {
     }
 
     public void updatePlayerDetails(Player player) {
-        readValidRankingPoints(player);
         playerNameField.setValue(player.toString());
         playerGenderField.setValue(player.getGender().getDisplayName());
         playerIdField.setValue(player.getPlayerId().toString());
@@ -110,45 +103,8 @@ public class PlayerDetailsView extends VerticalLayout implements UseLogging {
         playerStateNameField.setValue(player.getStateName());
         playerStateGroupField.setValue(player.getStateGroup().getDisplayName());
 
-        // --- Ranking Matrix (Grid) befüllen ---
-
         List<Player> allPlayers = rankingService.loadPlayer();
-
-        // Zeile 1: Einzel (Index 0)
-        RankingRow einzelRow = matrixData.getFirst();
-        einzelRow.setTournaments(String.valueOf(player.getSingleTournaments()));
-        einzelRow.setPoints(String.valueOf(player.getSinglePoints()));
-        einzelRow.setRank(String.valueOf(player.getSingleRanking()));
-        einzelRow.setRankAk(String.valueOf(calculateAkRank(player, allPlayers, Player::getSinglePoints)));
-        // Zeile 2: Doppel (Index 1)
-        RankingRow doppelRow = matrixData.get(1);
-        doppelRow.setTournaments(String.valueOf(player.getDoubleTournaments()));
-        doppelRow.setPoints(String.valueOf(player.getDoublePoints()));
-        doppelRow.setRank(String.valueOf(player.getDoubleRanking()));
-        doppelRow.setRankAk(String.valueOf(calculateAkRank(player, allPlayers, Player::getDoublePoints)));
-
-        // Zeile 3: Mixed (Index 2)
-        RankingRow mixedRow = matrixData.get(2);
-        mixedRow.setTournaments(String.valueOf(player.getMixedTournaments()));
-        mixedRow.setPoints(String.valueOf(player.getMixedPoints()));
-        mixedRow.setRank(String.valueOf(player.getMixedRanking()));
-        mixedRow.setRankAk(String.valueOf(calculateAkRank(player, allPlayers, Player::getMixedPoints)));
-
-        // Grid aktualisieren, um die Änderungen anzuzeigen
-        rankingGrid.getDataProvider().refreshAll();
-    }
-
-    private void readValidRankingPoints(Player player) {
-        log().info("PlayerDetailsView :: readValidRankingPoints for player {}", player);
-
-        if (player.getPlayerTournamentId() != null) {
-            log().info("PlayerDetailsView :: readValidRankingPoints found playerTournamentId {}", player.getPlayerTournamentId());
-            return;
-        }
-
-        playerDetailsService.addPlayerTournamentIdToPlayer(player);
-
-        log().warn("PlayerDetailsView :: player tournamentId could not be scraped for player {}", player);
+        matrixComponent.updateRanking(player, allPlayers);
     }
 
     public void clearDetails() {
@@ -162,108 +118,6 @@ public class PlayerDetailsView extends VerticalLayout implements UseLogging {
         playerStateNameField.clear();
         playerStateGroupField.clear();
 
-        // Matrix-Daten leeren
-        matrixData.forEach(row -> {
-            row.setTournaments("");
-            row.setPoints("");
-            row.setRank("");
-            row.setRankAk("");
-        });
-
-        // Grid aktualisieren
-        rankingGrid.getDataProvider().refreshAll();
-    }
-
-    private Component createRankingMatrix() {
-        rankingGrid = new Grid<>();
-        rankingGrid.addClassName("ranking-grid");
-        rankingGrid.setWidth("50%"); // Tabelle auf die Hälfte begrenzen
-        rankingGrid.setAllRowsVisible(true); // Alle 3 Zeilen ohne Scrollbar anzeigen
-
-        // 1. Spalte: Disziplin (Hier wird das Label FETT gemacht)
-        rankingGrid.addColumn(new ComponentRenderer<>(item -> {
-                    Span span = new Span(item.getDiscipline());
-                    span.getStyle().set("font-weight", "bold");
-                    return span;
-                }))
-                .setHeader("Disziplin")
-                .setFlexGrow(0)
-                .setWidth("150px");
-
-        // Datenspalten
-        rankingGrid.addColumn(RankingRow::getTournaments).setHeader("Turniere");
-        rankingGrid.addColumn(RankingRow::getPoints).setHeader("Punkte");
-        rankingGrid.addColumn(RankingRow::getRank).setHeader("Rang");
-        rankingGrid.addColumn(RankingRow::getRankAk).setHeader("Rang AK");
-
-        // Daten initialisieren
-        matrixData = List.of(
-                new RankingRow("Einzel"),
-                new RankingRow("Doppel"),
-                new RankingRow("Mixed")
-        );
-        rankingGrid.setItems(matrixData);
-
-        rankingGrid.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_ROW_STRIPES);
-
-        return rankingGrid;
-    }
-
-    private int calculateAkRank(Player target, List<Player> allPlayers, java.util.function.Function<Player, Integer> pointGetter) {
-        int targetPoints = pointGetter.apply(target);
-
-        return (int) allPlayers.stream()
-                .filter(p -> p.getGender() == target.getGender())
-                .filter(p -> p.getAgeClassGeneral().equals(target.getAgeClassGeneral()))
-                .filter(p -> pointGetter.apply(p) > targetPoints)
-                .count() + 1;
-    }
-
-    public static class RankingRow {
-        private final String discipline;
-        private String tournaments = "";
-        private String points = "";
-        private String rank = "";
-        private String rankAk = "";
-
-        public RankingRow(String discipline) {
-            this.discipline = discipline;
-        }
-
-        public String getDiscipline() {
-            return discipline;
-        }
-
-        public String getTournaments() {
-            return tournaments;
-        }
-
-        public void setTournaments(String t) {
-            this.tournaments = t;
-        }
-
-        public String getPoints() {
-            return points;
-        }
-
-        public void setPoints(String p) {
-            this.points = p;
-        }
-
-        public String getRank() {
-            return rank;
-        }
-
-        public void setRank(String r) {
-            this.rank = r;
-        }
-
-        public String getRankAk() {
-            return rankAk;
-        }
-
-        public void setRankAk(String ra) {
-            this.rankAk = ra;
-        }
+        matrixComponent.clearDetails();
     }
 }

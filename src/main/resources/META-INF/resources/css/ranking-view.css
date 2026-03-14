@@ -65,3 +65,13 @@
     font-weight: bold !important;
     color: var(--lumo-body-text-color) !important;
 }
+
+/* --- Größere Schrift für das Ranking Grid --- */
+.ranking-grid::part(cell) {
+    font-size: 0.9rem !important;
+}
+
+.ranking-grid::part(header-cell) {
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+}
