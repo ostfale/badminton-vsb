@@ -34,8 +34,15 @@ public class GetPlayerDetailsService implements UseLogging {
     }
 
     public Optional<PlayerRankingRelevantTournaments> getRelevantRankingPoints(Player player) {
+
+        if (player.getRelevantTournaments() != null) {
+            log().debug("GetPlayerDetailsService :: getRelevantRankingPoints:found: {} ", true);
+            return Optional.of(player.getRelevantTournaments());
+        }
+
         var relevantTournaments = relevantRankingPointsScraper.scrapeRelevantRankingPoints(player);
-        log().debug("GetPlayerDetailsService :: getRelevantRankingPoints:found: {} ", relevantTournaments.isPresent());
+        player.setRelevantTournaments(relevantTournaments.orElse(null));
+        log().debug("GetPlayerDetailsService :: load getRelevantRankingPoints: found: {} ", relevantTournaments.isPresent());
         return relevantTournaments;
     }
 }
