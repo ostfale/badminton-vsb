@@ -1,9 +1,13 @@
 package de.ostfale.va.framework.in.ui.playerranking;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.grid.contextmenu.GridContextMenu;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import de.ostfale.va.application.domain.model.playerrankings.Player;
 import de.ostfale.va.application.domain.model.playerrankings.PlayerRankingRelevantTournaments;
@@ -22,6 +26,7 @@ public class PlayerDetailsMatrixComponent implements UseLogging {
 
     private Grid<PlayerMatrixRow> rankingGrid;
     private List<PlayerMatrixRow> matrixData;
+    private Optional<PlayerRankingRelevantTournaments> rankingPoints = Optional.empty();
 
     public PlayerDetailsMatrixComponent(GetPlayerDetailsService playerDetailsService) {
         this.playerDetailsService = playerDetailsService;
@@ -32,6 +37,8 @@ public class PlayerDetailsMatrixComponent implements UseLogging {
         rankingGrid.addClassName("ranking-grid");
         rankingGrid.setWidth("100%");
         rankingGrid.setAllRowsVisible(true); // show all rows without scroll bar
+
+        createContextMenu(rankingGrid);
 
         rankingGrid.addColumn(new ComponentRenderer<>(item -> {
                     Span span = new Span(item.getDiscipline());
@@ -65,15 +72,86 @@ public class PlayerDetailsMatrixComponent implements UseLogging {
         return rankingGrid;
     }
 
+    private void createContextMenu(Grid<PlayerMatrixRow> rankingGrid) {
+        log().debug("PlayerDetailsMatrixComponent :: createContextMenu");
+        GridContextMenu<PlayerMatrixRow> menu = rankingGrid.addContextMenu();
+
+        // decides if the menu should be shown
+        menu.setDynamicContentHandler(row -> {
+            return row != null && !row.getPoints().isEmpty();
+        });
+
+        menu.addItem("Zeige alle Turniere", event -> {
+            event.getItem().ifPresent(this::showAllTournamentsForDiscipline);
+        });
+    }
+
+    private void showAllTournamentsForDiscipline(PlayerMatrixRow row) {
+
+        if (rankingPoints.isEmpty()) {
+            Notification.show("Keine Turnierdaten verfügbar.");
+            return;
+        }
+
+        List<PlayerRankingTournamentPoints> tournaments = switch (row.getDiscipline()) {
+            case "Einzel" -> rankingPoints.get().singleTournaments();
+            case "Doppel" -> rankingPoints.get().doubleTournaments();
+            case "Mixed" -> rankingPoints.get().mixedTournaments();
+            default -> List.of();
+        };
+
+        Dialog dialog = new Dialog();
+        dialog.setHeaderTitle("Alle Turniere für Disziplin: " + row.getDiscipline());
+        dialog.setWidth("1000px");
+
+        Grid<PlayerRankingTournamentPoints> detailGrid = new Grid<>();
+        detailGrid.setItems(tournaments);
+        detailGrid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_ROW_STRIPES);
+
+        // 1. Spalten mit fester, kleiner Breite (flexGrow = 0)
+        detailGrid.addColumn(PlayerRankingTournamentPoints::tournamentWeek)
+                .setHeader("KW")
+                .setWidth("80px")
+                .setFlexGrow(0);  // does not grow
+
+        detailGrid.addColumn(PlayerRankingTournamentPoints::tournamentDiscipline)
+                .setHeader("Disziplin")
+                .setWidth("100px") // Feste Breite
+                .setFlexGrow(0);
+
+        detailGrid.addColumn(PlayerRankingTournamentPoints::tournamentPlacement)
+                .setHeader("Platz")
+                .setWidth("75px")
+                .setFlexGrow(0);
+
+        detailGrid.addColumn(PlayerRankingTournamentPoints::tournamentPoints)
+                .setHeader("Punkte")
+                .setWidth("75px")
+                .setFlexGrow(0);
+
+        detailGrid.addColumn(PlayerRankingTournamentPoints::tournamentName)
+                .setHeader("Turnier")
+                .setFlexGrow(1); // Nimmt den gesamten verfügbaren Platz ein
+
+        // css marker for relevant tournaments
+        detailGrid.setPartNameGenerator(item -> item.isRelevant() ? "relevant-tournament" : null);
+
+        dialog.add(detailGrid);
+
+        Button closeButton = new Button("Schließen", e -> dialog.close());
+        dialog.getFooter().add(closeButton);
+
+        dialog.open();
+    }
+
     public void clearDetails() {
         matrixData.forEach(PlayerMatrixRow::reset);
-
         rankingGrid.getDataProvider().refreshAll();
     }
 
     public void updateRanking(Player player, List<Player> allPlayers) {
         readValidRankingPoints(player);
-        var rankingPoints = playerDetailsService.getRelevantRankingPoints(player);
+        rankingPoints = playerDetailsService.getRelevantRankingPoints(player);
 
         populateDisciplineRow(matrixData.get(0), player, allPlayers,
                 Player::getSingleTournaments, Player::getSinglePoints, Player::getSingleRanking,
@@ -141,6 +219,7 @@ public class PlayerDetailsMatrixComponent implements UseLogging {
 
     public static class PlayerMatrixRow {
         private final String discipline;
+        private final String disciplineKey;
         private String tournaments = "";
         private String points = "";
         private String rank = "";
@@ -153,6 +232,7 @@ public class PlayerDetailsMatrixComponent implements UseLogging {
 
         public PlayerMatrixRow(String discipline) {
             this.discipline = discipline;
+            this.disciplineKey = discipline;
         }
 
         public void reset() {

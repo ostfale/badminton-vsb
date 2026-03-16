@@ -75,3 +75,17 @@
     font-size: 1.1rem !important;
     font-weight: 600 !important;
 }
+
+/* popup with all ranking tournaments */
+
+vaadin-grid::part(relevant-tournament) {
+    background-color: rgba(0, 255, 0, 0.1); /* Ein helles Grün */
+    color: #006400; /* Dunkelgrüner Text für bessere Lesbarkeit */
+    font-weight: bold;
+}
+
+/* Optional: Damit das Grün auch bei gestreiften Zeilen (Row Stripes) sichtbar bleibt */
+vaadin-grid::part(relevant-tournament odd-row),
+vaadin-grid::part(relevant-tournament even-row) {
+    background-color: rgba(0, 255, 0, 0.15);
+}
