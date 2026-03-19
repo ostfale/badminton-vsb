@@ -1,8 +1,8 @@
-package de.ostfale.va.application.domain.service;
+package de.ostfale.va.application.domain.service.plannedtournaments;
 
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournament;
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournamentsStatistics;
-import de.ostfale.va.application.port.in.ForCalculatingTournamentsStatisticsUC;
+import de.ostfale.va.application.port.in.plannedtournaments.ForCalculatingTournamentsStatisticsUC;
 import de.ostfale.va.common.UseLogging;
 import org.springframework.stereotype.Service;
 
@@ -11,7 +11,7 @@ import java.util.List;
 @Service
 public class CalculateTournamentsStatisticsService implements ForCalculatingTournamentsStatisticsUC, UseLogging {
 
-    public PlannedTournamentsStatistics loadTournamentsStatistik(List<PlannedTournament> tournaments, String lastDownloadDate) {
+    public PlannedTournamentsStatistics loadStatistic(List<PlannedTournament> tournaments, String lastDownloadDate) {
         var totalTournamentsThisYear = calculateAllTournamentsThisYear(tournaments);
         var totalTournamentsNextYear = calculateAllTournamentsNextYear(tournaments);
         var openTournamentsThisYear = calculateAllOpenTournamentsThisYear(tournaments);

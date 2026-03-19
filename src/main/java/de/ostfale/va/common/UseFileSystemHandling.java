@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Collections;
@@ -50,9 +51,10 @@ public interface UseFileSystemHandling extends UseLogging {
         }
         log().debug("UseFileSystemHandling :: Getting first file timestamp in {}", dirPath);
         try {
-            return LocalDateTime.ofInstant(Files.getLastModifiedTime(dirPath).toInstant(), ZoneId.systemDefault());
+            BasicFileAttributes attrs = Files.readAttributes(dirPath, BasicFileAttributes.class);
+            return LocalDateTime.ofInstant(attrs.creationTime().toInstant(), ZoneId.systemDefault());
         } catch (IOException e) {
-            log().error("UpdateRankingService :: Failure retrieving timestamp for {}", dirPath, e);
+            log().error("UseFileSystemHandling :: Failure retrieving timestamp for {} and message:  {}", dirPath, e.getMessage());
             return LocalDateTime.MIN;
         }
     }
@@ -76,7 +78,7 @@ public interface UseFileSystemHandling extends UseLogging {
                 Files.createDirectories(rootPath);
                 log().info("UseFileSystemHandling :: Created directory: {}", dirPath);
             } catch (IOException e) {
-                log().error("UseFileSystemHandling :: Failed to create directory: {}", dirPath, e);
+                log().error("UseFileSystemHandling :: Failed to create directory: {} with error: {}", dirPath, e.getMessage());
                 return Collections.emptyList();
             }
         }
@@ -88,7 +90,7 @@ public interface UseFileSystemHandling extends UseLogging {
                     .filter(Objects::nonNull)
                     .toList();
         } catch (IOException e) {
-            log().error("UseFileSystemHandling :: Failed to list files in {}", dirPath, e);
+            log().error("UseFileSystemHandling :: Failed to list files in {} with error:  {}", dirPath, e.getMessage());
             return Collections.emptyList();
         }
     }
@@ -97,7 +99,7 @@ public interface UseFileSystemHandling extends UseLogging {
         try {
             return Files.newInputStream(path);
         } catch (IOException e) {
-            log().warn("UseFileSystemHandling :: Could not open stream for file: {}", path, e);
+            log().warn("UseFileSystemHandling :: Could not open stream for file: {} with error: {}", path, e.getMessage());
             return null;
         }
     }
@@ -110,7 +112,7 @@ public interface UseFileSystemHandling extends UseLogging {
                     .filter(Files::isRegularFile)
                     .allMatch(this::deleteFileQuietly);
         } catch (IOException e) {
-            log().error("{} Failed to list files in {}", logTag, dirPath, e);
+            log().error("{} Failed to list files in {} with error:  {}", logTag, dirPath, e.getMessage());
             return false;
         }
     }
@@ -119,7 +121,7 @@ public interface UseFileSystemHandling extends UseLogging {
         try {
             return Files.deleteIfExists(path);
         } catch (IOException e) {
-            log().error("UseFileSystemHandling :: Failed to delete file: {}", path, e);
+            log().error("UseFileSystemHandling :: Failed to delete file: {} with error: {}", path, e.getMessage());
             return false;
         }
     }
