@@ -72,7 +72,7 @@ public class PlayerDetailsSearchComponent implements UseLogging {
             favoritesSelect.setItems(Collections.emptyList());
             return;
         }
-        List<Player> favoritePlayers = filterFavoritePlayers(rankingService.loadPlayer(), favoritePlayerIds);
+        List<Player> favoritePlayers = filterFavoritePlayers(rankingService.getAllPlayers(), favoritePlayerIds);
         log().debug("PlayerDetailsSearchComponent :: Found number of favorites: {}", favoritePlayers.size());
         favoritesSelect.setItems(favoritePlayers);
     }

@@ -1,37 +1,64 @@
 package de.ostfale.va.application.domain.service.ranking;
 
+import de.ostfale.va.application.domain.model.playerrankings.GenderType;
 import de.ostfale.va.application.domain.model.playerrankings.Player;
+import de.ostfale.va.application.domain.model.playerrankings.RankingDashboardStatistics;
 import de.ostfale.va.application.port.in.ranking.ForLoadingRankings;
 import de.ostfale.va.application.port.out.ranking.ForParsingRankingFile;
-import de.ostfale.va.common.UseFileSystemHandling;
-import de.ostfale.va.common.UseLogging;
 import de.ostfale.va.framework.out.filesystem.ApplicationDirectoryConfiguration;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 @Service
-public class ImportRankingsService implements ForLoadingRankings, UseFileSystemHandling, UseLogging {
+public class ImportRankingsService implements ForLoadingRankings {
+
+    private static final String DATE_TIME_FORMAT = "dd.MM.yyyy HH:mm";
+
+    // cached players
+    private final List<Player> players = new ArrayList<>();
 
     private final ForParsingRankingFile parser;
-
-    private final List<Player> players = new ArrayList<>();
+    private LocalDateTime lastRankingFileUpdate;
 
     public ImportRankingsService(ForParsingRankingFile parser) {
         this.parser = parser;
     }
 
     @Override
-    public List<Player> loadPlayer() {
+    public List<Player> getAllPlayers() {
         if (players.isEmpty()) {
             players.addAll(loadFromSource());
         }
         log().trace("ImportRankingsService :: Loaded {} players from ranking file", players.size());
         return players;
+    }
+
+    @Override
+    public RankingDashboardStatistics calculateStatistics() {
+        getAllPlayers();
+        var lastDownloadDate = "";
+        var nofPlayers = players.size();
+        var nofMalePlayers = players.stream().filter(player -> GenderType.MALE.equals(player.getGender())).count();
+        var nofFemalePlayers = players.stream().filter(player -> GenderType.FEMALE.equals(player.getGender())).count();
+
+        if (lastRankingFileUpdate != null) {
+            lastDownloadDate = lastRankingFileUpdate.format(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT));
+        }
+
+        return new RankingDashboardStatistics(
+                lastDownloadDate,
+                "",
+                nofPlayers,
+                nofFemalePlayers,
+                nofMalePlayers
+        );
     }
 
     @Override
@@ -53,6 +80,8 @@ public class ImportRankingsService implements ForLoadingRankings, UseFileSystemH
         List<Player> players = parser.parseRankingFile(rankingFilePath);
         log().info("ImportRankingsService :: Imported {} players from ranking file {}", players.size(), rankingFilePath);
 
+        lastRankingFileUpdate = getFirstFileTimestamp(rankingFilePath);
+
         return players;
     }
 
@@ -61,7 +90,7 @@ public class ImportRankingsService implements ForLoadingRankings, UseFileSystemH
         if (filter == null || filter.isBlank()) return Collections.emptyList();
 
         String[] tokens = filter.toLowerCase().split("\\s+");
-        return loadPlayer().stream()
+        return getAllPlayers().stream()
                 .filter(player -> matchPlayer(player, tokens))
                 .skip(offset)
                 .limit(limit)
@@ -70,7 +99,7 @@ public class ImportRankingsService implements ForLoadingRankings, UseFileSystemH
 
     @Override
     public int countPlayers(String filter) {
-        if (players.isEmpty()) loadPlayer();
+        if (players.isEmpty()) getAllPlayers();
         if (filter == null || filter.isBlank()) return 0;
 
         String[] tokens = filter.toLowerCase().split("\\s+");

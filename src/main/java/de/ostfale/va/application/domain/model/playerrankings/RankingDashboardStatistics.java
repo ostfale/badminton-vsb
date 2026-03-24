@@ -1,10 +1,10 @@
 package de.ostfale.va.application.domain.model.playerrankings;
 
-public record PlayerRankingsStatistics(
+public record RankingDashboardStatistics(
         String lastDownloadTimestamp,
         String lastOnlineTimestamp,
-        int numberOfPlayer,
-        int numberOfFemalePlayer,
-        int numberOfMalePlayer
+        long numberOfPlayer,
+        long numberOfFemalePlayer,
+        long numberOfMalePlayer
 ) {
 }

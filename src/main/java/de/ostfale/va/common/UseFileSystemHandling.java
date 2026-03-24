@@ -14,6 +14,7 @@ import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 public interface UseFileSystemHandling extends UseLogging {
@@ -38,25 +39,33 @@ public interface UseFileSystemHandling extends UseLogging {
         return Paths.get(getApplicationHomeDir(), subDirName).toString();
     }
 
+    private Optional<File> findFirstFileInDirectory(Path dirPath) {
+        if (!Files.isDirectory(dirPath)) return Optional.empty();
+        log().debug("UseFileSystemHandling :: Given path is a directory {}", dirPath);
+        List<File> files = readAllFiles(dirPath.toString());
+        if (files.isEmpty()) {
+            log().warn("UseFileSystemHandling :: No files found in directory {}", dirPath);
+        }
+        return files.isEmpty() ? Optional.empty() : Optional.of(files.getFirst());
+    }
+
     default LocalDateTime getFirstFileTimestamp(Path dirPath) {
         Objects.requireNonNull(dirPath, "Path must not be null");
-        if (Files.isDirectory(dirPath)) {
-            log().debug("UseFileSystemHandling :: Given path is a directory {}", dirPath);
-            List<File> files = readAllFiles(dirPath.toString());
-            if (files.isEmpty()) {
-                log().warn("UseFileSystemHandling :: No files found in directory {}", dirPath);
-                return LocalDateTime.MIN;
-            }
-            return getFirstFileTimestamp(files.getFirst().toPath());
-        }
-        log().debug("UseFileSystemHandling :: Getting first file timestamp in {}", dirPath);
+        Path target = findFirstFileInDirectory(dirPath).map(File::toPath).orElse(dirPath);
+        if (Files.isDirectory(target)) return LocalDateTime.MIN; // was already a dir with no files
+        log().debug("UseFileSystemHandling :: Getting first file timestamp in {}", target);
         try {
-            BasicFileAttributes attrs = Files.readAttributes(dirPath, BasicFileAttributes.class);
+            BasicFileAttributes attrs = Files.readAttributes(target, BasicFileAttributes.class);
             return LocalDateTime.ofInstant(attrs.creationTime().toInstant(), ZoneId.systemDefault());
         } catch (IOException e) {
-            log().error("UseFileSystemHandling :: Failure retrieving timestamp for {} and message:  {}", dirPath, e.getMessage());
+            log().error("UseFileSystemHandling :: Failure retrieving timestamp for {} and message:  {}", target, e.getMessage());
             return LocalDateTime.MIN;
         }
+    }
+
+    default File getFirstFile(Path dirPath) {
+        Objects.requireNonNull(dirPath, "Path must not be null");
+        return findFirstFileInDirectory(dirPath).orElse(null);
     }
 
     default List<File> readAllFiles(String dirPath) {

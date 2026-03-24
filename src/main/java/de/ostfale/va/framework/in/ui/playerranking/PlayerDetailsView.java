@@ -103,7 +103,7 @@ public class PlayerDetailsView extends VerticalLayout implements UseTimeHandling
         playerStateNameField.setValue(player.getStateName());
         playerStateGroupField.setValue(player.getStateGroup().getDisplayName());
 
-        List<Player> allPlayers = rankingService.loadPlayer();
+        List<Player> allPlayers = rankingService.getAllPlayers();
         matrixComponent.updateRanking(player, allPlayers);
     }
 

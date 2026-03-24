@@ -14,7 +14,7 @@ import de.ostfale.va.common.UseFileSystemHandling;
 import de.ostfale.va.common.UseLogging;
 import de.ostfale.va.common.UseTimeHandling;
 
-public abstract class BaseInfoCard extends VerticalLayout implements UseLogging , UseTimeHandling, UseFileSystemHandling {
+public abstract class BaseInfoCard extends VerticalLayout implements UseLogging, UseTimeHandling, UseFileSystemHandling {
 
     private final VerticalLayout contentContainer = new VerticalLayout();
     private final HorizontalLayout actionLayout = new HorizontalLayout();
@@ -34,13 +34,13 @@ public abstract class BaseInfoCard extends VerticalLayout implements UseLogging 
 
         // content area
         contentContainer.setPadding(true);
-        contentContainer.setSpacing(true);
+        contentContainer.setSpacing(false);
         contentContainer.getStyle().set("flex-grow", "1");
 
         // action bar
         actionLayout.setWidthFull();
         actionLayout.setPadding(true);
-        actionLayout.setSpacing(true);
+        actionLayout.setSpacing(false);
         actionLayout.setJustifyContentMode(JustifyContentMode.START);
 
         add(image, title, contentContainer, actionLayout);
@@ -74,11 +74,14 @@ public abstract class BaseInfoCard extends VerticalLayout implements UseLogging 
         row.setWidthFull();
         row.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
 
-        row.getStyle().set("margin-bottom", "0.75rem");
 
         if (indented) {
-            // Apply a "tab" (indentation) to the left
+            // Apply a "tab" (indentation) to the left and keep grouped rows tight.
             row.getStyle().set("padding-left", "2rem");
+            row.getStyle().set("margin-bottom", "0.20rem");
+        } else {
+            // Keep a stronger visual separation before grouped rows.
+            row.getStyle().set("margin-bottom", "0.75rem");
         }
         return row;
     }
