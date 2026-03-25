@@ -37,8 +37,6 @@ public class HttpFileDownloadAdapter implements ForDownloadingFiles, UseFileSyst
 
         log().debug("HttpDownloadAdapter :: Processing {} download tasks", tasks.size());
 
-        // Da alle Tasks eines Service-Aufrufs (z.B. Rankings oder Tournaments)
-        // üblicherweise im selben Verzeichnis landen, bereinigen wir dieses einmalig vorab.
         tasks.stream()
                 .map(task -> task.destination().getParent())
                 .filter(Objects::nonNull)

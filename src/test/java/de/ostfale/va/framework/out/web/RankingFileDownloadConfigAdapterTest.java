@@ -11,15 +11,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.ObjectProvider;
 
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -31,7 +33,7 @@ class RankingFileDownloadConfigAdapterTest {
     Path tempDir;
     private RankingFileDownloadConfigAdapter sut;
     @Mock
-    private ObjectProvider<Browser> browserProvider;
+    private CompletableFuture<Browser> browserFuture;
     @Mock
     private Browser browser;
     @Mock
@@ -42,15 +44,15 @@ class RankingFileDownloadConfigAdapterTest {
     private BadmintonDeTimestampParser timestampParser;
 
     @BeforeEach
-    void setUp() {
-        sut = new RankingFileDownloadConfigAdapter(browserProvider, timestampParser);
+    void setUp() throws Exception {
+        when(browserFuture.get(anyLong(), any(TimeUnit.class))).thenReturn(browser);
+        sut = new RankingFileDownloadConfigAdapter(browserFuture, timestampParser);
     }
 
     @Test
     @DisplayName("Should return empty list when no newer ranking is available")
     void shouldReturnEmptyListWhenNoNewerRankingAvailable() {
         // Given - remote timestamp is older than LocalDateTime.MIN (impossible scenario)
-        when(browserProvider.getIfAvailable()).thenReturn(browser);
         when(browser.newContext()).thenReturn(browserContext);
         when(browserContext.newPage()).thenReturn(page);
         when(timestampParser.parseLastUpdate(page)).thenReturn(Optional.of(LocalDateTime.MIN));
@@ -66,7 +68,6 @@ class RankingFileDownloadConfigAdapterTest {
     @DisplayName("Should return download task when newer ranking is available online")
     void shouldReturnDownloadTaskWhenNewerRankingAvailable() {
         // Given
-        when(browserProvider.getIfAvailable()).thenReturn(browser);
         when(browser.newContext()).thenReturn(browserContext);
         when(browserContext.newPage()).thenReturn(page);
         when(timestampParser.parseLastUpdate(page)).thenReturn(Optional.of(LocalDateTime.now().plusDays(1)));
@@ -84,7 +85,6 @@ class RankingFileDownloadConfigAdapterTest {
     @DisplayName("Should return empty list when remote timestamp is not available")
     void shouldReturnEmptyListWhenRemoteTimestampNotAvailable() {
         // Given
-        when(browserProvider.getIfAvailable()).thenReturn(browser);
         when(browser.newContext()).thenReturn(browserContext);
         when(browserContext.newPage()).thenReturn(page);
         when(timestampParser.parseLastUpdate(page)).thenReturn(Optional.empty());
@@ -100,7 +100,6 @@ class RankingFileDownloadConfigAdapterTest {
     @DisplayName("Should return empty list when Browser throws exception")
     void shouldReturnEmptyListWhenBrowserThrowsException() {
         // Given
-        when(browserProvider.getIfAvailable()).thenReturn(browser);
         when(browser.newContext()).thenReturn(browserContext);
         when(browserContext.newPage()).thenReturn(page);
         when(page.navigate(any(String.class))).thenThrow(new RuntimeException("Connection failed"));
@@ -117,7 +116,6 @@ class RankingFileDownloadConfigAdapterTest {
     void shouldCompareFileTimestampWithRemoteTimestamp() {
         // Given - use a future timestamp to ensure it's newer than any existing file
         LocalDateTime remoteTime = LocalDateTime.now().plusDays(1);
-        when(browserProvider.getIfAvailable()).thenReturn(browser);
         when(browser.newContext()).thenReturn(browserContext);
         when(browserContext.newPage()).thenReturn(page);
         when(timestampParser.parseLastUpdate(page)).thenReturn(Optional.of(remoteTime));
@@ -134,7 +132,6 @@ class RankingFileDownloadConfigAdapterTest {
     @DisplayName("Should generate correct file name with calendar week and year")
     void shouldGenerateCorrectFileNameWithCalendarWeekAndYear() {
         // Given
-        when(browserProvider.getIfAvailable()).thenReturn(browser);
         when(browser.newContext()).thenReturn(browserContext);
         when(browserContext.newPage()).thenReturn(page);
         when(timestampParser.parseLastUpdate(page)).thenReturn(Optional.of(LocalDateTime.now().plusDays(1)));

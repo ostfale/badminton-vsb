@@ -42,7 +42,8 @@ public class ImportRankingsService implements ForLoadingRankings {
 
     @Override
     public RankingDashboardStatistics calculateStatistics() {
-        getAllPlayers();
+        players.clear();
+        players.addAll(loadFromSource());
         var lastDownloadDate = "";
         var nofPlayers = players.size();
         var nofMalePlayers = players.stream().filter(player -> GenderType.MALE.equals(player.getGender())).count();

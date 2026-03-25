@@ -1,5 +1,7 @@
 package de.ostfale.va.framework.out.web;
 
+import com.microsoft.playwright.FrameLocator;
+import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import de.ostfale.va.common.UseLogging;
 import org.springframework.stereotype.Component;
@@ -14,26 +16,43 @@ import java.util.regex.Pattern;
 @Component
 public class BadmintonDeTimestampParser implements UseLogging {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
-    private static final Pattern TIMESTAMP_PATTERN = Pattern.compile("zuletzt aktualisiert:\\s*(\\d{2}\\.\\d{2}\\.\\d{4}\\s+\\d{2}:\\d{2}:\\d{2})");
 
     public Optional<LocalDateTime> parseLastUpdate(Page page) {
-        String wholeText = page.textContent("body");
-        Matcher matcher = TIMESTAMP_PATTERN.matcher(wholeText);
+        try {
+            // 1. Switch to the iframe with ID "myIframe"
+            FrameLocator rankingFrame = page.frameLocator("#myIframe");
 
-        if (matcher.find()) {
-            String dateStr = matcher.group(1);
-            log().info("BadmintonDeTimestampParser :: Timestamp found per regex: {}", dateStr);
-            return parseDateTime(dateStr);
+            // 2. Search for the element #infopop within this frame
+            // We use .first() in case the element appears multiple times in the DOM
+            Locator infoPopLocator = rankingFrame.locator("#infopop").first();
+
+            // 3. Extract text (Playwright automatically waits for the iframe to load here)
+            String rawText = infoPopLocator.textContent();
+
+            if (rawText == null || rawText.isBlank()) {
+                log().warn("BadmintonDeTimestampParser :: Element #infopop im Iframe gefunden, aber leer.");
+                return Optional.empty();
+            }
+
+            String cleanDateStr = rawText.trim();
+            log().info("BadmintonDeTimestampParser :: Zeitstempel im Iframe gefunden: {}", cleanDateStr);
+
+            return parseDateTime(cleanDateStr);
+
+        } catch (com.microsoft.playwright.TimeoutError e) {
+            log().error("BadmintonDeTimestampParser :: Timeout beim Warten auf den Iframe oder #infopop.");
+            return Optional.empty();
+        } catch (Exception e) {
+            log().error("BadmintonDeTimestampParser :: Unerwarteter Fehler beim Parsen", e);
+            return Optional.empty();
         }
-        log().warn("BadmintonDeTimestampParser :: Timestamp not found in page text");
-        return Optional.empty();
     }
 
     private Optional<LocalDateTime> parseDateTime(String dateString) {
         try {
             return Optional.of(LocalDateTime.parse(dateString, FORMATTER));
         } catch (DateTimeParseException e) {
-            log().warn("Failed to parse timestamp: {}", dateString, e);
+            log().warn("Failed to parse timestamp: {}", dateString);
             return Optional.empty();
         }
     }

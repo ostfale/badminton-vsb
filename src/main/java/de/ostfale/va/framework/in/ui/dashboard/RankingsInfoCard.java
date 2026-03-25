@@ -3,6 +3,7 @@ package de.ostfale.va.framework.in.ui.dashboard;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import de.ostfale.va.application.domain.model.playerrankings.RankingDashboardStatistics;
+import de.ostfale.va.application.port.in.ranking.ForDownloadingRankingsUC;
 import de.ostfale.va.application.port.in.ranking.ForLoadingRankings;
 
 public class RankingsInfoCard extends BaseInfoCard {
@@ -11,7 +12,7 @@ public class RankingsInfoCard extends BaseInfoCard {
     private static final String CARD_TITLE = "Infos Rangliste";
 
     private static final String DOWNLOAD_TOOLTIP = "Rangliste herunterladen";
-    private static final String REFRESH_TOOLTIP = "Rangliste aktualisieren";
+    private static final String REFRESH_TOOLTIP = "Rangliste aktualisieren (kann ein paar Sekunden dauern)";
 
     private static final String LABEL_LAST_DOWNLOAD = "Letzter Download";
     private static final String LABEL_PLAYER_COUNT = "Anzahl der Spieler";
@@ -19,10 +20,12 @@ public class RankingsInfoCard extends BaseInfoCard {
     private static final String LABEL_MALE_PLAYER_COUNT = "Anzahl männliche Spieler";
 
     private final ForLoadingRankings rankingsService;
+    private final ForDownloadingRankingsUC downloadRankings;
 
-    public RankingsInfoCard(ForLoadingRankings rankingsService) {
+    public RankingsInfoCard(ForLoadingRankings rankingsService, ForDownloadingRankingsUC downloadRankings) {
         super(IMAGE_PATH, CARD_TITLE);
         this.rankingsService = rankingsService;
+        this.downloadRankings = downloadRankings;
         setupActions();
         refresh();
     }
@@ -40,8 +43,10 @@ public class RankingsInfoCard extends BaseInfoCard {
 
     private void download() {
         log().info("RankingsInfoCard :: Downloading ranking statistics");
+        downloadRankings.downloadRankings();
+        refresh();
     }
-    
+
     private void setupActions() {
         Button downloadButton = createIconButton(VaadinIcon.DOWNLOAD, DOWNLOAD_TOOLTIP, this::download);
         Button updateButton = createIconButton(VaadinIcon.REFRESH, REFRESH_TOOLTIP, this::refresh);
