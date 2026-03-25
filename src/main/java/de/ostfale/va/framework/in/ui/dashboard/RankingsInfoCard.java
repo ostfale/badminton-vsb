@@ -27,20 +27,26 @@ public class RankingsInfoCard extends BaseInfoCard {
         refresh();
     }
 
-    public void refresh() {
-        updateStatisticsContent();
+    @Override
+    protected String getTitle() {
+        return "Rangliste KW " + getCurrentCalendarWeek();
     }
 
+    private void refresh() {
+        log().info("RankingsInfoCard :: Refreshing ranking statistics");
+        clearContent();
+        addStatisticsRows(loadStatistics());
+    }
+
+    private void download() {
+        log().info("RankingsInfoCard :: Downloading ranking statistics");
+    }
+    
     private void setupActions() {
-        Button downloadButton = createIconButton(VaadinIcon.DOWNLOAD, DOWNLOAD_TOOLTIP, this::handleDownload);
-        Button updateButton = createIconButton(VaadinIcon.REFRESH, REFRESH_TOOLTIP, this::updateStatisticsContent);
+        Button downloadButton = createIconButton(VaadinIcon.DOWNLOAD, DOWNLOAD_TOOLTIP, this::download);
+        Button updateButton = createIconButton(VaadinIcon.REFRESH, REFRESH_TOOLTIP, this::refresh);
         addAction(downloadButton);
         addAction(updateButton);
-    }
-
-    private void updateStatisticsContent() {
-        RankingDashboardStatistics statistics = loadStatistics();
-        addStatisticsRows(statistics);
     }
 
     private RankingDashboardStatistics loadStatistics() {
@@ -52,13 +58,5 @@ public class RankingsInfoCard extends BaseInfoCard {
         addContent(createStatRow(LABEL_PLAYER_COUNT, String.valueOf(statistics.numberOfPlayer()), true));
         addContent(createStatRow(LABEL_FEMALE_PLAYER_COUNT, String.valueOf(statistics.numberOfFemalePlayer()), true));
         addContent(createStatRow(LABEL_MALE_PLAYER_COUNT, String.valueOf(statistics.numberOfMalePlayer()), true));
-    }
-
-    private void handleDownload() {
-    }
-
-    @Override
-    protected String getTitle() {
-        return "Rangliste KW " + getCurrentCalendarWeek();
     }
 }

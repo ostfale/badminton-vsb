@@ -11,8 +11,6 @@ public interface ForLoadingRankings extends UseFileSystemHandling, UseLogging {
 
     List<Player> getAllPlayers();
 
-    List<Player> loadFromSource();
-
     List<Player> findPlayers(String filert, int offset, int limit);
 
     RankingDashboardStatistics calculateStatistics();

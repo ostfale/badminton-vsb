@@ -61,8 +61,7 @@ public class ImportRankingsService implements ForLoadingRankings {
         );
     }
 
-    @Override
-    public List<Player> loadFromSource() {
+    private List<Player> loadFromSource() {
         var rankingDir = getApplicationSubDir(ApplicationDirectoryConfiguration.RANKING_DIR_NAME);
         List<File> rankingFiles = readAllFiles(rankingDir);
 

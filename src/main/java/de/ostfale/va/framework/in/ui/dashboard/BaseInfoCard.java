@@ -48,6 +48,10 @@ public abstract class BaseInfoCard extends VerticalLayout implements UseLogging,
 
     protected abstract String getTitle();
 
+    protected void clearContent() {
+        contentContainer.removeAll();
+    }
+
     protected void addContent(Component... components) {
         contentContainer.add(components);
     }
