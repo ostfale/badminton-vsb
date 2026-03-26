@@ -20,8 +20,12 @@ public class DownloadRankingsService implements ForDownloadingRankingsUC, UseLog
     }
 
     @Override
-    public void downloadRankings() {
+    public boolean downloadRankings() {
         var tasks = downloadConfig.getDownloadTasks();
+        if (tasks.isEmpty()) {
+            return false;
+        }
         fileDownloader.downloadFiles(tasks);
+        return true;
     }
 }

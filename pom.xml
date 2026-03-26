@@ -10,7 +10,7 @@
 
     <properties>
         <java.version>25</java.version>
-        <vaadin.version>25.0.6</vaadin.version>
+        <vaadin.version>25.1.0</vaadin.version>
 
         <!-- monitor -->
         <logstash-logback-encoder.version>9.0</logstash-logback-encoder.version>
@@ -32,7 +32,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.0.3</version>
+        <version>4.0.5</version>
         <relativePath/>
     </parent>
 
