@@ -15,6 +15,8 @@ import java.util.concurrent.TimeUnit;
 
 public class RankingsInfoCard extends BaseInfoCard {
 
+    private static final int DOWNLOAD_POLL_INTERVAL_MS = 500;
+
     private static final String IMAGE_PATH = "images/info_card_ranking.png";
     private static final String CARD_TITLE = "Infos Rangliste";
 
@@ -60,39 +62,45 @@ public class RankingsInfoCard extends BaseInfoCard {
 
     private void download() {
         log().info("RankingsInfoCard :: Downloading ranking statistics");
-        if (downloadButton == null || !downloadButton.isEnabled()) {
-            return;
-        }
 
         UI ui = UI.getCurrent();
-        if (ui == null) {
+        if (!isDownloadAllowed(ui)) {
             return;
         }
 
         downloadButton.setEnabled(false);
         showStatus(DOWNLOAD_RUNNING_MESSAGE);
+
         final int previousPollInterval = ui.getPollInterval();
-        ui.setPollInterval(500);
+        ui.setPollInterval(DOWNLOAD_POLL_INTERVAL_MS);
 
         CompletableFuture.supplyAsync(downloadRankings::downloadRankings)
-                .whenComplete((downloadPerformed, throwable) ->
-                        ui.access(() -> {
-                            if (!ui.isAttached()) {
-                                return;
-                            }
-                            if (throwable != null) {
-                                log().error("RankingsInfoCard :: Download failed", throwable);
-                                showStatus(DOWNLOAD_FAILED_MESSAGE);
-                            } else if (Boolean.TRUE.equals(downloadPerformed)) {
-                                showStatus(DOWNLOAD_FINISHED_MESSAGE);
-                            } else {
-                                showStatus(DOWNLOAD_NOT_NECESSARY_MESSAGE);
-                            }
-                            schedulePopoverClose(ui);
-                            downloadButton.setEnabled(true);
-                            ui.setPollInterval(previousPollInterval);
-                            refresh();
-                        }));
+                .whenComplete((wasDownloaded, throwable) ->
+                        ui.access(() -> handleDownloadResult(ui, previousPollInterval, wasDownloaded, throwable)));
+    }
+
+    private boolean isDownloadAllowed(UI ui) {
+        return downloadButton != null && downloadButton.isEnabled() && ui != null;
+    }
+
+    private void handleDownloadResult(UI ui, int previousPollInterval, Boolean wasDownloaded, Throwable throwable) {
+        if (!ui.isAttached()) {
+            return;
+        }
+
+        if (throwable != null) {
+            log().error("RankingsInfoCard :: Download failed", throwable);
+            showStatus(DOWNLOAD_FAILED_MESSAGE);
+        } else if (Boolean.TRUE.equals(wasDownloaded)) {
+            showStatus(DOWNLOAD_FINISHED_MESSAGE);
+        } else {
+            showStatus(DOWNLOAD_NOT_NECESSARY_MESSAGE);
+        }
+
+        schedulePopoverClose(ui);
+        downloadButton.setEnabled(true);
+        ui.setPollInterval(previousPollInterval);
+        refresh();
     }
 
     private void setupActions() {

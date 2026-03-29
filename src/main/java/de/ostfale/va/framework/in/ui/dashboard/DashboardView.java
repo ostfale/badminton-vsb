@@ -3,6 +3,7 @@ package de.ostfale.va.framework.in.ui.dashboard;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
+import de.ostfale.va.application.port.in.plannedtournaments.ForDownloadingPlannedTournamentsUC;
 import de.ostfale.va.application.port.in.plannedtournaments.ForLoadingPlannedTournaments;
 import de.ostfale.va.application.port.in.ranking.ForDownloadingRankingsUC;
 import de.ostfale.va.application.port.in.ranking.ForLoadingRankings;
@@ -17,14 +18,15 @@ public class DashboardView extends VerticalLayout implements UseLogging {
     public DashboardView(
             ForLoadingRankings rankingService,
             ForLoadingPlannedTournaments tournamentService,
-            ForDownloadingRankingsUC forDownloadingRankingsUC
+            ForDownloadingRankingsUC forDownloadingRankingsUC,
+            ForDownloadingPlannedTournamentsUC forDownloadingPlannedTournamentsUC
     ) {
         log().info("DashboardView :: constructor");
         setSizeFull();
         getStyle().set("padding-top", "calc(var(--lumo-space-m) * 2)");
         getStyle().set("padding-left", "calc(var(--lumo-space-m) * 2)");
 
-        var plannedTournamentsInfoCard = new PlannedTournamentsInfoCard(tournamentService);
+        var plannedTournamentsInfoCard = new TournamentsInfoCard(tournamentService, forDownloadingPlannedTournamentsUC);
         var rankingsInfoCard = new RankingsInfoCard(rankingService, forDownloadingRankingsUC);
 
         HorizontalLayout cardsLayout = new HorizontalLayout(plannedTournamentsInfoCard, rankingsInfoCard);

@@ -17,9 +17,7 @@ public class TurnierDeCookieHandler implements UseLogging {
             log().info("TurnierDeCookieHandler :: Cookiewall erkannt. Sende Formular ab...");
 
             try {
-                page.evaluate("document.forms[0].submit();");
-                page.waitForURL(url -> !url.contains(COOKIE_WALL_URL_PART),
-                        new Page.WaitForURLOptions().setTimeout(3000));
+                page.waitForNavigation(() -> page.evaluate("document.forms[0].submit();"));
                 log().info("TurnierDeCookieHandler :: Aktuelle URL nach Behandlung: {}", page.url());
             } catch (Exception e) {
                 log().error("TurnierDeCookieHandler :: Fehler beim Cookie-Handling", e);

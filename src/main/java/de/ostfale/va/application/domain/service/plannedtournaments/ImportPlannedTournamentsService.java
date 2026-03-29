@@ -46,7 +46,8 @@ public class ImportPlannedTournamentsService implements ForLoadingPlannedTournam
 
     @Override
     public PlannedTournamentsDashboardStatistics calculateStatistics() {
-        getAllPlannedTournaments();
+        tournaments.clear();
+        tournaments.addAll(loadFromSource());
         var lastDownloadDate = "";
 
         if (lastRankingFileUpdate != null) {
@@ -69,6 +70,11 @@ public class ImportPlannedTournamentsService implements ForLoadingPlannedTournam
     public List<PlannedTournament> loadFromSource() {
         var dataDir = getApplicationSubDir(ApplicationDirectoryConfiguration.TOURNAMENT_DIR_NAME);
         List<File> tournamentFiles = readAllFiles(dataDir);
+        if (tournamentFiles.isEmpty()) {
+            log().warn("ImportPlannedTournamentsService :: No tournament files found in {}", dataDir);
+            return List.of();
+        }
+
         Path rankingFilePath = tournamentFiles.getFirst().toPath();
         lastRankingFileUpdate = getFirstFileTimestamp(rankingFilePath);
 

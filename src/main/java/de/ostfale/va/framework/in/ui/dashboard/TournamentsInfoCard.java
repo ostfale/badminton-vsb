@@ -3,9 +3,10 @@ package de.ostfale.va.framework.in.ui.dashboard;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournamentsDashboardStatistics;
+import de.ostfale.va.application.port.in.plannedtournaments.ForDownloadingPlannedTournamentsUC;
 import de.ostfale.va.application.port.in.plannedtournaments.ForLoadingPlannedTournaments;
 
-public class PlannedTournamentsInfoCard extends BaseInfoCard {
+public class TournamentsInfoCard extends BaseInfoCard {
 
     private static final String IMAGE_PATH = "images/info_card_tournaments.png";
 
@@ -16,16 +17,22 @@ public class PlannedTournamentsInfoCard extends BaseInfoCard {
     private static final String TOURNAMENTS_LABEL_PREFIX = "Turniere ";
 
     private final ForLoadingPlannedTournaments tournamentsService;
+    private final ForDownloadingPlannedTournamentsUC downloadPlannedTournaments;
 
-    public PlannedTournamentsInfoCard(ForLoadingPlannedTournaments tournamentService) {
+    public TournamentsInfoCard(
+            ForLoadingPlannedTournaments tournamentService,
+            ForDownloadingPlannedTournamentsUC downloadPlannedTournaments
+    ) {
         super(IMAGE_PATH, "Infos Turniere");
         this.tournamentsService = tournamentService;
+        this.downloadPlannedTournaments = downloadPlannedTournaments;
         setupActions();
         refresh();
     }
 
-
     public void refresh() {
+        log().info("TournamentsInfoCard :: Refreshing planned tournament statistics");
+        clearContent();
         updateStatisticsContent();
     }
 
@@ -43,6 +50,9 @@ public class PlannedTournamentsInfoCard extends BaseInfoCard {
     }
 
     private void handleDownload() {
+        log().info("TournamentsInfoCard :: Downloading planned tournaments");
+        downloadPlannedTournaments.downloadPlannedTournaments();
+        refresh();
     }
 
     private void updateStatisticsContent() {
