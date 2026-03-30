@@ -1,6 +1,6 @@
 package de.ostfale.va.application.domain.model.plannedournaments;
 
-public record PlannedTournamentsDashboardStatistics(
+public record TournamentsDashboardStatistics(
         String lastDownloadTimestamp,
         long totalTournamentsThisYear,
         long totalTournamentsNextYear,

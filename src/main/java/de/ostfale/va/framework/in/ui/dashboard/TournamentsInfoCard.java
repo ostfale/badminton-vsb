@@ -2,11 +2,16 @@ package de.ostfale.va.framework.in.ui.dashboard;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.icon.VaadinIcon;
-import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournamentsDashboardStatistics;
+import com.vaadin.flow.component.UI;
+import de.ostfale.va.application.domain.model.plannedournaments.TournamentsDashboardStatistics;
 import de.ostfale.va.application.port.in.plannedtournaments.ForDownloadingPlannedTournamentsUC;
 import de.ostfale.va.application.port.in.plannedtournaments.ForLoadingPlannedTournaments;
 
+import java.util.concurrent.CompletableFuture;
+
 public class TournamentsInfoCard extends BaseInfoCard {
+
+    private static final int DOWNLOAD_POLL_INTERVAL_MS = 500;
 
     private static final String IMAGE_PATH = "images/info_card_tournaments.png";
 
@@ -18,6 +23,7 @@ public class TournamentsInfoCard extends BaseInfoCard {
 
     private final ForLoadingPlannedTournaments tournamentsService;
     private final ForDownloadingPlannedTournamentsUC downloadPlannedTournaments;
+    private Button downloadButton;
 
     public TournamentsInfoCard(
             ForLoadingPlannedTournaments tournamentService,
@@ -37,8 +43,8 @@ public class TournamentsInfoCard extends BaseInfoCard {
     }
 
     private void setupActions() {
-        Button downloadButton = createIconButton(VaadinIcon.DOWNLOAD, DOWNLOAD_TOOLTIP, this::handleDownload);
-        Button updateButton = createIconButton(VaadinIcon.REFRESH, REFRESH_TOOLTIP, this::updateStatisticsContent);
+        downloadButton = createIconButton(VaadinIcon.DOWNLOAD, DOWNLOAD_TOOLTIP, this::handleDownload);
+        Button updateButton = createIconButton(VaadinIcon.REFRESH, REFRESH_TOOLTIP, this::refresh);
         addAction(downloadButton);
         addAction(updateButton);
     }
@@ -51,16 +57,45 @@ public class TournamentsInfoCard extends BaseInfoCard {
 
     private void handleDownload() {
         log().info("TournamentsInfoCard :: Downloading planned tournaments");
-        downloadPlannedTournaments.downloadPlannedTournaments();
+
+        UI ui = UI.getCurrent();
+        if (!isDownloadAllowed(ui)) {
+            return;
+        }
+
+        downloadButton.setEnabled(false);
+        final int previousPollInterval = ui.getPollInterval();
+        ui.setPollInterval(DOWNLOAD_POLL_INTERVAL_MS);
+
+        CompletableFuture.runAsync(downloadPlannedTournaments::downloadPlannedTournaments)
+                .whenComplete((unused, throwable) ->
+                        ui.access(() -> handleDownloadResult(ui, previousPollInterval, throwable)));
+    }
+
+    private boolean isDownloadAllowed(UI ui) {
+        return downloadButton != null && downloadButton.isEnabled() && ui != null;
+    }
+
+    private void handleDownloadResult(UI ui, int previousPollInterval, Throwable throwable) {
+        if (!ui.isAttached()) {
+            return;
+        }
+
+        if (throwable != null) {
+            log().error("TournamentsInfoCard :: Download failed", throwable);
+        }
+
+        downloadButton.setEnabled(true);
+        ui.setPollInterval(previousPollInterval);
         refresh();
     }
 
     private void updateStatisticsContent() {
-        PlannedTournamentsDashboardStatistics statistics = loadStatistics();
+        TournamentsDashboardStatistics statistics = loadStatistics();
         addStatisticsRows(statistics);
     }
 
-    private void addStatisticsRows(PlannedTournamentsDashboardStatistics statistics) {
+    private void addStatisticsRows(TournamentsDashboardStatistics statistics) {
         int currentYear = getCurrentCalendarYear();
 
         addContent(createStatRow(LABEL_LAST_DOWNLOAD, statistics.lastDownloadTimestamp(), false));
@@ -72,7 +107,7 @@ public class TournamentsInfoCard extends BaseInfoCard {
         addContent(createStatRow(TOURNAMENTS_LABEL_PREFIX + year, statistic, true));
     }
 
-    private PlannedTournamentsDashboardStatistics loadStatistics() {
+    private TournamentsDashboardStatistics loadStatistics() {
         return tournamentsService.calculateStatistics();
     }
 }

@@ -1,7 +1,7 @@
 package de.ostfale.va.application.domain.service.plannedtournaments;
 
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournament;
-import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournamentsDashboardStatistics;
+import de.ostfale.va.application.domain.model.plannedournaments.TournamentsDashboardStatistics;
 import de.ostfale.va.application.port.in.ForProvidingPlannedTournamentStreams;
 import de.ostfale.va.application.port.in.plannedtournaments.ForLoadingPlannedTournaments;
 import de.ostfale.va.application.port.out.plannedtournaments.ForParsingPlannedTournaments;
@@ -45,7 +45,7 @@ public class ImportPlannedTournamentsService implements ForLoadingPlannedTournam
     }
 
     @Override
-    public PlannedTournamentsDashboardStatistics calculateStatistics() {
+    public TournamentsDashboardStatistics calculateStatistics() {
         tournaments.clear();
         tournaments.addAll(loadFromSource());
         var lastDownloadDate = "";
@@ -58,7 +58,7 @@ public class ImportPlannedTournamentsService implements ForLoadingPlannedTournam
         var nofTournamentsOpen = tournaments.stream().filter(PlannedTournament::isOpenTournament).count();
         var nofTournamentsNextYear = tournaments.stream().filter(PlannedTournament::isFromNextYear).count();
 
-        return new PlannedTournamentsDashboardStatistics(
+        return new TournamentsDashboardStatistics(
                 lastDownloadDate,
                 nofTournamentsThisYear,
                 nofTournamentsNextYear,
