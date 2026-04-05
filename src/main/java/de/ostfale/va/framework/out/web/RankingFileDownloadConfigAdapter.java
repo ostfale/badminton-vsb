@@ -44,14 +44,17 @@ public class RankingFileDownloadConfigAdapter implements ForRankingFileDownloadC
 
     @Override
     public List<DownloadTask> getDownloadTasks() {
-        String destination = prepareDownloadTargetPath(ApplicationDirectoryConfiguration.RANKING_DIR_NAME);
+        String destination = prepareDownloadTargetPath(ApplicationDirectoryConfiguration.RANKING_DIR_NAME, false);
+        String destinationArchive = prepareDownloadTargetPath(ApplicationDirectoryConfiguration.RANKING_DIR_NAME, true);
         Path destinationPath = Path.of(destination);
+        Path destinationArchivePath = Path.of(destinationArchive);
         if (!isThereNewerRankingAvailableOnline(destinationPath)) {
             log().info("RankingFileDownloadConfigAdapter :: No newer ranking available online. Download skipped.");
             return List.of();
         }
         DownloadTask downloadTask = new DownloadTask(CURRENT_RANKING_FILE_URL, destinationPath);
-        return List.of(downloadTask);
+        DownloadTask downloadTaskArchive = new DownloadTask(CURRENT_RANKING_FILE_URL, destinationArchivePath);
+        return List.of(downloadTask, downloadTaskArchive);
     }
 
     private boolean isThereNewerRankingAvailableOnline(Path destinationPath) {
@@ -113,13 +116,16 @@ public class RankingFileDownloadConfigAdapter implements ForRankingFileDownloadC
         }
     }
 
-    private String prepareDownloadTargetPath(String appDirName) {
+    private String prepareDownloadTargetPath(String appDirName, boolean archive) {
         LocalDateTime downloadDateTime = LocalDateTime.now();
         var calendarWeek = downloadDateTime.get(DEFAULT_WEEK_FIELDS.weekOfWeekBasedYear());
         var calendarYear = downloadDateTime.getYear();
         String rFileName = RANKING_FILE_NAME + calendarYear + RANKING_FILE_NAME_CW + calendarWeek + RANKING_FILE_SUFFIX;
 
         String targetPath = getApplicationHomeDir() + SEPARATOR + appDirName + SEPARATOR + rFileName;
+        if (archive) {
+            targetPath = getApplicationSubDir(ApplicationDirectoryConfiguration.RANKING_HISTORY_DIR_NAME) + SEPARATOR + rFileName;
+        }
         log().debug("RankingFileDownloadConfigAdapter :: prepareDownloadTargetPath: targetPath={}", targetPath);
         return targetPath;
     }

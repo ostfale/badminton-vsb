@@ -1,93 +1,45 @@
 package de.ostfale.va.application.domain.service.ranking;
 
-import de.ostfale.va.application.domain.model.playerrankings.GenderType;
-import de.ostfale.va.application.domain.model.playerrankings.Player;
-import de.ostfale.va.application.domain.model.playerrankings.RankingDashboardStatistics;
+import de.ostfale.va.application.domain.model.playerrankings.*;
 import de.ostfale.va.application.port.in.ranking.ForLoadingRankings;
 import de.ostfale.va.application.port.out.ranking.ForParsingRankingFile;
+import de.ostfale.va.application.port.out.ranking.PlayerRepository;
+import de.ostfale.va.common.UseFileSystemHandling;
+import de.ostfale.va.common.UseLogging;
 import de.ostfale.va.framework.out.filesystem.ApplicationDirectoryConfiguration;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @Service
-public class ImportRankingsService implements ForLoadingRankings {
+public class ImportRankingsService implements ForLoadingRankings, UseFileSystemHandling, UseLogging {
 
     private static final String DATE_TIME_FORMAT = "dd.MM.yyyy HH:mm";
 
-    // cached players
-    private final List<Player> players = new ArrayList<>();
-
     private final ForParsingRankingFile parser;
-    private LocalDateTime lastRankingFileUpdate;
+    private final PlayerRepository playerRepository;
 
-    public ImportRankingsService(ForParsingRankingFile parser) {
+    public ImportRankingsService(PlayerRepository playerRepository, ForParsingRankingFile parser) {
+        this.playerRepository = playerRepository;
         this.parser = parser;
     }
 
     @Override
     public List<Player> getAllPlayers() {
-        if (players.isEmpty()) {
-            players.addAll(loadFromSource());
-        }
-        log().trace("ImportRankingsService :: Loaded {} players from ranking file", players.size());
-        return players;
-    }
-
-    @Override
-    public RankingDashboardStatistics calculateStatistics() {
-        players.clear();
-        players.addAll(loadFromSource());
-        var lastDownloadDate = "";
-        var nofPlayers = players.size();
-        var nofMalePlayers = players.stream().filter(player -> GenderType.MALE.equals(player.getGender())).count();
-        var nofFemalePlayers = players.stream().filter(player -> GenderType.FEMALE.equals(player.getGender())).count();
-
-        if (lastRankingFileUpdate != null) {
-            lastDownloadDate = lastRankingFileUpdate.format(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT));
-        }
-
-        return new RankingDashboardStatistics(
-                lastDownloadDate,
-                "",
-                nofPlayers,
-                nofFemalePlayers,
-                nofMalePlayers
-        );
-    }
-
-    private List<Player> loadFromSource() {
-        var rankingDir = getApplicationSubDir(ApplicationDirectoryConfiguration.RANKING_DIR_NAME);
-        List<File> rankingFiles = readAllFiles(rankingDir);
-
-        if (rankingFiles.isEmpty()) {
-            log().warn("ImportRankingsService ::No ranking files found in {}", rankingDir);
-            return List.of();
-        }
-
-        if (rankingFiles.size() > 1) {
-            log().warn("ImportRankingsService :: Found more than one ranking file in {}. Remove unused file(s)", rankingDir);
-            return List.of();
-        }
-
-        Path rankingFilePath = rankingFiles.getFirst().toPath();
-        List<Player> players = parser.parseRankingFile(rankingFilePath);
-        log().info("ImportRankingsService :: Imported {} players from ranking file {}", players.size(), rankingFilePath);
-
-        lastRankingFileUpdate = getFirstFileTimestamp(rankingFilePath);
-
-        return players;
+        // Data is always fetched from the persistent graph via repository
+        return playerRepository.findAll();
     }
 
     @Override
     public List<Player> findPlayers(String filter, int offset, int limit) {
-        if (filter == null || filter.isBlank()) return Collections.emptyList();
+        if (filter == null || filter.isBlank()) {
+            return List.of();
+        }
 
         String[] tokens = filter.toLowerCase().split("\\s+");
         return getAllPlayers().stream()
@@ -98,23 +50,99 @@ public class ImportRankingsService implements ForLoadingRankings {
     }
 
     @Override
+    public RankingDashboardStatistics calculateStatistics() {
+        List<Player> allPlayers = playerRepository.findAll();
+
+        long nofPlayers = allPlayers.size();
+        long nofMale = allPlayers.stream().filter(p -> GenderType.MALE.equals(p.getGender())).count();
+        long nofFemale = allPlayers.stream().filter(p -> GenderType.FEMALE.equals(p.getGender())).count();
+
+        // Placeholder for last download date - this could be retrieved from a metadata store
+        String lastUpdateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT));
+
+        return new RankingDashboardStatistics(lastUpdateStr, "", nofPlayers, nofFemale, nofMale);
+    }
+
+    @Override
     public int countPlayers(String filter) {
-        if (players.isEmpty()) getAllPlayers();
-        if (filter == null || filter.isBlank()) return 0;
+        if (filter == null || filter.isBlank()) {
+            return (int) playerRepository.count();
+        }
 
         String[] tokens = filter.toLowerCase().split("\\s+");
-        return (int) players.stream()
+        return (int) playerRepository.findAll().stream()
                 .filter(player -> matchPlayer(player, tokens))
                 .count();
     }
 
+    @Override
+    public void updateRankingsFromSource() {
+        var rankingDir = getApplicationSubDir(ApplicationDirectoryConfiguration.RANKING_DIR_NAME);
+        List<File> rankingFiles = readAllFiles(rankingDir);
+
+        if (rankingFiles.isEmpty()) {
+            log().info("ImportRankingsService :: No ranking files found for update.");
+            return;
+        }
+
+        Path rankingFilePath = rankingFiles.getFirst().toPath();
+        LocalDateTime fileTime = getFirstFileTimestamp(rankingFilePath);
+
+        // Use the new custom repository methods
+        LocalDateTime dbTime = playerRepository.getLastUpdate();
+        if (dbTime == null || fileTime.isAfter(dbTime)) {
+            log().info("ImportRankingsService :: New file detected. Starting import...");
+
+            List<Player> snapshots = parser.parseRankingFile(rankingFilePath);
+            for (Player snapshot : snapshots) {
+                Player persistentPlayer = playerRepository.findById(snapshot.getPlayerId().playerId())
+                        .orElseGet(() -> playerRepository.save(snapshot));
+
+                updatePlayerHistory(persistentPlayer, snapshot, fileTime.toLocalDate());
+                playerRepository.save(persistentPlayer);
+            }
+
+            // Update metadata after successful import
+            playerRepository.setLastUpdate(fileTime);
+            log().info("ImportRankingsService :: Update completed for timestamp {}", fileTime);
+        } else {
+            log().info("ImportRankingsService :: Data is up to date (DB: {}, File: {})", dbTime, fileTime);
+        }
+    }
+
+    /**
+     * Helper to transfer data from the parsed snapshot to the persistent player's history.
+     */
+    private void updatePlayerHistory(Player target, Player source, LocalDate date) {
+        // Add single ranking snapshot if available
+        if (source.getSinglePoints() > 0 || source.getSingleRanking() > 0) {
+            target.addHistoryEntry(date, DisciplineType.SINGLE, new RankingSnapshot(
+                    source.getSinglePoints(), source.getSingleRanking(),
+                    source.getSingleAgeRanking(), source.getSingleTournaments()));
+        }
+
+        // Add double ranking snapshot if available
+        if (source.getDoublePoints() > 0 || source.getDoubleRanking() > 0) {
+            target.addHistoryEntry(date, DisciplineType.DOUBLE, new RankingSnapshot(
+                    source.getDoublePoints(), source.getDoubleRanking(),
+                    source.getDoubleAgeRanking(), source.getDoubleTournaments()));
+        }
+
+        // Add mixed ranking snapshot if available
+        if (source.getMixedPoints() > 0 || source.getMixedRanking() > 0) {
+            target.addHistoryEntry(date, DisciplineType.MIXED, new RankingSnapshot(
+                    source.getMixedPoints(), source.getMixedRanking(),
+                    source.getMixedAgeRanking(), source.getMixedTournaments()));
+        }
+    }
+
+    // Internal matching logic for tokenized search strings
     private boolean matchPlayer(Player player, String[] tokens) {
         String firstName = (player.getFirstName() != null) ? player.getFirstName().toLowerCase() : "";
         String lastName = (player.getLastName() != null) ? player.getLastName().toLowerCase() : "";
 
         for (String token : tokens) {
             if (token.isEmpty()) continue;
-            // Der Spieler muss JEDES Token irgendwo (Vorname oder Nachname) enthalten
             if (!firstName.contains(token) && !lastName.contains(token)) {
                 return false;
             }

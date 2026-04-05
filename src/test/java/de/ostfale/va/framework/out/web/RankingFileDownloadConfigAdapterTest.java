@@ -76,9 +76,11 @@ class RankingFileDownloadConfigAdapterTest {
         List<DownloadTask> result = sut.getDownloadTasks();
 
         // Then
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).url()).contains("https://turniere.badminton.de/ranking/download");
-        assertThat(result.get(0).destination()).isNotNull();
+        assertThat(result).hasSize(2);
+        assertThat(result).allSatisfy(task -> {
+            assertThat(task.url()).contains("https://turniere.badminton.de/ranking/download");
+            assertThat(task.destination()).isNotNull();
+        });
     }
 
     @Test
@@ -125,7 +127,7 @@ class RankingFileDownloadConfigAdapterTest {
 
         // Then
         verify(timestampParser).parseLastUpdate(page);
-        assertThat(result).hasSize(1);
+        assertThat(result).hasSize(2);
     }
 
     @Test
@@ -140,10 +142,12 @@ class RankingFileDownloadConfigAdapterTest {
         List<DownloadTask> result = sut.getDownloadTasks();
 
         // Then
-        assertThat(result).hasSize(1);
-        String fileName = result.get(0).destination().getFileName().toString();
-        assertThat(fileName).startsWith("Ranking_");
-        assertThat(fileName).contains("_KW");
-        assertThat(fileName).endsWith(".xlsx");
+        assertThat(result).hasSize(2);
+        assertThat(result).allSatisfy(task -> {
+            String fileName = task.destination().getFileName().toString();
+            assertThat(fileName).startsWith("Ranking_");
+            assertThat(fileName).contains("_KW");
+            assertThat(fileName).endsWith(".xlsx");
+        });
     }
 }
