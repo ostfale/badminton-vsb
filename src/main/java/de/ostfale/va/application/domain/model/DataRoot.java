@@ -1,27 +1,14 @@
 package de.ostfale.va.application.domain.model;
 
-import de.ostfale.va.application.domain.model.playerrankings.Player;
+import de.ostfale.va.application.domain.model.plannedournaments.vo.UserIdendityVO;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class DataRoot {
-    private final List<UserData> users = new ArrayList<>();
-    private final List<RegistrationRecord> registrations = new ArrayList<>();
-    private final List<Player> players = new ArrayList<>();
+    private final Map<UserIdendityVO, UserData> users = new ConcurrentHashMap<>();
 
-    private LocalDateTime lastRankingUpdate;     // track last import
-
-    public List<Player> getPlayers() {
-        return players;
-    }
-
-    public LocalDateTime getLastRankingUpdate() {
-        return lastRankingUpdate;
-    }
-
-    public void setLastRankingUpdate(LocalDateTime lastRankingUpdate) {
-        this.lastRankingUpdate = lastRankingUpdate;
+    public Map<UserIdendityVO, UserData> getUsersMap() {
+        return users;
     }
 }

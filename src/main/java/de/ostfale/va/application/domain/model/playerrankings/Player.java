@@ -2,12 +2,6 @@ package de.ostfale.va.application.domain.model.playerrankings;
 
 import de.ostfale.va.common.UseLogging;
 
-import java.time.LocalDate;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.Map;
-import java.util.TreeMap;
-
 public class Player implements UseLogging {
 
     private boolean isFavorite;
@@ -36,7 +30,6 @@ public class Player implements UseLogging {
     private Integer mixedAgeRanking = 0;
     private Integer mixedTournaments = 0;
     private PlayerRankingRelevantTournaments relevantTournaments;
-    private final Map<LocalDate, Map<DisciplineType, RankingSnapshot>> history = new TreeMap<>();
 
     public Player(String playerId,
                   String firstName,
@@ -86,17 +79,6 @@ public class Player implements UseLogging {
         this.mixedRanking = mixedRanking;
         this.mixedAgeRanking = ageRanking;
         this.mixedTournaments = noOfTournaments;
-    }
-
-    // Adds a historical entry for a specific date and discipline
-    public void addHistoryEntry(LocalDate date, DisciplineType type, RankingSnapshot snapshot) {
-        this.history
-                .computeIfAbsent(date, k -> new EnumMap<>(DisciplineType.class))
-                .put(type, snapshot);
-    }
-
-    public Map<LocalDate, Map<DisciplineType, RankingSnapshot>> getHistory() {
-        return Collections.unmodifiableMap(history);
     }
 
     public PlayerRankingRelevantTournaments getRelevantTournaments() {

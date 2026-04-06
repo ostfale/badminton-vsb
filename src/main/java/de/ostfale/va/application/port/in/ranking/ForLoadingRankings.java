@@ -7,12 +7,7 @@ import de.ostfale.va.common.UseLogging;
 
 import java.util.List;
 
-
-/**
- * Input port defining the use cases for ranking data access.
- * Serves as the boundary between the UI and the domain logic.
- */
-public interface ForLoadingRankings {
+public interface ForLoadingRankings extends UseFileSystemHandling, UseLogging {
 
     List<Player> getAllPlayers();
 
@@ -21,6 +16,4 @@ public interface ForLoadingRankings {
     RankingDashboardStatistics calculateStatistics();
 
     int countPlayers(String filter);
-
-    void updateRankingsFromSource();
 }
