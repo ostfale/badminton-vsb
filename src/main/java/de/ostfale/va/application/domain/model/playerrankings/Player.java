@@ -37,7 +37,7 @@ public class Player implements UseLogging {
     private Integer mixedAgeRanking = 0;
     private Integer mixedTournaments = 0;
     private PlayerRankingRelevantTournaments relevantTournaments;
-    private Map<HistoryTimestamp, HistoryStatistics> history = new HashMap<>();
+    private  Map<HistoryTimestamp, HistoryStatistics> history = new HashMap<>();
 
     public Player(String playerId,
                   String firstName,
@@ -88,6 +88,15 @@ public class Player implements UseLogging {
         historyEntry.updateStatistics(type, snapshot);
     }
 
+    public void addHistoryEntry(String fileName,HistoryStatistics historyEntry) {
+        var historytimestamp = new HistoryTimestamp(fileName);
+        if (!history.containsKey(historytimestamp)) {
+            log().trace("Player {} added history entry for {}", this, historytimestamp);
+            history.put(historytimestamp, historyEntry);
+            return;
+        }
+        log().trace("Player {} history data for  {} already exists", this, historytimestamp);
+    }
 
     public void setSinglePointsAndRanking(Integer singlePoints, Integer singleRanking, Integer ageRanking, Integer noOfTournaments) {
         this.singlePoints = singlePoints;
