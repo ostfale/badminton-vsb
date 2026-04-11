@@ -4,6 +4,7 @@ import de.ostfale.va.application.domain.model.playerrankings.DisciplineType;
 import de.ostfale.va.application.domain.model.playerrankings.GenderType;
 import de.ostfale.va.application.domain.model.playerrankings.Group;
 import de.ostfale.va.application.domain.model.playerrankings.Player;
+import de.ostfale.va.application.domain.model.playerrankings.RankingSnapshot;
 import de.ostfale.va.application.port.out.ranking.ForParsingRankingFile;
 import de.ostfale.va.common.UseLogging;
 import org.dhatim.fastexcel.reader.ReadableWorkbook;
@@ -14,6 +15,8 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,16 +49,21 @@ enum ExcelFileRankingColIndex {
 @Component
 public class RankingFileExcelParserAdapter implements ForParsingRankingFile, UseLogging {
 
+    private  String excelfilePath;
+
     @Override
     public List<Player> parseRankingFile(Path filePath) {
+        excelfilePath = filePath.getFileName().toString();
+
         log().debug("RankingFileExcelParserAdapter :: Parsing ranking file {}", filePath);
         final Map<String, Player> playerMap = new HashMap<>();
+        final LocalDate rankingDate = determineRankingDate(filePath);
         try (InputStream is = Files.newInputStream(filePath);
              ReadableWorkbook wb = new ReadableWorkbook(is)) {
             try (Stream<Row> rows = wb.getFirstSheet().openStream()) {
                 rows.forEach(row -> {
                     if (row.getRowNum() == 1) return; // skip header
-                    mapToDomainModel(row, playerMap);
+                    mapToDomainModel(row, rankingDate, playerMap);
                 });
             }
         } catch (Exception e) {
@@ -64,7 +72,19 @@ public class RankingFileExcelParserAdapter implements ForParsingRankingFile, Use
         return List.copyOf(playerMap.values());
     }
 
-    private void mapToDomainModel(Row row, Map<String, Player> playerMap) {
+    private LocalDate determineRankingDate(Path filePath) {
+        try {
+            return Files.getLastModifiedTime(filePath)
+                    .toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate();
+        } catch (Exception e) {
+            log().warn("RankingFileExcelParserAdapter :: Could not determine ranking date from file metadata {}", filePath, e);
+            return LocalDate.now();
+        }
+    }
+
+    private void mapToDomainModel(Row row, LocalDate rankingDate, Map<String, Player> playerMap) {
         try {
             String playerId = getCellText(row, ExcelFileRankingColIndex.PLAYER_ID_INDEX);
             String firstName = getCellText(row, ExcelFileRankingColIndex.FIRST_NAME_INDEX);
@@ -88,7 +108,7 @@ public class RankingFileExcelParserAdapter implements ForParsingRankingFile, Use
             Player player = getOrCreatePlayer(playerId, firstName, lastName, genderType, yearOfBirth, ageClassGeneral,
                     ageClassDetail, clubName, districtName, stateName, stateGroupEnum, playerMap);
 
-            updatePlayerRanking(player, disciplineType, validPoints, rankingPosition, ageRankingPosition, nofTournaments);
+            updatePlayerRanking(player, rankingDate, disciplineType, validPoints, rankingPosition, ageRankingPosition, nofTournaments);
         } catch (Exception e) {
             log().error("RankingFileExcelParserAdapter :: Failed to parse ranking file row: {}", row, e);
         }
@@ -104,8 +124,14 @@ public class RankingFileExcelParserAdapter implements ForParsingRankingFile, Use
                 .orElse(0);
     }
 
-    private void updatePlayerRanking(Player player, DisciplineType disciplineType, int validPoints,
+    private void updatePlayerRanking(Player player, LocalDate rankingDate, DisciplineType disciplineType, int validPoints,
                                      int rankingPosition, int ageRankingPosition, int nofTournaments) {
+        player.addHistoryEntry(excelfilePath, disciplineType, new RankingSnapshot(
+                validPoints,
+                rankingPosition,
+                ageRankingPosition,
+                nofTournaments
+        ));
         switch (disciplineType) {
             case SINGLE -> player.setSinglePointsAndRanking(validPoints, rankingPosition, ageRankingPosition, nofTournaments);
             case DOUBLE -> player.setDoublePointsAndRanking(validPoints, rankingPosition, ageRankingPosition, nofTournaments);

@@ -1,11 +1,18 @@
 package de.ostfale.va.application.domain.model.playerrankings;
 
 import de.ostfale.va.common.UseLogging;
+import jakarta.persistence.Id;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Player implements UseLogging {
 
-    private boolean isFavorite;
+    @Id
     private PlayerId playerId;
+
+    private boolean isFavorite;
     private PlayerTournamentId playerTournamentId;
     private String firstName;
     private String lastName;
@@ -30,6 +37,7 @@ public class Player implements UseLogging {
     private Integer mixedAgeRanking = 0;
     private Integer mixedTournaments = 0;
     private PlayerRankingRelevantTournaments relevantTournaments;
+    private Map<HistoryTimestamp, HistoryStatistics> history = new HashMap<>();
 
     public Player(String playerId,
                   String firstName,
@@ -59,6 +67,27 @@ public class Player implements UseLogging {
     public String toString() {
         return firstName + " " + lastName;
     }
+
+    // history handling
+    public Map<HistoryTimestamp, HistoryStatistics> getHistory() {
+        return Collections.unmodifiableMap(history);
+    }
+
+    // Adds a historical entry for a specific date and discipline
+    public void addHistoryEntry(String fileName, DisciplineType type, RankingSnapshot snapshot) {
+        var historytimestamp = new HistoryTimestamp(fileName);
+        if (!history.containsKey(historytimestamp)) {
+            var historyEntry = new HistoryStatistics();
+            historyEntry.updateStatistics(type, snapshot);
+            history.put(historytimestamp, historyEntry);
+            log().trace("Player {} added history entry for {} and discipline {}", this, historytimestamp, type);
+            return;
+        }
+
+        var historyEntry = history.get(historytimestamp);
+        historyEntry.updateStatistics(type, snapshot);
+    }
+
 
     public void setSinglePointsAndRanking(Integer singlePoints, Integer singleRanking, Integer ageRanking, Integer noOfTournaments) {
         this.singlePoints = singlePoints;

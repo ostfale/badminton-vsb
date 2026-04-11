@@ -3,11 +3,14 @@ package de.ostfale.va.application.domain.model;
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournamentKey;
 import de.ostfale.va.application.domain.model.plannedournaments.vo.UserIdendityVO;
 import de.ostfale.va.application.domain.model.playerrankings.PlayerId;
+import jakarta.persistence.Id;
 
 import java.util.HashSet;
 import java.util.Set;
 
 public class UserData {
+
+    @Id
     private final String email;
     private final String name;
     private final Set<PlannedTournamentKey> favoriteKeys = new HashSet<>();

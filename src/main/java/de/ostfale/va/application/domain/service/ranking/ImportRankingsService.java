@@ -4,6 +4,7 @@ import de.ostfale.va.application.domain.model.playerrankings.GenderType;
 import de.ostfale.va.application.domain.model.playerrankings.Player;
 import de.ostfale.va.application.domain.model.playerrankings.RankingDashboardStatistics;
 import de.ostfale.va.application.port.in.ranking.ForLoadingRankings;
+import de.ostfale.va.application.port.out.ranking.ForLoadingPlayers;
 import de.ostfale.va.application.port.out.ranking.ForParsingRankingFile;
 import de.ostfale.va.framework.out.filesystem.ApplicationDirectoryConfiguration;
 import org.springframework.stereotype.Service;
@@ -12,7 +13,6 @@ import java.io.File;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -21,29 +21,46 @@ public class ImportRankingsService implements ForLoadingRankings {
 
     private static final String DATE_TIME_FORMAT = "dd.MM.yyyy HH:mm";
 
-    // cached players
-    private final List<Player> players = new ArrayList<>();
-
     private final ForParsingRankingFile parser;
+    private final ForLoadingPlayers forLoadingPlayers;
     private LocalDateTime lastRankingFileUpdate;
+    private volatile List<Player> cachedPlayers;
 
-    public ImportRankingsService(ForParsingRankingFile parser) {
+    public ImportRankingsService(ForParsingRankingFile parser, ForLoadingPlayers forLoadingPlayers) {
         this.parser = parser;
+        this.forLoadingPlayers = forLoadingPlayers;
     }
 
     @Override
     public List<Player> getAllPlayers() {
-        if (players.isEmpty()) {
-            players.addAll(loadFromSource());
+        var localCache = cachedPlayers;
+        if (localCache != null) {
+            return localCache;
         }
-        log().trace("ImportRankingsService :: Loaded {} players from ranking file", players.size());
-        return players;
+
+        synchronized (this) {
+            if (cachedPlayers != null) {
+                return cachedPlayers;
+            }
+
+            var savedPlayers = forLoadingPlayers.findAllPlayers();
+
+            if (savedPlayers.isEmpty()) {
+                log().info("ImportRankingsService :: No players found in database. Loading from ranking file");
+                var localPlayers = loadFromSource();
+
+                savedPlayers = forLoadingPlayers.save(localPlayers);
+            }
+
+            cachedPlayers = List.copyOf(savedPlayers);
+            log().trace("ImportRankingsService :: Loaded {} players", cachedPlayers.size());
+            return cachedPlayers;
+        }
     }
 
     @Override
     public RankingDashboardStatistics calculateStatistics() {
-        players.clear();
-        players.addAll(loadFromSource());
+        var players = getAllPlayers();
         var lastDownloadDate = "";
         var nofPlayers = players.size();
         var nofMalePlayers = players.stream().filter(player -> GenderType.MALE.equals(player.getGender())).count();
@@ -99,7 +116,7 @@ public class ImportRankingsService implements ForLoadingRankings {
 
     @Override
     public int countPlayers(String filter) {
-        if (players.isEmpty()) getAllPlayers();
+        var players = getAllPlayers();
         if (filter == null || filter.isBlank()) return 0;
 
         String[] tokens = filter.toLowerCase().split("\\s+");
