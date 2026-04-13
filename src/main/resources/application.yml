@@ -12,7 +12,7 @@ logging:
 
 vaadin:
   launch-browser: false                                                            # Launch browser when starting the application.
-  allowed-packages: com.vaadin,org.vaadin,com.flowingcode,de.ostfale.va
+  allowed-packages: com.vaadin,org.vaadin,com.flowingcode,com.github.appreciated,de.ostfale.va
   version: '@vaadin.version@'
   copilot:
     enabled: false

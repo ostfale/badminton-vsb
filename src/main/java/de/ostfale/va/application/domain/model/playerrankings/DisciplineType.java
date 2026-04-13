@@ -63,5 +63,11 @@ public enum DisciplineType implements UseLogging {
     public String getDisplayString() {
         return displayString;
     }
+
+
+    @Override
+    public String toString() {
+        return displayString;
+    }
 }
 

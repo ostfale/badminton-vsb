@@ -18,10 +18,12 @@ public class PlayerDetailsView extends VerticalLayout implements UseTimeHandling
     private static final String PLAYER_SEPARATOR_SELECTION = "Spieler Suchen";
     private static final String PLAYER_SEPARATOR_DETAILS = "Spieler Details";
     private static final String PLAYER_RANKING_POINTS = "Spieler Ranglistenpunkte";
+    private static final String PLAYER_HISTORY_CHART = "Spieler Verlauf";
 
 
     private final PlayerDetailsSearchComponent searchComponent;
     private final PlayerDetailsMatrixComponent matrixComponent;
+    private final PlayerHistoryChartComponent historyChartComponent;
 
     private final ForLoadingRankings rankingService;
 
@@ -41,6 +43,7 @@ public class PlayerDetailsView extends VerticalLayout implements UseTimeHandling
                              ForGettingUserConfiguration userConfiguration) {
         this.searchComponent = new PlayerDetailsSearchComponent(rankingService, this, userConfiguration, forStoringUserData);
         this.matrixComponent = new PlayerDetailsMatrixComponent(playerDetailsService);
+        this.historyChartComponent = new PlayerHistoryChartComponent();
         log().debug("PlayerDetailsView :: constructor");
         this.rankingService = rankingService;
         initLayout();
@@ -59,6 +62,9 @@ public class PlayerDetailsView extends VerticalLayout implements UseTimeHandling
 
         add(new FormSectionHeader(PLAYER_RANKING_POINTS + " (KW " + getCurrentCalendarWeek() + ")"));
         add(matrixComponent.getComponent());
+
+        add(new FormSectionHeader(PLAYER_HISTORY_CHART));
+        add(historyChartComponent.getComponent());
     }
 
     private FormLayout createDetailsBlock() {
@@ -105,6 +111,7 @@ public class PlayerDetailsView extends VerticalLayout implements UseTimeHandling
 
         List<Player> allPlayers = rankingService.getAllPlayers();
         matrixComponent.updateRanking(player, allPlayers);
+      //  historyChartComponent.updatePlayer(player);
     }
 
     public void clearDetails() {
@@ -119,5 +126,6 @@ public class PlayerDetailsView extends VerticalLayout implements UseTimeHandling
         playerStateGroupField.clear();
 
         matrixComponent.clearDetails();
+      //  historyChartComponent.clear();
     }
 }
