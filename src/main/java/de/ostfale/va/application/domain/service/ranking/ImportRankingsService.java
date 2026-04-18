@@ -33,9 +33,8 @@ public class ImportRankingsService implements ForLoadingRankings {
 
     @Override
     public List<Player> getAllPlayers() {
-        var localCache = cachedPlayers;
-        if (localCache != null) {
-            return localCache;
+        if (cachedPlayers != null) {
+            return cachedPlayers;
         }
 
         synchronized (this) {
@@ -43,19 +42,22 @@ public class ImportRankingsService implements ForLoadingRankings {
                 return cachedPlayers;
             }
 
-            var savedPlayers = forLoadingPlayers.findAllPlayers();
-
-            if (savedPlayers.isEmpty()) {
-                log().info("ImportRankingsService :: No players found in database. Loading from ranking file");
-                var localPlayers = loadFromSource();
-
-                savedPlayers = forLoadingPlayers.save(localPlayers);
-            }
-
-            cachedPlayers = List.copyOf(savedPlayers);
+            List<Player> playersFromStore = loadPlayersFromStoreOrSource();
+            cachedPlayers = List.copyOf(playersFromStore);
             log().trace("ImportRankingsService :: Loaded {} players", cachedPlayers.size());
             return cachedPlayers;
         }
+    }
+
+    private List<Player> loadPlayersFromStoreOrSource() {
+        List<Player> playersFromStore = forLoadingPlayers.findAllPlayers();
+        return playersFromStore.isEmpty() ? loadAndPersistPlayersFromSource() : playersFromStore;
+    }
+
+    private List<Player> loadAndPersistPlayersFromSource() {
+        log().info("ImportRankingsService :: No players found in database. Loading from ranking file");
+        List<Player> localPlayers = loadFromSource();
+        return forLoadingPlayers.save(localPlayers);
     }
 
     @Override

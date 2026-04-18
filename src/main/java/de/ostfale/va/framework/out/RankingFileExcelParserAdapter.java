@@ -17,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +52,17 @@ public class RankingFileExcelParserAdapter implements ForParsingRankingFile, Use
 
     private  String excelfilePath;
 
+    private record ParsedRankingEntry(
+            Player player,
+            DisciplineType disciplineType,
+            GenderType genderType,
+            String ageClassGeneral,
+            int validPoints,
+            int rankingPosition,
+            int nofTournaments
+    ) {
+    }
+
     @Override
     public List<Player> parseRankingFile(Path filePath) {
         excelfilePath = filePath.getFileName().toString();
@@ -58,14 +70,16 @@ public class RankingFileExcelParserAdapter implements ForParsingRankingFile, Use
         log().debug("RankingFileExcelParserAdapter :: Parsing ranking file {}", filePath);
         final Map<String, Player> playerMap = new HashMap<>();
         final LocalDate rankingDate = determineRankingDate(filePath);
+        final List<ParsedRankingEntry> parsedEntries = new ArrayList<>();
         try (InputStream is = Files.newInputStream(filePath);
              ReadableWorkbook wb = new ReadableWorkbook(is)) {
             try (Stream<Row> rows = wb.getFirstSheet().openStream()) {
                 rows.forEach(row -> {
                     if (row.getRowNum() == 1) return; // skip header
-                    mapToDomainModel(row, rankingDate, playerMap);
+                    mapToDomainModel(row, playerMap, parsedEntries);
                 });
             }
+            applyCalculatedAgeRanking(parsedEntries);
         } catch (Exception e) {
             log().error("RankingFileExcelParserAdapter :: Failed to parse ranking file {}", filePath, e);
         }
@@ -84,7 +98,7 @@ public class RankingFileExcelParserAdapter implements ForParsingRankingFile, Use
         }
     }
 
-    private void mapToDomainModel(Row row, LocalDate rankingDate, Map<String, Player> playerMap) {
+    private void mapToDomainModel(Row row, Map<String, Player> playerMap, List<ParsedRankingEntry> parsedEntries) {
         try {
             String playerId = getCellText(row, ExcelFileRankingColIndex.PLAYER_ID_INDEX);
             String firstName = getCellText(row, ExcelFileRankingColIndex.FIRST_NAME_INDEX);
@@ -95,7 +109,6 @@ public class RankingFileExcelParserAdapter implements ForParsingRankingFile, Use
             int yearOfBirth = getCellAsInt(row, ExcelFileRankingColIndex.BIRTH_YEAR_INDEX);
             int nofTournaments = getCellAsInt(row, ExcelFileRankingColIndex.TOURNAMENTS_INDEX);
             int rankingPosition = getCellAsInt(row, ExcelFileRankingColIndex.RANKING_INDEX);
-            int ageRankingPosition = getCellAsInt(row, ExcelFileRankingColIndex.AGE_RANKING_INDEX);
             int validPoints = getCellAsInt(row, ExcelFileRankingColIndex.VALID_POINTS_INDEX);
 
             String ageClassGeneral = getCellText(row, ExcelFileRankingColIndex.AGE_CLASS_GENERAL_INDEX);
@@ -108,9 +121,59 @@ public class RankingFileExcelParserAdapter implements ForParsingRankingFile, Use
             Player player = getOrCreatePlayer(playerId, firstName, lastName, genderType, yearOfBirth, ageClassGeneral,
                     ageClassDetail, clubName, districtName, stateName, stateGroupEnum, playerMap);
 
-            updatePlayerRanking(player, rankingDate, disciplineType, validPoints, rankingPosition, ageRankingPosition, nofTournaments);
+            parsedEntries.add(new ParsedRankingEntry(
+                    player,
+                    disciplineType,
+                    genderType,
+                    ageClassGeneral,
+                    validPoints,
+                    rankingPosition,
+                    nofTournaments
+            ));
         } catch (Exception e) {
             log().error("RankingFileExcelParserAdapter :: Failed to parse ranking file row: {}", row, e);
+        }
+    }
+
+    private void applyCalculatedAgeRanking(List<ParsedRankingEntry> parsedEntries) {
+        parsedEntries.stream()
+                .collect(java.util.stream.Collectors.groupingBy(entry ->
+                        entry.disciplineType().name() + "|" + entry.genderType().name() + "|" + entry.ageClassGeneral()))
+                .values()
+                .forEach(this::applyCalculatedAgeRankingPerGroup);
+    }
+
+    private void applyCalculatedAgeRankingPerGroup(List<ParsedRankingEntry> groupEntries) {
+        List<ParsedRankingEntry> sortedEntries = groupEntries.stream()
+                .sorted((a, b) -> {
+                    int byPoints = Integer.compare(b.validPoints(), a.validPoints());
+                    if (byPoints != 0) {
+                        return byPoints;
+                    }
+                    int byRanking = Integer.compare(a.rankingPosition(), b.rankingPosition());
+                    if (byRanking != 0) {
+                        return byRanking;
+                    }
+                    return a.player().getPlayerId().playerId().compareTo(b.player().getPlayerId().playerId());
+                })
+                .toList();
+
+        Integer previousPoints = null;
+        int currentAkRank = 0;
+        for (int index = 0; index < sortedEntries.size(); index++) {
+            ParsedRankingEntry entry = sortedEntries.get(index);
+            if (previousPoints == null || entry.validPoints() < previousPoints) {
+                currentAkRank = index + 1;
+            }
+            updatePlayerRanking(
+                    entry.player(),
+                    entry.disciplineType(),
+                    entry.validPoints(),
+                    entry.rankingPosition(),
+                    currentAkRank,
+                    entry.nofTournaments()
+            );
+            previousPoints = entry.validPoints();
         }
     }
 
@@ -124,7 +187,7 @@ public class RankingFileExcelParserAdapter implements ForParsingRankingFile, Use
                 .orElse(0);
     }
 
-    private void updatePlayerRanking(Player player, LocalDate rankingDate, DisciplineType disciplineType, int validPoints,
+    private void updatePlayerRanking(Player player, DisciplineType disciplineType, int validPoints,
                                      int rankingPosition, int ageRankingPosition, int nofTournaments) {
         player.addHistoryEntry(excelfilePath, disciplineType, new RankingSnapshot(
                 validPoints,

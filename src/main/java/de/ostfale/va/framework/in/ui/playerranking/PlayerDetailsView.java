@@ -111,7 +111,7 @@ public class PlayerDetailsView extends VerticalLayout implements UseTimeHandling
 
         List<Player> allPlayers = rankingService.getAllPlayers();
         matrixComponent.updateRanking(player, allPlayers);
-      //  historyChartComponent.updatePlayer(player);
+        historyChartComponent.updatePlayer(player);
     }
 
     public void clearDetails() {
@@ -126,6 +126,6 @@ public class PlayerDetailsView extends VerticalLayout implements UseTimeHandling
         playerStateGroupField.clear();
 
         matrixComponent.clearDetails();
-      //  historyChartComponent.clear();
+        historyChartComponent.clear();
     }
 }
