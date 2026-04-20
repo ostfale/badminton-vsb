@@ -16,6 +16,7 @@ import de.ostfale.va.common.UseLogging;
 import de.ostfale.va.framework.in.ui.dashboard.DashboardView;
 import de.ostfale.va.framework.in.ui.PlayerStatsView;
 import de.ostfale.va.framework.in.ui.plannedtournaments.PlannedTournamentsView;
+import de.ostfale.va.framework.in.ui.playerinfo.PlayerInfoView;
 import de.ostfale.va.framework.in.ui.playerranking.PlayerRankingView;
 
 import static com.vaadin.flow.component.icon.VaadinIcon.*;
@@ -60,6 +61,7 @@ public final class MainLayout extends AppLayout implements UseLogging {
                 new SideNavItem("Dashboard", "/" + DashboardView.PATH, DASHBOARD.create()),
                 new SideNavItem("Geplante Turniere", "/" + PlannedTournamentsView.PATH, CALENDAR.create()),
                 new SideNavItem("Spieler Statistik", "/" + PlayerStatsView.PATH, LINE_CHART.create()),
+                new SideNavItem("Spieler Infos", "/" + PlayerInfoView.PATH, LINE_CHART.create()),
                 new SideNavItem("Spieler Ranglisten", "/" + PlayerRankingView.PATH, USER_CARD.create()),
                 new SideNavItem("About", "/" + AboutView.PATH, QUESTION_CIRCLE.create())
         );
