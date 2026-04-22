@@ -20,13 +20,16 @@ public class PlayerInfoView extends VerticalLayout implements UseLogging {
         // components
 
         TabSheet tabSheet = new TabSheet();
-        tabSheet.add("Stammdaten",playerDataTabComponent);
-        tabSheet.add("Ranglisten Statistik",playerRankingTabComponent);
-        tabSheet.add("Leistungsentwicklung",playerHistoryTabComponent);
-        tabSheet.add("Matches",playerMatchesTabComponent);
+        tabSheet.add("Stammdaten", playerDataTabComponent);
+        tabSheet.add("Ranglisten Statistik", playerRankingTabComponent);
+        tabSheet.add("Leistungsentwicklung", playerHistoryTabComponent);
+        tabSheet.add("Matches", playerMatchesTabComponent);
+        tabSheet.setWidthFull();
+        tabSheet.setHeightFull();
 
         setSizeFull();
         add(playerInfoSearchComponent.getComponent(), tabSheet);
+        setFlexGrow(1, tabSheet);
     }
 
 }

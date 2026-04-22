@@ -11,7 +11,7 @@ logging:
       atmosphere: warn
 
 vaadin:
-  launch-browser: false                                                            # Launch browser when starting the application.
+  launch-browser: false
   allowed-packages: com.vaadin,org.vaadin,com.flowingcode,com.github.appreciated,de.ostfale.va
   version: '@vaadin.version@'
   copilot:
@@ -27,7 +27,7 @@ management:
     web:
       base-path: /mgmt
       exposure:
-        include: info,health,prometheus
+        include: info,health,prometheus,mappings,logfile
   endpoint:
     health:
       show-details: always

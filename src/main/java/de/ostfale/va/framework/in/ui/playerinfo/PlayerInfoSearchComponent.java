@@ -18,7 +18,6 @@ import de.ostfale.va.common.UseLogging;
 import de.ostfale.va.framework.in.ui.playerinfo.signal.PlayerSelectionState;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -38,8 +37,6 @@ public class PlayerInfoSearchComponent implements UseLogging {
     private final PlayerSelectionState playerSelectionState;
     private final ForGettingUserConfiguration userConfiguration;
     private final ForStoringUserData forStoringUserData;
-
-    private final Set<PlayerId> favoritePlayerIds = new HashSet<>();
 
     private ComboBox<Player> searchBox;
     private Select<Player> favoritesSelect;
@@ -161,14 +158,13 @@ public class PlayerInfoSearchComponent implements UseLogging {
 
     private void toggleFavorite(Player player) {
         PlayerId playerId = player.getPlayerId();
+        Set<PlayerId> favoritePlayerIds = getFavoritePlayerIds();
         boolean isFavorite = favoritePlayerIds.contains(playerId);
 
         if (isFavorite) {
-            favoritePlayerIds.remove(playerId);
             forStoringUserData.removePlayerFavorite(playerId);
             favoriteButton.setIcon(VaadinIcon.STAR_O.create());
         } else {
-            favoritePlayerIds.add(playerId);
             forStoringUserData.addPlayerFavorite(playerId);
             favoriteButton.setIcon(VaadinIcon.STAR.create());
         }
@@ -177,6 +173,7 @@ public class PlayerInfoSearchComponent implements UseLogging {
     }
 
     private void refreshFavorites() {
+        Set<PlayerId> favoritePlayerIds = getFavoritePlayerIds();
         if (favoritePlayerIds.isEmpty()) {
             favoritesSelect.setItems(Collections.emptyList());
             return;
@@ -190,8 +187,14 @@ public class PlayerInfoSearchComponent implements UseLogging {
     }
 
     private void updateFavoriteButtonIcon(Player player) {
+        Set<PlayerId> favoritePlayerIds = getFavoritePlayerIds();
         boolean selectedIsFavorite = favoritePlayerIds.contains(player.getPlayerId());
         favoriteButton.setIcon((selectedIsFavorite ? VaadinIcon.STAR : VaadinIcon.STAR_O).create());
+    }
+
+    private Set<PlayerId> getFavoritePlayerIds() {
+        UserData user = userConfiguration.getCurrentUser();
+        return user != null ? user.getFavoritePlayerIds() : Set.of();
     }
 
     private boolean isSearchFilterValid(String filter) {

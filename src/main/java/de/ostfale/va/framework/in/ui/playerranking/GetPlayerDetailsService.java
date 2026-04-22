@@ -28,8 +28,8 @@ public class GetPlayerDetailsService implements UseLogging {
         playerTournamentIdScraper.scrapePlayerTournamentId(player.getPlayerId()).ifPresent(tournamentId -> {
             log().info("GetPlayerDetailsService :: readValidRankingPoints found tournamentId {}", tournamentId);
             player.setPlayerTournamentId(tournamentId);
-
-            relevantRankingPointsScraper.scrapeRelevantRankingPoints(player);
+            var relevantTournaments = relevantRankingPointsScraper.scrapeRelevantRankingPoints(player);
+            player.setRelevantTournaments(relevantTournaments.orElse(null));
         });
     }
 

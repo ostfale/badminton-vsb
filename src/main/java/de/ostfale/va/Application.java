@@ -2,6 +2,7 @@ package de.ostfale.va;
 
 import com.vaadin.flow.component.dependency.StyleSheet;
 import com.vaadin.flow.component.page.AppShellConfigurator;
+import com.vaadin.flow.component.page.Push;
 import com.vaadin.flow.theme.lumo.Lumo;
 import de.ostfale.va.common.UseLogging;
 import org.springframework.boot.SpringApplication;
@@ -12,6 +13,7 @@ import software.xdev.spring.data.eclipse.store.repository.config.EnableEclipseSt
 @SpringBootApplication
 @EnableScheduling
 @EnableEclipseStoreRepositories
+@Push
 @StyleSheet(Lumo.STYLESHEET)
 @StyleSheet(Lumo.UTILITY_STYLESHEET)
 @StyleSheet("./css/styles.css")
@@ -19,7 +21,7 @@ public class Application implements AppShellConfigurator, UseLogging {
 
     private static final String LOG_MSG_CONFIGURE = "AppShell :: configurePage";
 
-    public static void main(String[] args) {
+    static void main(String[] args) {
         UseLogging.staticLog().info(LOG_MSG_CONFIGURE);
         SpringApplication.run(Application.class, args);
     }
