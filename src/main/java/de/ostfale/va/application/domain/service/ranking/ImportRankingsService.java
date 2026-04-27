@@ -6,6 +6,7 @@ import de.ostfale.va.application.domain.model.playerrankings.RankingDashboardSta
 import de.ostfale.va.application.port.in.ranking.ForLoadingRankings;
 import de.ostfale.va.application.port.out.ranking.ForLoadingPlayers;
 import de.ostfale.va.application.port.out.ranking.ForParsingRankingFile;
+import de.ostfale.va.common.UseLogging;
 import de.ostfale.va.framework.out.filesystem.ApplicationDirectoryConfiguration;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +18,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Service
-public class ImportRankingsService implements ForLoadingRankings {
+public class ImportRankingsService implements ForLoadingRankings, UseLogging {
 
     private static final String DATE_TIME_FORMAT = "dd.MM.yyyy HH:mm";
 
@@ -42,31 +43,43 @@ public class ImportRankingsService implements ForLoadingRankings {
                 return cachedPlayers;
             }
 
-            List<Player> playersFromStore = loadPlayersFromStoreOrSource();
+            // ONLY load from EclipseStore (database) now, no automatic fallback to the file
+            List<Player> playersFromStore = forLoadingPlayers.findAllPlayers();
             cachedPlayers = List.copyOf(playersFromStore);
-            log().trace("ImportRankingsService :: Loaded {} players", cachedPlayers.size());
+            log().info("ImportRankingsService :: Loaded {} players from store", cachedPlayers.size());
             return cachedPlayers;
         }
     }
 
-    private List<Player> loadPlayersFromStoreOrSource() {
-        List<Player> playersFromStore = forLoadingPlayers.findAllPlayers();
-        return playersFromStore.isEmpty() ? loadAndPersistPlayersFromSource() : playersFromStore;
-    }
-
-    private List<Player> loadAndPersistPlayersFromSource() {
-        log().info("ImportRankingsService :: No players found in database. Loading from ranking file");
+    @Override
+    public void importRankingsFromFile() {
+        log().info("ImportRankingsService :: Importing players from ranking file to store");
         List<Player> localPlayers = loadFromSource();
-        return forLoadingPlayers.save(localPlayers);
+        List<Player> savedPlayers = forLoadingPlayers.save(localPlayers);
+        synchronized (this) {
+            cachedPlayers = List.copyOf(savedPlayers);
+        }
+        log().info("ImportRankingsService :: Successfully imported and cached {} players", savedPlayers.size());
     }
 
     @Override
     public RankingDashboardStatistics calculateStatistics() {
         var players = getAllPlayers();
         var lastDownloadDate = "";
+        
+        // The count is purely based on the players stored/cached in the EclipseStore
         var nofPlayers = players.size();
         var nofMalePlayers = players.stream().filter(player -> GenderType.MALE.equals(player.getGender())).count();
         var nofFemalePlayers = players.stream().filter(player -> GenderType.FEMALE.equals(player.getGender())).count();
+
+        // The timestamp is still determined based on the file in the directory as requested
+        if (lastRankingFileUpdate == null) {
+            var rankingDir = getApplicationSubDir(ApplicationDirectoryConfiguration.RANKING_DIR_NAME);
+            List<File> rankingFiles = readAllFiles(rankingDir);
+            if (!rankingFiles.isEmpty()) {
+                lastRankingFileUpdate = getFirstFileTimestamp(rankingFiles.getFirst().toPath());
+            }
+        }
 
         if (lastRankingFileUpdate != null) {
             lastDownloadDate = lastRankingFileUpdate.format(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT));
@@ -74,7 +87,6 @@ public class ImportRankingsService implements ForLoadingRankings {
 
         return new RankingDashboardStatistics(
                 lastDownloadDate,
-                "",
                 nofPlayers,
                 nofFemalePlayers,
                 nofMalePlayers
@@ -133,7 +145,7 @@ public class ImportRankingsService implements ForLoadingRankings {
 
         for (String token : tokens) {
             if (token.isEmpty()) continue;
-            // Der Spieler muss JEDES Token irgendwo (Vorname oder Nachname) enthalten
+            // The player must contain EVERY token somewhere (first name or last name)
             if (!firstName.contains(token) && !lastName.contains(token)) {
                 return false;
             }

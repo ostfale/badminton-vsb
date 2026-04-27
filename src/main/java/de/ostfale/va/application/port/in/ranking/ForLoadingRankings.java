@@ -16,4 +16,9 @@ public interface ForLoadingRankings extends UseFileSystemHandling, UseLogging {
     RankingDashboardStatistics calculateStatistics();
 
     int countPlayers(String filter);
+
+    /**
+     * Explicitly triggers parsing the downloaded ranking file and storing it in the database.
+     */
+    void importRankingsFromFile();
 }
