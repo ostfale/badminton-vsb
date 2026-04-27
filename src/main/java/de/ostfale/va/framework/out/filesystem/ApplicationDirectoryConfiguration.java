@@ -13,6 +13,7 @@ public class ApplicationDirectoryConfiguration implements ForDirectoryConfig, Us
     public static final String APP_NAME = ".badminton-vsb";
     public static final String TOURNAMENT_DIR_NAME = "tournament";
     public static final String RANKING_DIR_NAME = "ranking";
+    public static final String HISTORY_DIR_NAME = "ranking/history";
 
 
     @Override
@@ -29,7 +30,8 @@ public class ApplicationDirectoryConfiguration implements ForDirectoryConfig, Us
                 createDirectoryEntry("data", "data"),
                 createDirectoryEntry("logs", "logs"),
                 createDirectoryEntry(TOURNAMENT_DIR_NAME, "tournament"),
-                createDirectoryEntry("ranking", "ranking")
+                createDirectoryEntry(RANKING_DIR_NAME, "ranking"),
+                createDirectoryEntry("history", HISTORY_DIR_NAME)
         );
     }
 

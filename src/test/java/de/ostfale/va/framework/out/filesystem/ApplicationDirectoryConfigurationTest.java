@@ -37,7 +37,7 @@ class ApplicationDirectoryConfigurationTest {
     @DisplayName("structure should return all required directories")
     void structure_shouldReturnAllRequiredDirectories() {
         // given
-        var expectedNumberOfDirectories = 5;
+        var expectedNumberOfDirectories = 6;
 
         // when
         List<ForDirectoryConfig.DirectoryEntry> structure = config.structure();

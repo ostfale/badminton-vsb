@@ -4,6 +4,7 @@ import de.ostfale.va.application.domain.model.download.DownloadTask;
 import de.ostfale.va.application.port.out.ForDownloadingFiles;
 import de.ostfale.va.common.UseFileSystemHandling;
 import de.ostfale.va.common.UseLogging;
+import de.ostfale.va.framework.out.filesystem.ApplicationDirectoryConfiguration;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -13,9 +14,11 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 @Component
 public class HttpFileDownloadAdapter implements ForDownloadingFiles, UseFileSystemHandling, UseLogging {
@@ -56,14 +59,14 @@ public class HttpFileDownloadAdapter implements ForDownloadingFiles, UseFileSyst
                     .GET()
                     .build();
 
-            // Der BodyHandler schreibt den Stream direkt in die Ziel-Datei
+            // The BodyHandler writes the stream directly to the target file
             HttpResponse<Path> response = httpClient.send(request, HttpResponse.BodyHandlers.ofFile(task.destination()));
 
             if (response.statusCode() == 200) {
                 log().info("HttpDownloadAdapter :: Successfully downloaded: {}", task.destination().getFileName());
             } else {
                 log().error("HttpDownloadAdapter :: Failed to download. HTTP Status: {}", response.statusCode());
-                // Falls der Download fehlschlägt, löschen wir die (eventuell korrupte) Datei
+                // If the download fails, we delete the (possibly corrupt) file
                 Files.deleteIfExists(task.destination());
             }
         } catch (Exception e) {
@@ -74,14 +77,36 @@ public class HttpFileDownloadAdapter implements ForDownloadingFiles, UseFileSyst
     private void prepareTargetDirectory(Path targetDir) {
         try {
             if (Files.exists(targetDir)) {
-                log().debug("HttpDownloadAdapter :: Cleaning existing directory: {}", targetDir);
-                deleteAllFiles(targetDir.toString());
+                log().debug("HttpDownloadAdapter :: Moving existing files to history directory before downloading new files to: {}", targetDir);
+                archiveFiles(targetDir);
             } else {
                 log().debug("HttpDownloadAdapter :: Creating target directory: {}", targetDir);
                 Files.createDirectories(targetDir);
             }
         } catch (IOException e) {
             log().error("HttpDownloadAdapter :: Failed to prepare target directory: {}", targetDir, e);
+        }
+    }
+
+    private void archiveFiles(Path sourceDir) throws IOException {
+        String historyDirPath = getApplicationHomeDir() + SEPARATOR + ApplicationDirectoryConfiguration.HISTORY_DIR_NAME;
+        Path historyPath = Path.of(historyDirPath);
+        
+        if (!Files.exists(historyPath)) {
+            Files.createDirectories(historyPath);
+        }
+
+        try (Stream<Path> stream = Files.list(sourceDir)) {
+            stream.filter(Files::isRegularFile)
+                  .forEach(file -> {
+                      try {
+                          Path targetFile = historyPath.resolve(file.getFileName());
+                          log().info("HttpDownloadAdapter :: Moving file {} to history: {}", file.getFileName(), historyDirPath);
+                          Files.move(file, targetFile, StandardCopyOption.REPLACE_EXISTING);
+                      } catch (IOException e) {
+                          log().error("HttpDownloadAdapter :: Failed to move file {} to history", file.getFileName(), e);
+                      }
+                  });
         }
     }
 }
