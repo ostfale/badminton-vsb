@@ -1,11 +1,10 @@
 package de.ostfale.va.application.domain.service.ranking;
 
 import de.ostfale.va.application.domain.model.playerrankings.GenderType;
+import de.ostfale.va.application.domain.model.playerrankings.HistoryTimestamp;
 import de.ostfale.va.application.domain.model.playerrankings.Player;
-import de.ostfale.va.application.domain.model.playerrankings.PlayerId;
 import de.ostfale.va.application.domain.model.playerrankings.RankingDashboardStatistics;
 import de.ostfale.va.application.port.in.ranking.ForLoadingRankings;
-import de.ostfale.va.application.port.out.ranking.ForLoadingPlayers;
 import de.ostfale.va.application.port.out.ranking.ForParsingRankingFile;
 import de.ostfale.va.common.UseLogging;
 import de.ostfale.va.framework.out.filesystem.ApplicationDirectoryConfiguration;
@@ -15,13 +14,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
 public class ImportRankingsService implements ForLoadingRankings, UseLogging {
@@ -29,115 +22,63 @@ public class ImportRankingsService implements ForLoadingRankings, UseLogging {
     private static final String DATE_TIME_FORMAT = "dd.MM.yyyy HH:mm";
 
     private final ForParsingRankingFile parser;
-    private final ForLoadingPlayers forLoadingPlayers;
+    private final InMemoryPlayerService inMemoryPlayerService;
     private LocalDateTime lastRankingFileUpdate;
-    private volatile List<Player> cachedPlayers;
 
-    public ImportRankingsService(ForParsingRankingFile parser, ForLoadingPlayers forLoadingPlayers) {
+    public ImportRankingsService(ForParsingRankingFile parser, InMemoryPlayerService inMemoryPlayerService) {
         this.parser = parser;
-        this.forLoadingPlayers = forLoadingPlayers;
+        this.inMemoryPlayerService = inMemoryPlayerService;
     }
 
     @Override
     public List<Player> getAllPlayers() {
-        if (cachedPlayers != null) {
-            return cachedPlayers;
-        }
-
-        synchronized (this) {
-            if (cachedPlayers != null) {
-                return cachedPlayers;
-            }
-
-            // ONLY load from EclipseStore (database) now, no automatic fallback to the file
-            List<Player> playersFromStore = forLoadingPlayers.findAllPlayers();
-            cachedPlayers = List.copyOf(playersFromStore);
-            log().info("ImportRankingsService :: Loaded {} players from store", cachedPlayers.size());
-            return cachedPlayers;
-        }
+        return inMemoryPlayerService.getAllPlayers();
     }
 
     @Override
     public void invalidateCache() {
-        synchronized (this) {
-            this.cachedPlayers = null;
-        }
+        inMemoryPlayerService.clear();
     }
 
     @Override
     public void importRankingsFromFile() {
-        log().info("ImportRankingsService :: Importing players from ranking file to store");
-        List<Player> parsedPlayers = loadFromSource();
-        Map<PlayerId, Player> existingPlayers = forLoadingPlayers.findAllPlayers().stream()
-                .collect(Collectors.toMap(Player::getPlayerId, Function.identity()));
+        log().info("ImportRankingsService :: Importing players from ranking file to memory");
+        
+        var rankingDir = getApplicationSubDir(ApplicationDirectoryConfiguration.RANKING_DIR_NAME);
+        List<File> rankingFiles = readAllFiles(rankingDir);
 
-        List<Player> playersToSave = new ArrayList<>();
-
-        for (Player parsedPlayer : parsedPlayers) {
-            Player existingPlayer = existingPlayers.get(parsedPlayer.getPlayerId());
-            if (existingPlayer != null) {
-                // Keep the existing player and update its data
-                
-                // Update history
-                existingPlayer.getHistory().putAll(parsedPlayer.getHistory());
-                if (parsedPlayer.getLastUpdated() != null) {
-                    existingPlayer.setLastUpdated(parsedPlayer.getLastUpdated());
-                }
-
-                // Update rankings and points
-                existingPlayer.setSinglePointsAndRanking(parsedPlayer.getSinglePoints(), parsedPlayer.getSingleRanking(), parsedPlayer.getSingleAgeRanking(), parsedPlayer.getSingleTournaments());
-                existingPlayer.setDoublePointsAndRanking(parsedPlayer.getDoublePoints(), parsedPlayer.getDoubleRanking(), parsedPlayer.getDoubleAgeRanking(), parsedPlayer.getDoubleTournaments());
-                existingPlayer.setMixedPointsAndRanking(parsedPlayer.getMixedPoints(), parsedPlayer.getMixedRanking(), parsedPlayer.getMixedAgeRanking(), parsedPlayer.getMixedTournaments());
-
-                // Update club if changed
-                if (!Objects.equals(existingPlayer.getClubName(), parsedPlayer.getClubName())) {
-                    existingPlayer.setClubName(parsedPlayer.getClubName());
-                }
-                
-                // Update age classes if changed
-                if (!Objects.equals(existingPlayer.getAgeClassGeneral(), parsedPlayer.getAgeClassGeneral())) {
-                    existingPlayer.setAgeClassGeneral(parsedPlayer.getAgeClassGeneral());
-                }
-                if (!Objects.equals(existingPlayer.getAgeClassDetail(), parsedPlayer.getAgeClassDetail())) {
-                    existingPlayer.setAgeClassDetail(parsedPlayer.getAgeClassDetail());
-                }
-                
-                // Update associations (district, state, stateGroup) if changed
-                if (!Objects.equals(existingPlayer.getDistrictName(), parsedPlayer.getDistrictName())) {
-                    existingPlayer.setDistrictName(parsedPlayer.getDistrictName());
-                }
-                if (!Objects.equals(existingPlayer.getStateName(), parsedPlayer.getStateName())) {
-                    existingPlayer.setStateName(parsedPlayer.getStateName());
-                }
-                if (!Objects.equals(existingPlayer.getStateGroup(), parsedPlayer.getStateGroup())) {
-                    existingPlayer.setStateGroup(parsedPlayer.getStateGroup());
-                }
-
-                playersToSave.add(existingPlayer);
-            } else {
-                playersToSave.add(parsedPlayer);
-            }
+        if (rankingFiles.isEmpty()) {
+            log().warn("ImportRankingsService ::No ranking files found in {}", rankingDir);
+            return;
         }
 
-        List<Player> savedPlayers = forLoadingPlayers.save(playersToSave);
-        synchronized (this) {
-            cachedPlayers = List.copyOf(savedPlayers);
+        if (rankingFiles.size() > 1) {
+            log().warn("ImportRankingsService :: Found more than one ranking file in {}. Remove unused file(s)", rankingDir);
+            return;
         }
-        log().info("ImportRankingsService :: Successfully imported and cached {} players", savedPlayers.size());
+
+        Path rankingFilePath = rankingFiles.getFirst().toPath();
+        List<Player> parsedPlayers = parser.parseRankingFile(rankingFilePath);
+        log().info("ImportRankingsService :: Imported {} players from ranking file {}", parsedPlayers.size(), rankingFilePath);
+
+        lastRankingFileUpdate = getFirstFileTimestamp(rankingFilePath);
+        HistoryTimestamp timestamp = new HistoryTimestamp(rankingFilePath.getFileName().toString());
+
+        if (!parsedPlayers.isEmpty()) {
+            inMemoryPlayerService.mergePlayers(parsedPlayers, timestamp);
+        }
     }
-
 
     @Override
     public RankingDashboardStatistics calculateStatistics() {
-        var players = getAllPlayers();
+        var players = inMemoryPlayerService.getAllPlayers();
         var lastDownloadDate = "";
         
-        // The count is purely based on the players stored/cached in the EclipseStore
         var nofPlayers = players.size();
         var nofMalePlayers = players.stream().filter(player -> GenderType.MALE.equals(player.getGender())).count();
         var nofFemalePlayers = players.stream().filter(player -> GenderType.FEMALE.equals(player.getGender())).count();
 
-        // The timestamp is still determined based on the file in the directory as requested
+        // The timestamp is determined based on the file in the directory
         if (lastRankingFileUpdate == null) {
             var rankingDir = getApplicationSubDir(ApplicationDirectoryConfiguration.RANKING_DIR_NAME);
             List<File> rankingFiles = readAllFiles(rankingDir);
@@ -158,63 +99,13 @@ public class ImportRankingsService implements ForLoadingRankings, UseLogging {
         );
     }
 
-    private List<Player> loadFromSource() {
-        var rankingDir = getApplicationSubDir(ApplicationDirectoryConfiguration.RANKING_DIR_NAME);
-        List<File> rankingFiles = readAllFiles(rankingDir);
-
-        if (rankingFiles.isEmpty()) {
-            log().warn("ImportRankingsService ::No ranking files found in {}", rankingDir);
-            return List.of();
-        }
-
-        if (rankingFiles.size() > 1) {
-            log().warn("ImportRankingsService :: Found more than one ranking file in {}. Remove unused file(s)", rankingDir);
-            return List.of();
-        }
-
-        Path rankingFilePath = rankingFiles.getFirst().toPath();
-        List<Player> players = parser.parseRankingFile(rankingFilePath);
-        log().info("ImportRankingsService :: Imported {} players from ranking file {}", players.size(), rankingFilePath);
-
-        lastRankingFileUpdate = getFirstFileTimestamp(rankingFilePath);
-
-        return players;
-    }
-
     @Override
     public List<Player> findPlayers(String filter, int offset, int limit) {
-        if (filter == null || filter.isBlank()) return Collections.emptyList();
-
-        String[] tokens = filter.toLowerCase().split("\\s+");
-        return getAllPlayers().stream()
-                .filter(player -> matchPlayer(player, tokens))
-                .skip(offset)
-                .limit(limit)
-                .toList();
+        return inMemoryPlayerService.findPlayers(filter, offset, limit);
     }
 
     @Override
     public int countPlayers(String filter) {
-        var players = getAllPlayers();
-        if (filter == null || filter.isBlank()) return 0;
-
-        String[] tokens = filter.toLowerCase().split("\\s+");
-        return (int) players.stream()
-                .filter(player -> matchPlayer(player, tokens))
-                .count();
-    }
-
-    private boolean matchPlayer(Player player, String[] tokens) {
-        String firstName = (player.getFirstName() != null) ? player.getFirstName().toLowerCase() : "";
-        String lastName = (player.getLastName() != null) ? player.getLastName().toLowerCase() : "";
-
-        for (String token : tokens) {
-            if (token.isEmpty()) continue;
-            // The player must contain EVERY token somewhere (first name or last name)
-            if (!firstName.contains(token) && !lastName.contains(token)) {
-                return false;
-            }
-        }
-        return true;
+        return inMemoryPlayerService.countPlayers(filter);
     }
 }

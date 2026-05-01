@@ -52,7 +52,7 @@ public class RankingFileExcelParserAdapter implements ForParsingRankingFile, Use
     public List<Player> parseRankingFile(Path filePath) {
         excelfilePath = filePath.getFileName().toString();
 
-        log().debug("RankingFileExcelParserAdapter :: Parsing ranking file {}", filePath);
+        log().trace("RankingFileExcelParserAdapter :: Parsing ranking file {}", filePath);
         final Map<String, Player> playerMap = new HashMap<>();
         final LocalDate rankingDate = determineRankingDate(filePath);
         final List<ParsedRankingEntry> parsedEntries = new ArrayList<>();
