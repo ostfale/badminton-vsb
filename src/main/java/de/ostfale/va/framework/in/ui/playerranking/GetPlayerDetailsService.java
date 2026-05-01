@@ -25,24 +25,21 @@ public class GetPlayerDetailsService implements UseLogging {
 
     public void addPlayerTournamentIdToPlayer(Player player) {
         log().debug("GetPlayerDetailsService :: read player tournamentId for player: {}", player);
+        if (player.getPlayerTournamentId() != null) {
+            return;
+        }
         playerTournamentIdScraper.scrapePlayerTournamentId(player.getPlayerId()).ifPresent(tournamentId -> {
             log().info("GetPlayerDetailsService :: readValidRankingPoints found tournamentId {}", tournamentId);
             player.setPlayerTournamentId(tournamentId);
-            var relevantTournaments = relevantRankingPointsScraper.scrapeRelevantRankingPoints(player);
-            player.setRelevantTournaments(relevantTournaments.orElse(null));
+            // Wir scrapen hier nicht mehr direkt die Turniere, das passiert lazy in getRelevantRankingPoints
         });
     }
 
     public Optional<PlayerRankingRelevantTournaments> getRelevantRankingPoints(Player player) {
-
-        if (player.getRelevantTournaments() != null) {
-            log().debug("GetPlayerDetailsService :: getRelevantRankingPoints:found: {} ", true);
-            return Optional.of(player.getRelevantTournaments());
-        }
-
+        // ALWAYS scrape fresh data from turnier.de to ensure up-to-date tournament information.
+        // We do not cache this on the in-memory Player object anymore.
         var relevantTournaments = relevantRankingPointsScraper.scrapeRelevantRankingPoints(player);
-        player.setRelevantTournaments(relevantTournaments.orElse(null));
-        log().debug("GetPlayerDetailsService :: load getRelevantRankingPoints: found: {} ", relevantTournaments.isPresent());
+        log().debug("GetPlayerDetailsService :: live scrape getRelevantRankingPoints: found: {} ", relevantTournaments.isPresent());
         return relevantTournaments;
     }
 }

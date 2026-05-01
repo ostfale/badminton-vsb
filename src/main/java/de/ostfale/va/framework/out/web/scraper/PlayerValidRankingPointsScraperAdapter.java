@@ -19,8 +19,8 @@ import java.util.Optional;
 @Component
 public class PlayerValidRankingPointsScraperAdapter implements ForScrapingRelevantRankingPoints, UseLogging {
 
-    private static final String WEB_URL_PLAYER_RANKING_VIEW = "https://dbv.turnier.de/player-profile/";
-    private static final String WEB_URL_PLAYER_RANKING_POINTS_VIEW = "https://dbv.turnier.de/ranking/player.aspx?id=50731&player=";
+    private static final String WEB_URL_BASE = "https://dbv.turnier.de";
+    private static final String WEB_URL_PLAYER_RANKING_VIEW = WEB_URL_BASE + "/player-profile/";
 
     private final ForLoadingExternalWebsites webLoader;
 
@@ -31,10 +31,16 @@ public class PlayerValidRankingPointsScraperAdapter implements ForScrapingReleva
     @Override
     public Optional<PlayerRankingRelevantTournaments> scrapeRelevantRankingPoints(Player player) {
         var urlRankingViewId = prepareUrlForPlayerRankingView(player);
-        var rankingViewId = webLoader.loadPageAndProcess(urlRankingViewId, new PlayerViewIdPageProcessor());
+        
+        // 1. Scrape the link to the CURRENT ranking points page from the player's profile
+        var rankingPointsUrlPath = webLoader.loadPageAndProcess(urlRankingViewId, new PlayerViewIdPageProcessor());
 
-        if (rankingViewId.isPresent()) {
-            var urlRankingPoints = prepareUrlForPlayerRankingPointsView(rankingViewId.get());
+        if (rankingPointsUrlPath.isPresent()) {
+            // 2. Build the full URL using the extracted path (which includes the correct list ID and player ID)
+            var urlRankingPoints = WEB_URL_BASE + rankingPointsUrlPath.get();
+            log().debug("PlayerValidRankingPointsScraperAdapter :: loading points from: {}", urlRankingPoints);
+            
+            // 3. Scrape the points
             var rankingPoints = webLoader.loadPageAndProcess(urlRankingPoints, new PlayerRankingPointsPageProcessor());
             log().debug("PlayerValidRankingPointsScraperAdapter :: ranking points for player: {} -> found: {}", player, rankingPoints.isPresent());
             return rankingPoints;
@@ -49,31 +55,20 @@ public class PlayerValidRankingPointsScraperAdapter implements ForScrapingReleva
         return urlString;
     }
 
-    private String prepareUrlForPlayerRankingPointsView(String playerViewId) {
-        var urlString = WEB_URL_PLAYER_RANKING_POINTS_VIEW + playerViewId;
-        log().debug("PlayerValidRankingPointsScraperAdapter :: ranking points view for player: {} -> {}", playerViewId, urlString);
-        return urlString;
-    }
-
     public static class PlayerViewIdPageProcessor implements PageProcessor<String>, UseLogging {
         private static final String XPATH_PLAYER_LINK = "//*[@id=\"profile_content\"]/div/div/div/div[2]/div/div[1]/table/tbody/tr[1]/th/a";
-        private static final String PLAYER_ID_PARAMETER = "player=";
 
         @Override
         public Optional<String> process(Page page) {
             String href = page.locator("xpath=" + XPATH_PLAYER_LINK).getAttribute("href");
-            return extractPlayerId(href);
-        }
-
-        private Optional<String> extractPlayerId(String href) {
-            if (href == null || !href.contains(PLAYER_ID_PARAMETER)) {
+            if (href == null || href.isBlank()) {
                 return Optional.empty();
             }
-
-            int playerIdStartIndex = href.indexOf(PLAYER_ID_PARAMETER) + PLAYER_ID_PARAMETER.length();
-            String playerId = href.substring(playerIdStartIndex);
-            log().info("PlayerViewIdPageProcessor :: extracted player id: {}", playerId);
-            return Optional.of(playerId);
+            
+            // We return the entire href (which looks like "/ranking/player.aspx?id=51829&player=12345")
+            // This ensures we get the CURRENT ranking list ID, not a hardcoded old one.
+            log().info("PlayerViewIdPageProcessor :: extracted ranking points link: {}", href);
+            return Optional.of(href.startsWith("/") ? href : "/" + href);
         }
     }
 
