@@ -1,10 +1,6 @@
 package de.ostfale.va.framework.out;
 
-import de.ostfale.va.application.domain.model.playerrankings.DisciplineType;
-import de.ostfale.va.application.domain.model.playerrankings.GenderType;
-import de.ostfale.va.application.domain.model.playerrankings.Group;
-import de.ostfale.va.application.domain.model.playerrankings.Player;
-import de.ostfale.va.application.domain.model.playerrankings.RankingSnapshot;
+import de.ostfale.va.application.domain.model.playerrankings.*;
 import de.ostfale.va.application.port.out.ranking.ForParsingRankingFile;
 import de.ostfale.va.common.UseLogging;
 import org.dhatim.fastexcel.reader.ReadableWorkbook;
@@ -50,18 +46,7 @@ enum ExcelFileRankingColIndex {
 @Component
 public class RankingFileExcelParserAdapter implements ForParsingRankingFile, UseLogging {
 
-    private  String excelfilePath;
-
-    private record ParsedRankingEntry(
-            Player player,
-            DisciplineType disciplineType,
-            GenderType genderType,
-            String ageClassGeneral,
-            int validPoints,
-            int rankingPosition,
-            int nofTournaments
-    ) {
-    }
+    private String excelfilePath;
 
     @Override
     public List<Player> parseRankingFile(Path filePath) {
@@ -120,6 +105,8 @@ public class RankingFileExcelParserAdapter implements ForParsingRankingFile, Use
 
             Player player = getOrCreatePlayer(playerId, firstName, lastName, genderType, yearOfBirth, ageClassGeneral,
                     ageClassDetail, clubName, districtName, stateName, stateGroupEnum, playerMap);
+
+            player.setLastUpdated(new HistoryTimestamp(excelfilePath));
 
             parsedEntries.add(new ParsedRankingEntry(
                     player,
@@ -216,5 +203,16 @@ public class RankingFileExcelParserAdapter implements ForParsingRankingFile, Use
                 districtName,
                 stateName,
                 group));
+    }
+
+    private record ParsedRankingEntry(
+            Player player,
+            DisciplineType disciplineType,
+            GenderType genderType,
+            String ageClassGeneral,
+            int validPoints,
+            int rankingPosition,
+            int nofTournaments
+    ) {
     }
 }

@@ -3,14 +3,13 @@ package de.ostfale.va.application.domain.model.playerrankings;
 import de.ostfale.va.common.UseLogging;
 import jakarta.persistence.Id;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class Player implements UseLogging {
 
     @Id
     private PlayerId playerId;
+    private HistoryTimestamp lastUpdated;
 
     private boolean isFavorite;
     private PlayerTournamentId playerTournamentId;
@@ -37,7 +36,8 @@ public class Player implements UseLogging {
     private Integer mixedAgeRanking = 0;
     private Integer mixedTournaments = 0;
     private PlayerRankingRelevantTournaments relevantTournaments;
-    private  Map<HistoryTimestamp, HistoryStatistics> history = new HashMap<>();
+    private Map<HistoryTimestamp, HistoryStatistics> history = new HashMap<>();
+    private List<HistoryChange> historyChanges = new ArrayList<>();
 
     public Player(String playerId,
                   String firstName,
@@ -70,7 +70,15 @@ public class Player implements UseLogging {
 
     // history handling
     public Map<HistoryTimestamp, HistoryStatistics> getHistory() {
-        return Collections.unmodifiableMap(history);
+        return history;
+    }
+
+    public List<HistoryChange> getHistoryChanges() {
+        return historyChanges;
+    }
+
+    public void addHistoryChange(String timestamp, String newValue, String oldValue) {
+       historyChanges.add(new HistoryChange(timestamp, newValue, oldValue));
     }
 
     // Adds a historical entry for a specific date and discipline
@@ -88,7 +96,28 @@ public class Player implements UseLogging {
         historyEntry.updateStatistics(type, snapshot);
     }
 
-    public void addHistoryEntry(String fileName,HistoryStatistics historyEntry) {
+    public void setLastUpdated(HistoryTimestamp lastUpdated) {
+        if (lastUpdated == null) {
+            return;
+        }
+
+        if (this.lastUpdated == null) {
+            log().trace("Player {} first set last updated to {}", playerId.playerId(), lastUpdated);
+            this.lastUpdated = lastUpdated;
+            return;
+        }
+
+        if (lastUpdated.compareTo(this.lastUpdated) > 0) {
+            log().trace("Player {} set last updated from {} to {}", playerId.playerId(), this.lastUpdated, lastUpdated);
+            this.lastUpdated = lastUpdated;
+        }
+    }
+
+    public HistoryTimestamp getLastUpdated() {
+        return lastUpdated;
+    }
+
+    public void addHistoryEntry(String fileName, HistoryStatistics historyEntry) {
         var historytimestamp = new HistoryTimestamp(fileName);
         if (!history.containsKey(historytimestamp)) {
             log().trace("Player {} added history entry for {}", this, historytimestamp);
@@ -189,6 +218,14 @@ public class Player implements UseLogging {
 
     public void setAgeClassGeneral(String ageClassGeneral) {
         this.ageClassGeneral = ageClassGeneral;
+    }
+
+    public String getAgeClassDetail() {
+        return ageClassDetail;
+    }
+
+    public void setAgeClassDetail(String ageClassDetail) {
+        this.ageClassDetail = ageClassDetail;
     }
 
     public String getClubName() {

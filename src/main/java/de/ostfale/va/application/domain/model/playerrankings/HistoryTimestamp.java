@@ -1,6 +1,7 @@
 package de.ostfale.va.application.domain.model.playerrankings;
 
 import de.ostfale.va.common.UseLogging;
+import org.jspecify.annotations.NonNull;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -46,5 +47,10 @@ public record HistoryTimestamp(
             return yearCompare;
         }
         return Integer.compare(this.calendarWeek(), other.calendarWeek());
+    }
+
+    @Override
+    public @NonNull String toString() {
+        return "Jahr: " + twoDigitYear() + " KW: " + calendarWeek();
     }
 }

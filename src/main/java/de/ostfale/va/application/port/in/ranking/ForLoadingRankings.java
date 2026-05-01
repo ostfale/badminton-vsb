@@ -21,4 +21,9 @@ public interface ForLoadingRankings extends UseFileSystemHandling, UseLogging {
      * Explicitly triggers parsing the downloaded ranking file and storing it in the database.
      */
     void importRankingsFromFile();
+
+    /**
+     * Invalidates the current player cache.
+     */
+    void invalidateCache();
 }

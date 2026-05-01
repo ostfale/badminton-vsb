@@ -6,6 +6,7 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.signals.Signal;
 import com.vaadin.flow.spring.annotation.SpringComponent;
 import com.vaadin.flow.spring.annotation.UIScope;
+import de.ostfale.va.application.domain.model.playerrankings.HistoryChange;
 import de.ostfale.va.application.domain.model.playerrankings.Player;
 import de.ostfale.va.common.UseLogging;
 import de.ostfale.va.framework.in.ui.playerinfo.signal.PlayerSelectionState;
@@ -17,9 +18,11 @@ import java.util.List;
 @SpringComponent
 public class PlayerDataTabComponent extends VerticalLayout implements UseLogging {
     private static final String PLAYER_DETAILS_SECTION_TITLE = "Informationen zum Spieler";
+    private static final String PLAYER_CHANGES_SECTION_TITLE = "Veränderungen";
     private static final String NO_SHADOW_FIELD_CLASS = "no-shadow-field";
 
     private final TextField playerNameField = createReadOnlyField("Name");
+    private final TextField playerLastUpdate = createReadOnlyField("Letztes Update");
     private final TextField playerGenderField = createReadOnlyField("M / F");
     private final TextField playerIdField = createReadOnlyField("Spieler ID");
     private final TextField playerAgeClassField = createReadOnlyField("Altersklasse");
@@ -35,11 +38,14 @@ public class PlayerDataTabComponent extends VerticalLayout implements UseLogging
             playerIdField,
             playerAgeClassField,
             playerYearOfBirthField,
+            playerLastUpdate,
             playerClubNameField,
             playerDistrictNameField,
             playerStateNameField,
             playerStateGroupField
     );
+
+    private final VerticalLayout changesLayout = new VerticalLayout();
 
     public PlayerDataTabComponent(PlayerSelectionState selectionState) {
         initLayout();
@@ -49,6 +55,14 @@ public class PlayerDataTabComponent extends VerticalLayout implements UseLogging
     private void initLayout() {
         add(new FormSectionHeader(PLAYER_DETAILS_SECTION_TITLE));
         add(createDetailsForm());
+        add(new FormSectionHeader(PLAYER_CHANGES_SECTION_TITLE));
+        add(createChangesForm());
+    }
+
+    private VerticalLayout createChangesForm() {
+        changesLayout.setPadding(false);
+        changesLayout.setSpacing(false);
+        return changesLayout;
     }
 
     private FormLayout createDetailsForm() {
@@ -77,6 +91,23 @@ public class PlayerDataTabComponent extends VerticalLayout implements UseLogging
             return;
         }
         showPlayerDetails(player);
+        showPlayerChanges(player);
+    }
+
+    private void showPlayerChanges(Player player) {
+        changesLayout.removeAll();
+        List<HistoryChange> historyChanges = player.getHistoryChanges();
+        if (historyChanges == null ||historyChanges.isEmpty()) {
+            TextField noChangesField = createReadOnlyField(null);
+            noChangesField.setValue("Keine Veränderungen vorhanden");
+            changesLayout.add(noChangesField);
+        } else {
+            historyChanges.forEach(change -> {
+                TextField changeField = createReadOnlyField(null);
+                changeField.setValue(change.toString());
+                changesLayout.add(changeField);
+            });
+        }
     }
 
     private void showPlayerDetails(Player player) {
@@ -86,6 +117,7 @@ public class PlayerDataTabComponent extends VerticalLayout implements UseLogging
         setFieldValue(playerIdField, player.getPlayerId());
         setFieldValue(playerAgeClassField, player.getAgeClassGeneral());
         setFieldValue(playerYearOfBirthField, player.getYearOfBirth());
+        setFieldValue(playerLastUpdate, player.getLastUpdated() != null ? player.getLastUpdated().toString() : null);
         setFieldValue(playerClubNameField, player.getClubName());
         setFieldValue(playerDistrictNameField, player.getDistrictName());
         setFieldValue(playerStateNameField, player.getStateName());
@@ -99,6 +131,7 @@ public class PlayerDataTabComponent extends VerticalLayout implements UseLogging
     private void showNoPlayerSelected() {
         log().debug("PlayerDataTabComponent :: showNoPlayerSelected");
         clearDetails();
+        changesLayout.removeAll();
     }
 
     public void clearDetails() {

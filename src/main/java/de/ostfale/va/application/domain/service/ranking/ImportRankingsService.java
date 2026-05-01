@@ -2,6 +2,7 @@ package de.ostfale.va.application.domain.service.ranking;
 
 import de.ostfale.va.application.domain.model.playerrankings.GenderType;
 import de.ostfale.va.application.domain.model.playerrankings.Player;
+import de.ostfale.va.application.domain.model.playerrankings.PlayerId;
 import de.ostfale.va.application.domain.model.playerrankings.RankingDashboardStatistics;
 import de.ostfale.va.application.port.in.ranking.ForLoadingRankings;
 import de.ostfale.va.application.port.out.ranking.ForLoadingPlayers;
@@ -14,8 +15,13 @@ import java.io.File;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class ImportRankingsService implements ForLoadingRankings, UseLogging {
@@ -52,15 +58,74 @@ public class ImportRankingsService implements ForLoadingRankings, UseLogging {
     }
 
     @Override
+    public void invalidateCache() {
+        synchronized (this) {
+            this.cachedPlayers = null;
+        }
+    }
+
+    @Override
     public void importRankingsFromFile() {
         log().info("ImportRankingsService :: Importing players from ranking file to store");
-        List<Player> localPlayers = loadFromSource();
-        List<Player> savedPlayers = forLoadingPlayers.save(localPlayers);
+        List<Player> parsedPlayers = loadFromSource();
+        Map<PlayerId, Player> existingPlayers = forLoadingPlayers.findAllPlayers().stream()
+                .collect(Collectors.toMap(Player::getPlayerId, Function.identity()));
+
+        List<Player> playersToSave = new ArrayList<>();
+
+        for (Player parsedPlayer : parsedPlayers) {
+            Player existingPlayer = existingPlayers.get(parsedPlayer.getPlayerId());
+            if (existingPlayer != null) {
+                // Keep the existing player and update its data
+                
+                // Update history
+                existingPlayer.getHistory().putAll(parsedPlayer.getHistory());
+                if (parsedPlayer.getLastUpdated() != null) {
+                    existingPlayer.setLastUpdated(parsedPlayer.getLastUpdated());
+                }
+
+                // Update rankings and points
+                existingPlayer.setSinglePointsAndRanking(parsedPlayer.getSinglePoints(), parsedPlayer.getSingleRanking(), parsedPlayer.getSingleAgeRanking(), parsedPlayer.getSingleTournaments());
+                existingPlayer.setDoublePointsAndRanking(parsedPlayer.getDoublePoints(), parsedPlayer.getDoubleRanking(), parsedPlayer.getDoubleAgeRanking(), parsedPlayer.getDoubleTournaments());
+                existingPlayer.setMixedPointsAndRanking(parsedPlayer.getMixedPoints(), parsedPlayer.getMixedRanking(), parsedPlayer.getMixedAgeRanking(), parsedPlayer.getMixedTournaments());
+
+                // Update club if changed
+                if (!Objects.equals(existingPlayer.getClubName(), parsedPlayer.getClubName())) {
+                    existingPlayer.setClubName(parsedPlayer.getClubName());
+                }
+                
+                // Update age classes if changed
+                if (!Objects.equals(existingPlayer.getAgeClassGeneral(), parsedPlayer.getAgeClassGeneral())) {
+                    existingPlayer.setAgeClassGeneral(parsedPlayer.getAgeClassGeneral());
+                }
+                if (!Objects.equals(existingPlayer.getAgeClassDetail(), parsedPlayer.getAgeClassDetail())) {
+                    existingPlayer.setAgeClassDetail(parsedPlayer.getAgeClassDetail());
+                }
+                
+                // Update associations (district, state, stateGroup) if changed
+                if (!Objects.equals(existingPlayer.getDistrictName(), parsedPlayer.getDistrictName())) {
+                    existingPlayer.setDistrictName(parsedPlayer.getDistrictName());
+                }
+                if (!Objects.equals(existingPlayer.getStateName(), parsedPlayer.getStateName())) {
+                    existingPlayer.setStateName(parsedPlayer.getStateName());
+                }
+                if (!Objects.equals(existingPlayer.getStateGroup(), parsedPlayer.getStateGroup())) {
+                    existingPlayer.setStateGroup(parsedPlayer.getStateGroup());
+                }
+
+                playersToSave.add(existingPlayer);
+            } else {
+                playersToSave.add(parsedPlayer);
+            }
+        }
+
+        List<Player> savedPlayers = forLoadingPlayers.save(playersToSave);
         synchronized (this) {
             cachedPlayers = List.copyOf(savedPlayers);
         }
         log().info("ImportRankingsService :: Successfully imported and cached {} players", savedPlayers.size());
     }
+
 
     @Override
     public RankingDashboardStatistics calculateStatistics() {

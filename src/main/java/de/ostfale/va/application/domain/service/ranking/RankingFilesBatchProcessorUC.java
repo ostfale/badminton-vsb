@@ -1,8 +1,10 @@
 package de.ostfale.va.application.domain.service.ranking;
 
+import de.ostfale.va.application.domain.model.playerrankings.HistoryTimestamp;
 import de.ostfale.va.application.domain.model.playerrankings.Player;
 import de.ostfale.va.application.domain.model.playerrankings.PlayerId;
 import de.ostfale.va.application.port.in.ranking.ForBatchProcessingRankingFiles;
+import de.ostfale.va.application.port.in.ranking.ForLoadingRankings;
 import de.ostfale.va.application.port.out.ranking.ForLoadingPlayers;
 import de.ostfale.va.application.port.out.ranking.ForParsingRankingFile;
 import de.ostfale.va.common.UseFileSystemHandling;
@@ -12,15 +14,9 @@ import org.springframework.stereotype.Service;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
 public class RankingFilesBatchProcessorUC implements ForBatchProcessingRankingFiles, UseFileSystemHandling, UseLogging {
@@ -29,10 +25,12 @@ public class RankingFilesBatchProcessorUC implements ForBatchProcessingRankingFi
 
     private final ForParsingRankingFile parser;
     private final ForLoadingPlayers loadedPlayers;
+    private final ForLoadingRankings loadingRankings;
 
-    public RankingFilesBatchProcessorUC(ForParsingRankingFile parser, ForLoadingPlayers loadedPlayers) {
+    public RankingFilesBatchProcessorUC(ForParsingRankingFile parser, ForLoadingPlayers loadedPlayers, ForLoadingRankings loadingRankings) {
         this.parser = parser;
         this.loadedPlayers = loadedPlayers;
+        this.loadingRankings = loadingRankings;
     }
 
     @Async
@@ -40,50 +38,58 @@ public class RankingFilesBatchProcessorUC implements ForBatchProcessingRankingFi
     public void processRankingFiles() {
         log().info("RankingFilesBatchProcessorUC :: Starting async batch import of historical data...");
 
-        var historyDirectory = getApplicationSubDir(RANKING_HISTORY_SUBDIR);
-        Path historyDir = Paths.get(historyDirectory);
-
+        Path historyDir = Path.of(getApplicationSubDir(RANKING_HISTORY_SUBDIR));
         try (Stream<Path> paths = Files.list(historyDir)) {
-            Map<PlayerId, Player> playersById = loadedPlayers.findAllPlayers().stream()
-                    .collect(Collectors.toMap(Player::getPlayerId, Function.identity()));
-            Set<PlayerId> changedPlayerIds = new HashSet<>();
+
+            Map<PlayerId, Player> playersMap = new HashMap<>();   // for batch starts always with empty map
 
             List<Path> excelFiles = paths
                     .filter(p -> p.toString().endsWith(".xlsx"))
-                    .sorted()
+                    .sorted(Comparator.comparing(p -> new HistoryTimestamp(p.getFileName().toString())))
                     .toList();
 
             for (Path file : excelFiles) {
                 String fileName = file.getFileName().toString();
-
                 log().info("RankingFilesBatchProcessorUC :: Processing file: {}", fileName);
-                List<Player> weeklySnapshots = parser.parseRankingFile(file);
 
-                for (Player player : weeklySnapshots) {
-                    var dbPlayer = playersById.get(player.getPlayerId());
-                    if (dbPlayer != null) {
-                        var history = player.getHistory().values().stream().findFirst();
-                        history.ifPresent(historyStatistics -> {
-                            dbPlayer.addHistoryEntry(fileName, historyStatistics);
-                            changedPlayerIds.add(player.getPlayerId());
-                        });
-                    }
-                }
-                log().debug("BatchProcessor :: {} Player from {} processed", weeklySnapshots.size(), fileName);
+                List<Player> weeklyRanking = parser.parseRankingFile(file);
+                weeklyRanking.forEach(player -> processPlayer(player, fileName, playersMap));
+
+                log().debug("BatchProcessor :: {} Player from {} processed", weeklyRanking.size(), fileName);
             }
 
-            if (!changedPlayerIds.isEmpty()) {
-                List<Player> changedPlayers = new ArrayList<>(changedPlayerIds.size());
-                for (var playerId : changedPlayerIds) {
-                    changedPlayers.add(playersById.get(playerId));
-                }
-                loadedPlayers.save(changedPlayers);
-                log().info("RankingFilesBatchProcessorUC :: Persisted {} players with updated history", changedPlayers.size());
-            } else {
-                log().info("RankingFilesBatchProcessorUC :: No player history changes detected");
-            }
+            loadedPlayers.save(playersMap.values().stream().toList());
+            loadingRankings.invalidateCache();
         } catch (Exception e) {
             log().error("RankingFilesBatchProcessorUC :: Critical error during batch processing", e);
         }
+    }
+
+    private void processPlayer(Player player, String fileName, Map<PlayerId, Player> playersMap) {
+        var dbPlayer = playersMap.get(player.getPlayerId());
+        if (dbPlayer == null) {
+            playersMap.put(player.getPlayerId(), player);
+            return;
+        }
+
+        String cwYear = new HistoryTimestamp(fileName).cwyear();
+        applyFieldChange(cwYear, "age class", player.getAgeClassGeneral(), dbPlayer.getAgeClassGeneral(), dbPlayer::setAgeClassGeneral, dbPlayer);
+        applyFieldChange(cwYear, "club name", player.getClubName(), dbPlayer.getClubName(), dbPlayer::setClubName, dbPlayer);
+        applyFieldChange(cwYear, "state name", player.getStateName(), dbPlayer.getStateName(), dbPlayer::setStateName, dbPlayer);
+        applyFieldChange(cwYear, "district name", player.getDistrictName(), dbPlayer.getDistrictName(), dbPlayer::setDistrictName, dbPlayer);
+
+        player.getHistory().values().stream().findFirst().ifPresent(historyStatistics -> {
+            dbPlayer.addHistoryEntry(fileName, historyStatistics);
+        });
+    }
+
+    private void applyFieldChange(String cwYear, String fieldName, String newValue, String oldValue,
+                                  Consumer<String> setter, Player dbPlayer) {
+        if (newValue == null || newValue.equals(oldValue)) {
+            return;
+        }
+        log().trace("RankingFilesBatchProcessorUC :: found change in {} for player {}: {} -> {}", fieldName, dbPlayer.getPlayerId().playerId(), oldValue, newValue);
+        dbPlayer.addHistoryChange(cwYear, oldValue, newValue);
+        setter.accept(newValue);
     }
 }

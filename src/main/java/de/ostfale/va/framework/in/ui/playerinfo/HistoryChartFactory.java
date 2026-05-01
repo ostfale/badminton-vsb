@@ -54,12 +54,18 @@ class HistoryChartFactory {
         return chart;
     }
 
-    void clear(ApexCharts chart) {
-        chart.setSeries(
+    void clear(ApexCharts chart, String yAxisLabel) {
+        chart.setXaxis(XAxisBuilder.get()
+                .withTitle(TitleBuilder.get().withText("Monat (" + yAxisLabel + ")").build())
+                .withCategories(List.of())
+                .withTickPlacement(TickPlacement.BETWEEN)
+                .build());
+        chart.updateConfig();
+        
+        chart.updateSeries(
                 new Series<>(DisciplineType.SINGLE.getDisplayString(), new Number[0]),
                 new Series<>(DisciplineType.DOUBLE.getDisplayString(), new Number[0]),
                 new Series<>(DisciplineType.MIXED.getDisplayString(), new Number[0]));
-        chart.render();
     }
 
     void apply(ApexCharts chart, String yAxisLabel, List<String> categories, HistoryChartData.DisciplineSeries series) {

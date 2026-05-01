@@ -35,6 +35,7 @@ public class PlayerHistoryTabComponent extends VerticalLayout implements UseLogg
         add(createSection("Punkte", pointsChart));
         add(createSection("Turniere", tournamentsChart));
         Signal.effect(this, () -> refreshContent(selectionState.getSelectedPlayer().get()));
+        addAttachListener(event -> refreshContent(selectionState.getSelectedPlayer().peek()));
     }
 
     private VerticalLayout createSection(String title, ApexCharts chart) {
@@ -48,15 +49,24 @@ public class PlayerHistoryTabComponent extends VerticalLayout implements UseLogg
     }
 
     private void refreshContent(Player player) {
+        if (player == null) {
+            clearCharts();
+            return;
+        }
+
         HistoryChartData chartData = chartDataMapper.map(player);
         if (chartData.isEmpty()) {
-            chartFactory.clear(rankingChart);
-            chartFactory.clear(pointsChart);
-            chartFactory.clear(tournamentsChart);
+            clearCharts();
             return;
         }
         chartFactory.apply(rankingChart, RANKING_AXIS_LABEL, chartData.categories(), chartData.ranking());
         chartFactory.apply(pointsChart, POINTS_AXIS_LABEL, chartData.categories(), chartData.points());
         chartFactory.apply(tournamentsChart, TOURNAMENTS_AXIS_LABEL, chartData.categories(), chartData.tournaments());
+    }
+
+    private void clearCharts() {
+        chartFactory.clear(rankingChart, RANKING_AXIS_LABEL);
+        chartFactory.clear(pointsChart, POINTS_AXIS_LABEL);
+        chartFactory.clear(tournamentsChart, TOURNAMENTS_AXIS_LABEL);
     }
 }
