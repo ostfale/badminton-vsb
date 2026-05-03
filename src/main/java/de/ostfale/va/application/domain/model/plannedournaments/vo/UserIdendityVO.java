@@ -7,6 +7,10 @@ public enum UserIdendityVO {
     johannes("meyer@multicash-solutions.de", "Johannes Meyer"),
     marianne("marianneflato@gmx.de", "Marianne Flato"),
     uwe("info@uwe-sauerbrei.de", "Uwe Sauerbrei"),
+    ole("jugendsportwart.bwb.bad@web.de", "Ole Blanck"),
+    jin("sunshinyjin@msn.com", "Jin Zhang"),
+    matthias("matthias.braun77@web.de", "Matthias Braun"),
+    martin("mlippert@gmail.com", "Martin Lippert"),
     develop("dev@dev.de", "Developer");
 
     private final String email;

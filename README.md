@@ -1,6 +1,6 @@
 # Badminton Statistics Web Application
 
-dd
++ Java, Vaadin, Spring Boot , EclipseStore
 
 # Internal
 
@@ -24,6 +24,8 @@ docker build --secret id=proKey,src=$HOME/.vaadin/proKey .           # builds a 
 Run local jar: 
 
 ```bash
+mvn clean package -Pproduction
+
 java --add-exports java.base/jdk.internal.misc=ALL-UNNAMED \
      --add-opens java.base/java.lang=ALL-UNNAMED \
      --add-opens java.base/java.lang.reflect=ALL-UNNAMED \
