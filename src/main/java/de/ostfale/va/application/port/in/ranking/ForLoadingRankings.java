@@ -22,8 +22,4 @@ public interface ForLoadingRankings extends UseFileSystemHandling, UseLogging {
      */
     void importRankingsFromFile();
 
-    /**
-     * Invalidates the current player cache.
-     */
-    void invalidateCache();
 }

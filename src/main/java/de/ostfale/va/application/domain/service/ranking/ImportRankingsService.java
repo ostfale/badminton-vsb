@@ -36,11 +36,6 @@ public class ImportRankingsService implements ForLoadingRankings, UseLogging {
     }
 
     @Override
-    public void invalidateCache() {
-        inMemoryPlayerService.clear();
-    }
-
-    @Override
     public void importRankingsFromFile() {
         log().info("ImportRankingsService :: Importing players from ranking file to memory");
         
