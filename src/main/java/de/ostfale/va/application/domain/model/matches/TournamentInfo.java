@@ -10,4 +10,13 @@ public record TournamentInfo(
     public TournamentInfo() {
         this("", "", "", "", 1970);
     }
+
+    @Override
+    public String tournamentDate() {
+        if (tournamentDate.contains("bis")) {
+            return tournamentDate.split("bis")[0];
+        }
+
+        return tournamentDate;
+    }
 }

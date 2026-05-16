@@ -13,6 +13,10 @@ public class DisciplineMatch implements TournamentNode{
     private String partnerOneName = null;
     private String playerTwoName;
     private String partnerTwoName = null;
+    private String retirementMessage = null;
+    
+    private boolean isTeamOneWinner = false;
+    private boolean isTeamTwoWinner = false;
 
     private final List<MatchSet> matchSets = new ArrayList<>();
 
@@ -50,7 +54,11 @@ public class DisciplineMatch implements TournamentNode{
     }
 
     public List<String> getSetResults() {
-        return matchSets.stream().map(MatchSet::getDisplayString).toList();
+        List<String> results = new ArrayList<>(matchSets.stream().map(MatchSet::getDisplayString).toList());
+        if (retirementMessage != null && !retirementMessage.isEmpty()) {
+            results.add(retirementMessage);
+        }
+        return results;
     }
 
     public void setMatchDate(String matchDate) {
@@ -91,5 +99,29 @@ public class DisciplineMatch implements TournamentNode{
 
     public void setRoundName(String roundName) {
         this.roundName = roundName;
+    }
+    
+    public boolean isTeamOneWinner() {
+        return isTeamOneWinner;
+    }
+
+    public void setTeamOneWinner(boolean teamOneWinner) {
+        isTeamOneWinner = teamOneWinner;
+    }
+
+    public boolean isTeamTwoWinner() {
+        return isTeamTwoWinner;
+    }
+
+    public void setTeamTwoWinner(boolean teamTwoWinner) {
+        isTeamTwoWinner = teamTwoWinner;
+    }
+    
+    public String getRetirementMessage() {
+        return retirementMessage;
+    }
+
+    public void setRetirementMessage(String retirementMessage) {
+        this.retirementMessage = retirementMessage;
     }
 }

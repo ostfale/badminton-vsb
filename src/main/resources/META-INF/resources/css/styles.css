@@ -1,5 +1,6 @@
 @import "ranking-view.css";
 @import "info-card.css";
+@import "playerMatch.css";
 
 /* Medium drop shadow */
 vaadin-text-field::part(input-field) {

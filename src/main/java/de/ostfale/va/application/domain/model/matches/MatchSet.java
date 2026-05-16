@@ -24,7 +24,7 @@ public class MatchSet {
 
         String firstValueString = firstValue < 10 ? " " + firstValue : String.valueOf(firstValue);
         String secondValueString = secondValue < 10 ? " " + secondValue : String.valueOf(secondValue);
-        return String.format("[Satz %d] %s : %s", setNumber.getSetNo(), firstValueString, secondValueString);
+        return String.format(" %s : %s",  firstValueString, secondValueString);
     }
 
     public MatchResultType getMatchResultType() {
