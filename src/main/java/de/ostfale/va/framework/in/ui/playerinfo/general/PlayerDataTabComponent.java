@@ -1,4 +1,4 @@
-package de.ostfale.va.framework.in.ui.playerinfo;
+package de.ostfale.va.framework.in.ui.playerinfo.general;
 
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;

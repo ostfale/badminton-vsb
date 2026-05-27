@@ -5,7 +5,10 @@ import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.router.Route;
 import de.ostfale.va.common.UseLogging;
 import de.ostfale.va.framework.in.ui.app.MainLayout;
+import de.ostfale.va.framework.in.ui.playerinfo.general.PlayerDataTabComponent;
+import de.ostfale.va.framework.in.ui.playerinfo.history.PlayerHistoryTabComponent;
 import de.ostfale.va.framework.in.ui.playerinfo.matches.PlayerMatchesTabComponent;
+import de.ostfale.va.framework.in.ui.playerinfo.ranking.PlayerRankingTabComponent;
 
 @Route(value = PlayerInfoView.PATH, layout = MainLayout.class)
 public class PlayerInfoView extends VerticalLayout implements UseLogging {

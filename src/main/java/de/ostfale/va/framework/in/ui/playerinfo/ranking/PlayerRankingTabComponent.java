@@ -1,4 +1,4 @@
-package de.ostfale.va.framework.in.ui.playerinfo;
+package de.ostfale.va.framework.in.ui.playerinfo.ranking;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;

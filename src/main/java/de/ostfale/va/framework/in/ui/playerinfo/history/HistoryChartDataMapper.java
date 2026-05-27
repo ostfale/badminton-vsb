@@ -1,4 +1,4 @@
-package de.ostfale.va.framework.in.ui.playerinfo;
+package de.ostfale.va.framework.in.ui.playerinfo.history;
 
 import de.ostfale.va.application.domain.model.playerrankings.HistoryStatistics;
 import de.ostfale.va.application.domain.model.playerrankings.HistoryTimestamp;
@@ -14,17 +14,17 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-class HistoryChartDataMapper {
+public class HistoryChartDataMapper {
 
     private static final WeekFields ISO_WEEK_FIELDS = WeekFields.ISO;
 
     private final DateTimeFormatter monthLabelFormatter;
 
-    HistoryChartDataMapper(Locale locale) {
+    public HistoryChartDataMapper(Locale locale) {
         this.monthLabelFormatter = DateTimeFormatter.ofPattern("MMM yy", locale);
     }
 
-    HistoryChartData map(Player player) {
+    public HistoryChartData map(Player player) {
         if (player == null || player.getHistory().isEmpty()) {
             return HistoryChartData.empty();
         }

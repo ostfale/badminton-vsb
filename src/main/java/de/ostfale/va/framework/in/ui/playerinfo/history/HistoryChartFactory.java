@@ -1,13 +1,8 @@
-package de.ostfale.va.framework.in.ui.playerinfo;
+package de.ostfale.va.framework.in.ui.playerinfo.history;
 
 import com.github.appreciated.apexcharts.ApexCharts;
 import com.github.appreciated.apexcharts.ApexChartsBuilder;
-import com.github.appreciated.apexcharts.config.builder.ChartBuilder;
-import com.github.appreciated.apexcharts.config.builder.LegendBuilder;
-import com.github.appreciated.apexcharts.config.builder.MarkersBuilder;
-import com.github.appreciated.apexcharts.config.builder.NoDataBuilder;
-import com.github.appreciated.apexcharts.config.builder.StrokeBuilder;
-import com.github.appreciated.apexcharts.config.builder.XAxisBuilder;
+import com.github.appreciated.apexcharts.config.builder.*;
 import com.github.appreciated.apexcharts.config.chart.Type;
 import com.github.appreciated.apexcharts.config.stroke.Curve;
 import com.github.appreciated.apexcharts.config.xaxis.TickPlacement;
@@ -26,7 +21,11 @@ class HistoryChartFactory {
     }
 
     ApexCharts createChart(String yAxisLabel) {
-        ApexCharts chart = ApexChartsBuilder.get()
+        return createChart(yAxisLabel, false);
+    }
+
+    ApexCharts createChart(String yAxisLabel, boolean reversed) {
+        ApexChartsBuilder builder = ApexChartsBuilder.get()
                 .withChart(ChartBuilder.get().withType(Type.LINE).withHeight("340").build())
                 .withStroke(StrokeBuilder.get().withCurve(Curve.STEPLINE).withWidth(1.5).build())
                 .withColors("#2563eb", "#16a34a", "#f59e0b")
@@ -44,8 +43,13 @@ class HistoryChartFactory {
                 .withSeries(
                         new Series<>(DisciplineType.SINGLE.getDisplayString(), new Number[0]),
                         new Series<>(DisciplineType.DOUBLE.getDisplayString(), new Number[0]),
-                        new Series<>(DisciplineType.MIXED.getDisplayString(), new Number[0]))
-                .build();
+                        new Series<>(DisciplineType.MIXED.getDisplayString(), new Number[0]));
+
+        if (reversed) {
+            builder.withYaxis(YAxisBuilder.get().withReversed(true).build());
+        }
+
+        ApexCharts chart = builder.build();
         chart.setWidthFull();
         chart.setHeight("340px");
         chart.getStyle().set("border", "1px solid var(--lumo-contrast-20pct)");

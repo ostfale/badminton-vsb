@@ -1,4 +1,4 @@
-package de.ostfale.va.framework.in.ui.playerinfo;
+package de.ostfale.va.framework.in.ui.playerinfo.history;
 
 import com.github.appreciated.apexcharts.ApexCharts;
 import com.vaadin.flow.component.html.H4;
@@ -23,7 +23,7 @@ public class PlayerHistoryTabComponent extends VerticalLayout implements UseLogg
 
     private final HistoryChartDataMapper chartDataMapper = new HistoryChartDataMapper(Locale.GERMAN);
     private final HistoryChartFactory chartFactory = new HistoryChartFactory(CHART_NO_DATA_TEXT);
-    private final ApexCharts rankingChart = chartFactory.createChart(RANKING_AXIS_LABEL);
+    private final ApexCharts rankingChart = chartFactory.createChart(RANKING_AXIS_LABEL, true);
     private final ApexCharts pointsChart = chartFactory.createChart(POINTS_AXIS_LABEL);
     private final ApexCharts tournamentsChart = chartFactory.createChart(TOURNAMENTS_AXIS_LABEL);
 

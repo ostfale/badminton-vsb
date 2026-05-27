@@ -1,4 +1,4 @@
-package de.ostfale.va.framework.in.ui.playerinfo;
+package de.ostfale.va.framework.in.ui.playerinfo.history;
 
 import java.util.List;
 

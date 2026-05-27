@@ -3,6 +3,7 @@ package de.ostfale.va.application.domain.model.plannedournaments.vo;
 import java.util.Arrays;
 
 public enum UserIdendityVO {
+    andreas("andreas.karmann@gmx.de", "Andreas  Karmann"),
     gisbert("gisbert.benecke@hamburg-badminton.de", "Gisbert Benecke"),
     johannes("meyer@multicash-solutions.de", "Johannes Meyer"),
     marianne("marianneflato@gmx.de", "Marianne Flato"),

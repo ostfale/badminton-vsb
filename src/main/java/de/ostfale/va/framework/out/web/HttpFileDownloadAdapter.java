@@ -78,7 +78,9 @@ public class HttpFileDownloadAdapter implements ForDownloadingFiles, UseFileSyst
         try {
             if (Files.exists(targetDir)) {
                 log().debug("HttpDownloadAdapter :: Moving existing files to history directory before downloading new files to: {}", targetDir);
-                archiveFiles(targetDir);
+                if (!targetDir.endsWith(ApplicationDirectoryConfiguration.TOURNAMENT_DIR_NAME)) {
+                    archiveFiles(targetDir);
+                }
             } else {
                 log().debug("HttpDownloadAdapter :: Creating target directory: {}", targetDir);
                 Files.createDirectories(targetDir);
@@ -91,22 +93,22 @@ public class HttpFileDownloadAdapter implements ForDownloadingFiles, UseFileSyst
     private void archiveFiles(Path sourceDir) throws IOException {
         String historyDirPath = getApplicationHomeDir() + SEPARATOR + ApplicationDirectoryConfiguration.HISTORY_DIR_NAME;
         Path historyPath = Path.of(historyDirPath);
-        
+
         if (!Files.exists(historyPath)) {
             Files.createDirectories(historyPath);
         }
 
         try (Stream<Path> stream = Files.list(sourceDir)) {
             stream.filter(Files::isRegularFile)
-                  .forEach(file -> {
-                      try {
-                          Path targetFile = historyPath.resolve(file.getFileName());
-                          log().info("HttpDownloadAdapter :: Moving file {} to history: {}", file.getFileName(), historyDirPath);
-                          Files.move(file, targetFile, StandardCopyOption.REPLACE_EXISTING);
-                      } catch (IOException e) {
-                          log().error("HttpDownloadAdapter :: Failed to move file {} to history", file.getFileName(), e);
-                      }
-                  });
+                    .forEach(file -> {
+                        try {
+                            Path targetFile = historyPath.resolve(file.getFileName());
+                            log().info("HttpDownloadAdapter :: Moving file {} to history: {}", file.getFileName(), historyDirPath);
+                            Files.move(file, targetFile, StandardCopyOption.REPLACE_EXISTING);
+                        } catch (IOException e) {
+                            log().error("HttpDownloadAdapter :: Failed to move file {} to history", file.getFileName(), e);
+                        }
+                    });
         }
     }
 }

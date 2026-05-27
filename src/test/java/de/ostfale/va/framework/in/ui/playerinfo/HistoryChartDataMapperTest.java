@@ -5,6 +5,8 @@ import de.ostfale.va.application.domain.model.playerrankings.GenderType;
 import de.ostfale.va.application.domain.model.playerrankings.Group;
 import de.ostfale.va.application.domain.model.playerrankings.Player;
 import de.ostfale.va.application.domain.model.playerrankings.RankingSnapshot;
+import de.ostfale.va.framework.in.ui.playerinfo.history.HistoryChartData;
+import de.ostfale.va.framework.in.ui.playerinfo.history.HistoryChartDataMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

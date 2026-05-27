@@ -4,6 +4,7 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridSortOrder;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Span;
@@ -12,9 +13,7 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.data.provider.ConfigurableFilterDataProvider;
-import com.vaadin.flow.data.provider.DataProvider;
-import com.vaadin.flow.data.provider.Query;
+import com.vaadin.flow.data.provider.*;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.function.ValueProvider;
 import de.ostfale.va.application.domain.model.plannedournaments.PlannedTournament;
@@ -25,6 +24,7 @@ import de.ostfale.va.application.port.out.ForGettingUserConfiguration;
 import de.ostfale.va.application.port.out.ForStoringUserData;
 import de.ostfale.va.common.UseLogging;
 
+import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -35,6 +35,7 @@ public class PlannedTournamentsListCompoment extends VerticalLayout implements U
     private final DataProvider<PlannedTournament, PlannedTournamentsFilter> dataProvider;
     private final ForStoringUserData forStoringUserData;
     private final ForGettingUserConfiguration userConfig;
+    private Grid.Column<PlannedTournament> startDateColumn;
 
     public PlannedTournamentsListCompoment(DataProvider<PlannedTournament, PlannedTournamentsFilter> dataProvider,
                                            PaginationComponent paginationComponent,
@@ -78,6 +79,11 @@ public class PlannedTournamentsListCompoment extends VerticalLayout implements U
 
         addColumns();
 
+        // Set default sort order to ascending by start date
+        if (startDateColumn != null) {
+            grid.sort(List.of(new GridSortOrder<>(startDateColumn, SortDirection.ASCENDING)));
+        }
+
         DataProvider<PlannedTournament, PlannedTournamentsFilter> wrappedDataProvider =
                 DataProvider.fromFilteringCallbacks(
                         query -> {
@@ -98,7 +104,7 @@ public class PlannedTournamentsListCompoment extends VerticalLayout implements U
 
     private void addColumns() {
         addFavoriteColumn(PlannedTournament::isFavorite);
-        addTextColumn(PlannedTournament::startDate, "Datum", 0);
+        startDateColumn = addTextColumn(PlannedTournament::startDate, "Datum", 0);
         addTextColumn(PlannedTournament::closingDate, "Meldeschluss", 0);
         addTextColumn(PlannedTournament::tournamentName, "Turniername", 1);
         addTextColumn(PlannedTournament::location, "Ort", 1);
@@ -129,8 +135,8 @@ public class PlannedTournamentsListCompoment extends VerticalLayout implements U
 
     }
 
-    private void addTextColumn(ValueProvider<PlannedTournament, ?> valueProvider, String header, int flexGrow) {
-        grid.addColumn(valueProvider)
+    private Grid.Column<PlannedTournament> addTextColumn(ValueProvider<PlannedTournament, ?> valueProvider, String header, int flexGrow) {
+        return grid.addColumn(valueProvider)
                 .setHeader(header)
                 .setAutoWidth(true)
                 .setFlexGrow(flexGrow)

@@ -35,6 +35,7 @@ public class NominatimGeocodingAdapter implements UseLogging {
         try {
             String encodedLocation = URLEncoder.encode(location, StandardCharsets.UTF_8);
             String url = String.format("%s?q=%s&format=json&limit=1", NOMINATIM_URL, encodedLocation);
+            log().info("Nominatim request URL: {}", url);
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
@@ -46,10 +47,11 @@ public class NominatimGeocodingAdapter implements UseLogging {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() != 200) {
-                log().warn("Geocoding request failed with status: {}", response.statusCode());
+                log().warn("Geocoding request failed with status: {}. Response: {}", response.statusCode(), response.body());
                 return Optional.empty();
             }
 
+            log().debug("Nominatim response: {}", response.body());
             return parseGeocodingResponse(response.body());
 
         } catch (Exception e) {
@@ -69,6 +71,7 @@ public class NominatimGeocodingAdapter implements UseLogging {
             String encodedCountryCode = URLEncoder.encode(countryCode, StandardCharsets.UTF_8);
             String url = String.format("%s?postalcode=%s&country=%s&format=json&limit=1",
                     NOMINATIM_URL, encodedPostalCode, encodedCountryCode);
+            log().info("Nominatim request URL (postal code): {}", url);
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
@@ -80,10 +83,11 @@ public class NominatimGeocodingAdapter implements UseLogging {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() != 200) {
-                log().warn("Geocoding request failed with status: {}", response.statusCode());
+                log().warn("Geocoding request failed with status: {}. Response: {}", response.statusCode(), response.body());
                 return Optional.empty();
             }
 
+            log().debug("Nominatim response (postal code): {}", response.body());
             return parseGeocodingResponse(response.body());
 
         } catch (Exception e) {
@@ -96,6 +100,7 @@ public class NominatimGeocodingAdapter implements UseLogging {
         JsonNode root = objectMapper.readTree(jsonResponse);
 
         if (!root.isArray() || root.isEmpty()) {
+            log().warn("Nominatim returned empty or non-array result.");
             return Optional.empty();
         }
 
