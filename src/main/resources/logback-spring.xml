@@ -30,7 +30,7 @@
           <!--  <appender-ref ref="CONSOLE" />  -->
         </root>
 
-        <logger name="de.ostfale.va" level="DEBUG" additivity="false">
+        <logger name="de.ostfale.va" level="INFO" additivity="false">
             <appender-ref ref="ROLLING_FILE"/>
        <!--     <appender-ref ref="CONSOLE"/> -->
         </logger>

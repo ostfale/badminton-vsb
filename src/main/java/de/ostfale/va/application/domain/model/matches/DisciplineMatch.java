@@ -2,10 +2,37 @@ package de.ostfale.va.application.domain.model.matches;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class DisciplineMatch implements TournamentNode{
 
     private static final String PLAYER_SEPARATOR = " / ";
+
+    private static final Map<String, String> NAME_TO_ABBREVIATION_MAP = Map.ofEntries(
+            Map.entry("Finale", "F"),
+            Map.entry("Final", "F"),
+            Map.entry("Halbfinale", "HF"),
+            Map.entry("Semi final", "HF"),
+            Map.entry("Viertelfinale", "VF"),
+            Map.entry("Quarter final", "VF"),
+            Map.entry("Achtelfinale", "AF"),
+            Map.entry("Runde der 16", "R16"),
+            Map.entry("Round of 16", "R16"),
+            Map.entry("Runde der 32", "R32"),
+            Map.entry("Round of 32", "R32"),
+            Map.entry("Runde der 64", "R64"),
+            Map.entry("Round of 64", "R64"),
+            Map.entry("Runde der 128", "R128"),
+            Map.entry("Spiel um Platz 3", "Pl. 3/4"),
+            Map.entry("3rd/4th place", "Pl. 3/4"),
+            Map.entry("9th/16th place", "Pl. 9/16"),
+            Map.entry("Spiel um Platz 7", "Pl. 7"),
+            Map.entry("Spiel um Platz 15", "Pl. 15"),
+            Map.entry("Qualifikation", "Qual."),
+            Map.entry("Qual. 1", "Qual. 1"),
+            Map.entry("Qual. 2", "Qual. 2"),
+            Map.entry("Qual. F", "Qual. F")
+    );
 
     private String matchDate;
     private String roundName;
@@ -42,7 +69,10 @@ public class DisciplineMatch implements TournamentNode{
     }
 
     public String getRoundName() {
-        return roundName;
+        if (roundName == null) {
+            return "";
+        }
+        return NAME_TO_ABBREVIATION_MAP.getOrDefault(roundName, roundName);
     }
 
     public String getMatchDate() {

@@ -46,7 +46,10 @@ class HistoryChartFactory {
                         new Series<>(DisciplineType.MIXED.getDisplayString(), new Number[0]));
 
         if (reversed) {
-            builder.withYaxis(YAxisBuilder.get().withReversed(true).build());
+            builder.withYaxis(YAxisBuilder.get()
+                    .withReversed(true)
+                    .withMin(1.0)
+                    .build());
         }
 
         ApexCharts chart = builder.build();
